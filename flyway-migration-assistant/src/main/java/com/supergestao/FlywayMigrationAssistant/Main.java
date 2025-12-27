@@ -1,5 +1,7 @@
 package com.supergestao.FlywayMigrationAssistant;
 
+import com.supergestao.FlywayMigrationAssistant.model.Tipo;
+
 import javax.swing.*;
 
 public class Main {
@@ -17,6 +19,6 @@ public class Main {
             window.setVisible(true);
         });*/
 
-        System.out.println("Olá mundo!");
+        System.out.println("");
     }
 }
