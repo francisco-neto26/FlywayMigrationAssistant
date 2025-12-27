@@ -1,0 +1,25 @@
+application:
+  name: "Flyway Migration Assistant"
+  version: "1.0.0"
+  author: "Super Gestão"
+
+appearance:
+  theme: "darcula"  # darcula, dark, light
+  font-family: "Consolas"
+  font-size: 13
+
+modules:
+  auto-sync: true
+  create-readme: true
+  default-schema: "public"
+
+templates:
+  versioned:
+    include-header: true
+    include-rollback: false
+  repeatable:
+    include-header: true
+
+preferences:
+  remember-last-folder: true
+  auto-refresh: true
