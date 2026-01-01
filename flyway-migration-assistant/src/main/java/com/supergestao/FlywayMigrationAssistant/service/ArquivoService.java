@@ -66,7 +66,7 @@ public class ArquivoService {
         return files;
     }
 
-    public String readFileContent(File file) throws IOException {
+    public String lerConteudoArquivo(File file) throws IOException {
         if (file == null || !file.exists()) {
             throw new IOException("Arquivo não existe");
         }
