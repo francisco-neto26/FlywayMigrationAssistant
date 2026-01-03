@@ -143,7 +143,7 @@ public class PainelModulo extends JPanel {
             }
 
             try {
-                boolean criado = arquivoService.createModule(nomeModulo, prefixo);
+                boolean criado = arquivoService.criarModulo(nomeModulo, prefixo);
                 if (criado) {
                     atualizar();
                     JOptionPane.showMessageDialog(this,

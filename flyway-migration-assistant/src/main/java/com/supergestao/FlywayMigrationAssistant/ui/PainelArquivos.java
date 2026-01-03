@@ -63,7 +63,7 @@ public class PainelArquivos extends JPanel {
     }
 
     public void carregarArquivos(String moduloNome) {
-        todosArquivos = arquivoService.getFilesInModule(moduloNome);
+        todosArquivos = arquivoService.obterArquivosModulo(moduloNome);
         atualizarLista(todosArquivos);
         campoPesquisa.setText("");
     }
