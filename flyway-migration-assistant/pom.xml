@@ -110,13 +110,12 @@
             <scope>test</scope>
         </dependency>
 
-        <!-- Lombok (opcional, para reduzir boilerplate) -->
         <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-            <version>1.18.30</version>
-            <scope>provided</scope>
+            <groupId>io.github.vincenzopalazzo</groupId>
+            <artifactId>material-ui-swing</artifactId>
+            <version>1.1.4</version>
         </dependency>
+
     </dependencies>
 
     <build>

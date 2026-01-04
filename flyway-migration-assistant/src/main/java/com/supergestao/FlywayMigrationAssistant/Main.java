@@ -1,24 +1,22 @@
 package com.supergestao.FlywayMigrationAssistant;
 
-import com.supergestao.FlywayMigrationAssistant.model.Tipo;
+import com.supergestao.FlywayMigrationAssistant.config.GerenciamentoTemaPadrao;
+import com.supergestao.FlywayMigrationAssistant.service.TemaService;
+import com.supergestao.FlywayMigrationAssistant.ui.TelaInicial;
 
 import javax.swing.*;
 
 public class Main {
     public static void main(String[] args) {
-        /*try {
-            // Tenta usar o Look and Feel do sistema operacional
-            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+        try {
+            String temaSalvo = GerenciamentoTemaPadrao.carregaTema();
+            TemaService.configurarLookAndFeel(temaSalvo);
         } catch (Exception e) {
             e.printStackTrace();
-            // Se falhar, usa o padrão do Java (Metal)
         }
-
         SwingUtilities.invokeLater(() -> {
-            MainWindow window = new MainWindow();
+            TelaInicial window = new TelaInicial();
             window.setVisible(true);
-        });*/
-
-        System.out.println("");
+        });
     }
 }

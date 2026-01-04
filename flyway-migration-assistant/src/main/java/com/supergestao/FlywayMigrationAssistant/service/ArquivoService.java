@@ -28,9 +28,9 @@ public class ArquivoService {
         List<String> modulos = new ArrayList<>();
 
         if (pastaRaiz != null && pastaRaiz.exists()) {
-            File[] subdirs = pastaRaiz.listFiles(File::isDirectory);
-            if (subdirs != null) {
-                for (File dir : subdirs) {
+            File[] subdiretorio = pastaRaiz.listFiles(File::isDirectory);
+            if (subdiretorio != null) {
+                for (File dir : subdiretorio) {
                     modulos.add(dir.getName());
                 }
                 modulos.sort(String::compareTo);
@@ -40,80 +40,80 @@ public class ArquivoService {
         return modulos;
     }
 
-    public List<Arquivo> getFilesInModule(String moduleName) {
-        List<Arquivo> files = new ArrayList<>();
+    public List<Arquivo> obterArquivosModulo(String nomeModulo) {
+        List<Arquivo> arquivos = new ArrayList<>();
 
         if (pastaRaiz == null) {
-            return files;
+            return arquivos;
         }
 
-        File moduleFolder = new File(pastaRaiz, moduleName);
-        if (!moduleFolder.exists() || !moduleFolder.isDirectory()) {
-            return files;
+        File pastaModulo = new File(pastaRaiz, nomeModulo);
+        if (!pastaModulo.exists() || !pastaModulo.isDirectory()) {
+            return arquivos;
         }
 
-        File[] sqlFiles = moduleFolder.listFiles((dir, name) -> name.endsWith(".sql"));
-        if (sqlFiles != null) {
-            Arrays.sort(sqlFiles, Comparator.comparing(File::getName));
+        File[] arquivoSql = pastaModulo.listFiles((dir, nome) -> nome.endsWith(".sql"));
+        if (arquivoSql != null) {
+            Arrays.sort(arquivoSql, Comparator.comparing(File::getName));
 
-            for (File file : sqlFiles) {
-                Tipo type = file.getName().startsWith("V") ?
+            for (File arquivo : arquivoSql) {
+                Tipo tipo = arquivo.getName().startsWith("V") ?
                         Tipo.VERSIONED : Tipo.REPEATABLE;
-                files.add(new Arquivo(file.getName(), moduleName, file, type));
+                arquivos.add(new Arquivo(arquivo.getName(), nomeModulo, arquivo, tipo));
             }
         }
 
-        return files;
+        return arquivos;
     }
 
-    public String readFileContent(File file) throws IOException {
-        if (file == null || !file.exists()) {
+    public String lerConteudoArquivo(File arquivo) throws IOException {
+        if (arquivo == null || !arquivo.exists()) {
             throw new IOException("Arquivo não existe");
         }
-        return Files.readString(file.toPath(), StandardCharsets.UTF_8);
+        return Files.readString(arquivo.toPath(), StandardCharsets.UTF_8);
     }
 
-    public void createArquivo(String moduleName, String fileName,
-                                    String content) throws IOException {
+    public void criarArquivo(String nomeModulo, String nomeArquivo,
+                                    String conteudo) throws IOException {
         if (pastaRaiz == null) {
             throw new IOException("Pasta raiz não definida");
         }
 
-        File moduleFolder = new File(pastaRaiz, moduleName);
-        if (!moduleFolder.exists()) {
-            moduleFolder.mkdirs();
+        File pastaModulo = new File(pastaRaiz, nomeModulo);
+        if (!pastaModulo.exists()) {
+            pastaModulo.mkdirs();
         }
 
-        File newFile = new File(moduleFolder, fileName);
-        Files.writeString(newFile.toPath(), content, StandardCharsets.UTF_8);
+        File novoArquivo = new File(pastaModulo, nomeArquivo);
+        Files.writeString(novoArquivo.toPath(), conteudo, StandardCharsets.UTF_8);
     }
 
-    public boolean fileExists(String moduleName, String fileName) {
+    public boolean existeArquivo(String nomeModulo, String nomeArquivo) {
         if (pastaRaiz == null) {
             return false;
         }
 
-        File moduleFolder = new File(pastaRaiz, moduleName);
-        File file = new File(moduleFolder, fileName);
-        return file.exists();
+        File pastaModulo = new File(pastaRaiz, nomeModulo);
+        File arquivo= new File(pastaModulo, nomeArquivo);
+        return arquivo.exists();
     }
 
-    public boolean createModule(String moduleName, String prefix) throws IOException {
+    public boolean criarModulo(String nomeModulo, String prefixo) throws IOException {
         if (pastaRaiz == null) {
             throw new IOException("Pasta raiz não definida");
         }
 
-        File moduleFolder = new File(pastaRaiz, moduleName);
-        if (moduleFolder.exists()) {
+        File pastaModulo = new File(pastaRaiz, nomeModulo);
+        if (pastaModulo.exists()) {
             return false;
         }
 
-        boolean created = moduleFolder.mkdirs();
-        if (created && prefix != null && !prefix.isEmpty()) {
-            ModuloConfig.addModule(moduleName, prefix);
+        boolean criado = pastaModulo.mkdirs();
+        if (criado && prefixo != null && !prefixo.isEmpty()) {
+            ModuloConfig.addModule(nomeModulo, prefixo);//precisa revisar para descontinuar o moduloConfig
         }
 
-        return created;
+        return criado;
     }
 
 }
