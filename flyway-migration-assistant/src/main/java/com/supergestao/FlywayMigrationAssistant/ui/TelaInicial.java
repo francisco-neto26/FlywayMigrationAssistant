@@ -37,38 +37,7 @@ public class TelaInicial extends JFrame {
         MenuOpcao menuOpcao = new MenuOpcao(this);
         setJMenuBar(menuOpcao.criarMenuBar());
     }
-/*
-    private void criaMenuFuncao() {
-        JMenuBar menuBar = new JMenuBar();
-        JMenu configMenu = new JMenu("Configurações");
 
-        JMenuItem caminhoRaizItem = new JMenuItem("Selecionar Pasta db/migration");
-        caminhoRaizItem.addActionListener(e -> MigrationSelecionadaDiretorio());
-        configMenu.add(caminhoRaizItem);
-
-        configMenu.addSeparator();
-
-        JMenuItem limparConfigItem = new JMenuItem("🗑️ Limpar Configuração");
-        limparConfigItem.addActionListener(e -> limparConfiguracao());
-        configMenu.add(limparConfigItem);
-
-        configMenu.addSeparator();
-
-        JMenuItem sairItem = new JMenuItem("Sair");
-        sairItem.addActionListener(e -> System.exit(0));
-        configMenu.add(sairItem);
-
-        menuBar.add(configMenu);
-
-        JMenu menuAjuda = new JMenu("Ajuda");
-        JMenuItem sobreItem = new JMenuItem("Sobre");
-        sobreItem.addActionListener(e -> mostrarSobre());
-        menuAjuda.add(sobreItem);
-        menuBar.add(menuAjuda);
-
-        setJMenuBar(menuBar);
-    }
-*/
     private void criaPainelPrincipal() {
         JPanel painelPrincipal = new JPanel(new BorderLayout(10, 10));
         painelPrincipal.setBorder(new EmptyBorder(10, 10, 10, 10));

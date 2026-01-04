@@ -1,8 +1,11 @@
 package com.supergestao.FlywayMigrationAssistant.ui;
 
+import com.formdev.flatlaf.FlatDarculaLaf;
 import com.formdev.flatlaf.FlatDarkLaf;
+import com.formdev.flatlaf.FlatIntelliJLaf;
 import com.formdev.flatlaf.FlatLightLaf;
 import com.supergestao.FlywayMigrationAssistant.config.GerenciamentoTemaPadrao;
+import com.supergestao.FlywayMigrationAssistant.service.TemaService;
 
 import javax.swing.*;
 
@@ -25,8 +28,9 @@ public class MenuOpcao {
         configMenu.add(caminhoRaizItem);
 
         configMenu.addSeparator();
+        configMenu.add(criarMenuTemas());
 
-        // --- Submenu de Temas ---
+        /*// --- Submenu de Temas ---
         JMenu menuTemas = new JMenu("Temas");
         ButtonGroup grupoTemas = new ButtonGroup();
         String temaAtual = GerenciamentoTemaPadrao.carregaTema();
@@ -37,6 +41,10 @@ public class MenuOpcao {
 
         configMenu.add(menuTemas);
         configMenu.addSeparator();
+
+         */
+
+
 
         JMenuItem limparConfigItem = new JMenuItem("🗑️ Limpar Configuração");
         limparConfigItem.addActionListener(e -> tela.limparConfiguracao());
@@ -69,22 +77,46 @@ public class MenuOpcao {
 
     private void aplicarTema(String nomeTema) {
         try {
-            if (nomeTema.equals("Dark")) {
-                FlatDarkLaf.setup();
-            } else if (nomeTema.equals("Light")) {
-                FlatLightLaf.setup();
-            } else {
-                UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-            }
-
+            TemaService.configurarLookAndFeel(nomeTema);
             GerenciamentoTemaPadrao.salvaTema(nomeTema);
-
             SwingUtilities.updateComponentTreeUI(tela);
+            tela.pack();
 
         } catch (Exception ex) {
+            JOptionPane.showMessageDialog(tela, "Erro ao aplicar o tema: " + ex.getMessage(),
+                    "Erro de Interface", JOptionPane.ERROR_MESSAGE);
             ex.printStackTrace();
         }
     }
+
+    public JMenu criarMenuTemas() {
+        JMenu menuTemas = new JMenu("Temas e Estilos");
+        ButtonGroup grupo = new ButtonGroup();
+        String atual = GerenciamentoTemaPadrao.carregaTema();
+        System.out.println("Tema atual: " + atual);
+
+        // --- Submenu: Nativos/Padrão ---
+        JMenu menuPadrao = new JMenu("Padrão Java");
+        adicionarOpcaoTema(menuPadrao, grupo, "Sistema", atual);
+        adicionarOpcaoTema(menuPadrao, grupo, "Metal", atual);
+        adicionarOpcaoTema(menuPadrao, grupo, "Nimbus", atual);
+        adicionarOpcaoTema(menuPadrao, grupo, "Motif", atual);
+        menuTemas.add(menuPadrao);
+
+        // --- Submenu: FlatLaf (Modernos) ---
+        JMenu menuFlat = new JMenu("Modernos (FlatLaf)");
+        adicionarOpcaoTema(menuFlat, grupo, "Flat Light", atual);
+        adicionarOpcaoTema(menuFlat, grupo, "Flat Dark", atual);
+        adicionarOpcaoTema(menuFlat, grupo, "IntelliJ", atual);
+        adicionarOpcaoTema(menuFlat, grupo, "Darcula", atual);
+        menuTemas.add(menuFlat);
+
+        // --- Outros ---
+        adicionarOpcaoTema(menuTemas, grupo, "Material", atual);
+
+        return menuTemas;
+    }
+
 
     private void mostrarSobre() {
         String message = "Super Gestão - Flyway Migration Assistant\n\n" +
@@ -93,7 +125,7 @@ public class MenuOpcao {
                 "seguindo as Regras de Ouro de nomenclatura.\n\n" +
                 "Desenvolvido com Java 21 e Swing";
 
-        JOptionPane.showMessageDialog(this, message, "Sobre",
+        JOptionPane.showMessageDialog(tela, message, "Sobre",
                 JOptionPane.INFORMATION_MESSAGE);
     }
 }
