@@ -17,9 +17,8 @@ public class MenuOpcao {
         JMenuBar menuBar = new JMenuBar();
         menuBar.setBorder(BorderFactory.createEmptyBorder());
 
-        // Menu Configurações
         JMenu menuConfig = new JMenu("Configurações");
-        estilizarItem(menuConfig);
+        estilizarItem(menuConfig, 0);
 
         menuConfig.add(criarItemSimples("Selecionar Pasta", e -> tela.MigrationSelecionadaDiretorio()));
         menuConfig.addSeparator();
@@ -31,9 +30,8 @@ public class MenuOpcao {
 
         menuBar.add(menuConfig);
 
-        // Menu Ajuda
         JMenu menuAjuda = new JMenu("Ajuda");
-        estilizarItem(menuAjuda);
+        estilizarItem(menuAjuda, 0);
         menuAjuda.add(criarItemSimples("Sobre", e -> mostrarSobre()));
         menuBar.add(menuAjuda);
 
@@ -42,30 +40,29 @@ public class MenuOpcao {
 
     public JMenu criarMenuTemas() {
         JMenu menuTemas = new JMenu("Temas e Estilos");
-        estilizarItem(menuTemas);
+        estilizarItem(menuTemas, 160);
 
         String atual = GerenciamentoTemaPadrao.carregaTema();
 
         JMenu menuModernos = new JMenu("FlatLaf");
-        estilizarItem(menuModernos);
+        estilizarItem(menuModernos, 140);
         String[] modernos = {"Flat Dark", "Flat Light", "IntelliJ", "Darcula"};
         for (String t : modernos) adicionarItemTema(menuModernos, t, atual);
 
         JMenu menuNativos = new JMenu("Padrão");
-        estilizarItem(menuNativos);
+        estilizarItem(menuNativos, 140);
         String[] nativos = {"Sistema", "Nimbus", "Metal", "Motif"};
         for (String t : nativos) adicionarItemTema(menuNativos, t, atual);
 
         menuTemas.add(menuModernos);
         menuTemas.add(menuNativos);
-        adicionarItemTema(menuTemas, "Material", atual);
 
         return menuTemas;
     }
 
     private void adicionarItemTema(JMenu menu, String nome, String atual) {
         JMenuItem item = new JMenuItem(nome);
-        estilizarItem(item);
+        estilizarItem(item, 140);
 
         if (nome.equals(atual)) {
             item.setFont(item.getFont().deriveFont(Font.BOLD));
@@ -75,10 +72,19 @@ public class MenuOpcao {
         item.addActionListener(e -> {
             TemaService.configurarLookAndFeel(nome);
             GerenciamentoTemaPadrao.salvaTema(nome);
+
+            SwingUtilities.updateComponentTreeUI(tela);
+            tela.setJMenuBar(null);
+            tela.revalidate();
+            tela.repaint();
+
             tela.atualizarLookAndFeel();
+
             tela.setJMenuBar(this.criarMenuBar());
             tela.revalidate();
             tela.repaint();
+
+            tela.atualizarLookAndFeel();
         });
 
         menu.add(item);
@@ -86,26 +92,26 @@ public class MenuOpcao {
 
     private JMenuItem criarItemSimples(String texto, java.awt.event.ActionListener acao) {
         JMenuItem item = new JMenuItem(texto);
-        estilizarItem(item);
+        estilizarItem(item, 180); // Itens principais do dropdown com 180px
         item.addActionListener(acao);
         return item;
     }
 
-    private void estilizarItem(JMenuItem item) {
+    private void estilizarItem(JMenuItem item, int larguraMinima) {
         item.setIcon(null);
         item.setHorizontalAlignment(SwingConstants.LEFT);
         item.setBorder(new EmptyBorder(5, 12, 5, 12));
-        item.setPreferredSize(new Dimension(item.getPreferredSize().width, 30));
+
+        int altura = 30;
+        int larguraTexto = item.getPreferredSize().width;
+
+        int larguraFinal = Math.max(larguraMinima, larguraTexto);
+
+        item.setPreferredSize(new Dimension(larguraFinal, altura));
     }
 
     private void mostrarSobre() {
-        String message = "Super Gestão - Flyway Migration Assistant\n\n" +
-                "Versão: 1.0.0\n\n" +
-                "Ferramenta para gestão de migrações Flyway\n" +
-                "seguindo as Regras de Ouro de nomenclatura.\n\n" +
-                "Desenvolvido com Java 21 e Swing";
-
-        JOptionPane.showMessageDialog(tela, message, "Sobre",
-                JOptionPane.INFORMATION_MESSAGE);
+        String message = "Super Gestão - Flyway Migration Assistant\n\nVersão: 1.0.0";
+        JOptionPane.showMessageDialog(tela, message, "Sobre", JOptionPane.INFORMATION_MESSAGE);
     }
 }
