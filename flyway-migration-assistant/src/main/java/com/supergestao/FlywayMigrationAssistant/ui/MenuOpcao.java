@@ -1,16 +1,12 @@
 package com.supergestao.FlywayMigrationAssistant.ui;
 
-import com.formdev.flatlaf.FlatDarculaLaf;
-import com.formdev.flatlaf.FlatDarkLaf;
-import com.formdev.flatlaf.FlatIntelliJLaf;
-import com.formdev.flatlaf.FlatLightLaf;
 import com.supergestao.FlywayMigrationAssistant.config.GerenciamentoTemaPadrao;
 import com.supergestao.FlywayMigrationAssistant.service.TemaService;
-
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
+import java.awt.*;
 
 public class MenuOpcao {
-
     private final TelaInicial tela;
 
     public MenuOpcao(TelaInicial tela) {
@@ -19,113 +15,103 @@ public class MenuOpcao {
 
     public JMenuBar criarMenuBar() {
         JMenuBar menuBar = new JMenuBar();
+        menuBar.setBorder(BorderFactory.createEmptyBorder());
 
-        // --- Menu Configurações ---
-        JMenu configMenu = new JMenu("Configurações");
+        JMenu menuConfig = new JMenu("Configurações");
+        estilizarItem(menuConfig, 0);
 
-        JMenuItem caminhoRaizItem = new JMenuItem("Selecionar Pasta db/migration");
-        caminhoRaizItem.addActionListener(e -> tela.MigrationSelecionadaDiretorio());
-        configMenu.add(caminhoRaizItem);
+        menuConfig.add(criarItemSimples("Selecionar Pasta", e -> tela.MigrationSelecionadaDiretorio()));
+        menuConfig.addSeparator();
+        menuConfig.add(criarMenuTemas());
+        menuConfig.addSeparator();
+        menuConfig.add(criarItemSimples("Limpar Configuração", e -> tela.limparConfiguracao()));
+        menuConfig.addSeparator();
+        menuConfig.add(criarItemSimples("Sair", e -> System.exit(0)));
 
-        configMenu.addSeparator();
-        configMenu.add(criarMenuTemas());
+        menuBar.add(menuConfig);
 
-        /*// --- Submenu de Temas ---
-        JMenu menuTemas = new JMenu("Temas");
-        ButtonGroup grupoTemas = new ButtonGroup();
-        String temaAtual = GerenciamentoTemaPadrao.carregaTema();
-
-        adicionarOpcaoTema(menuTemas, grupoTemas, "System", temaAtual);
-        adicionarOpcaoTema(menuTemas, grupoTemas, "Dark", temaAtual);
-        adicionarOpcaoTema(menuTemas, grupoTemas, "Light", temaAtual);
-
-        configMenu.add(menuTemas);
-        configMenu.addSeparator();
-
-         */
-
-
-
-        JMenuItem limparConfigItem = new JMenuItem("🗑️ Limpar Configuração");
-        limparConfigItem.addActionListener(e -> tela.limparConfiguracao());
-        configMenu.add(limparConfigItem);
-
-        configMenu.addSeparator();
-
-        JMenuItem sairItem = new JMenuItem("Sair");
-        sairItem.addActionListener(e -> System.exit(0));
-        configMenu.add(sairItem);
-
-        menuBar.add(configMenu);
-
-        // --- Menu Ajuda ---
         JMenu menuAjuda = new JMenu("Ajuda");
-        JMenuItem sobreItem = new JMenuItem("Sobre");
-        sobreItem.addActionListener(e -> mostrarSobre());
-        menuAjuda.add(sobreItem);
+        estilizarItem(menuAjuda, 0);
+        menuAjuda.add(criarItemSimples("Sobre", e -> mostrarSobre()));
         menuBar.add(menuAjuda);
 
         return menuBar;
     }
 
-    private void adicionarOpcaoTema(JMenu menu, ButtonGroup grupo, String nome, String atual) {
-        JRadioButtonMenuItem item = new JRadioButtonMenuItem(nome, nome.equals(atual));
-        item.addActionListener(e -> aplicarTema(nome));
-        grupo.add(item);
-        menu.add(item);
-    }
-
-    private void aplicarTema(String nomeTema) {
-        try {
-            TemaService.configurarLookAndFeel(nomeTema);
-            GerenciamentoTemaPadrao.salvaTema(nomeTema);
-            SwingUtilities.updateComponentTreeUI(tela);
-            tela.pack();
-
-        } catch (Exception ex) {
-            JOptionPane.showMessageDialog(tela, "Erro ao aplicar o tema: " + ex.getMessage(),
-                    "Erro de Interface", JOptionPane.ERROR_MESSAGE);
-            ex.printStackTrace();
-        }
-    }
-
     public JMenu criarMenuTemas() {
         JMenu menuTemas = new JMenu("Temas e Estilos");
-        ButtonGroup grupo = new ButtonGroup();
+        estilizarItem(menuTemas, 160);
+
         String atual = GerenciamentoTemaPadrao.carregaTema();
-        System.out.println("Tema atual: " + atual);
 
-        // --- Submenu: Nativos/Padrão ---
-        JMenu menuPadrao = new JMenu("Padrão Java");
-        adicionarOpcaoTema(menuPadrao, grupo, "Sistema", atual);
-        adicionarOpcaoTema(menuPadrao, grupo, "Metal", atual);
-        adicionarOpcaoTema(menuPadrao, grupo, "Nimbus", atual);
-        adicionarOpcaoTema(menuPadrao, grupo, "Motif", atual);
-        menuTemas.add(menuPadrao);
+        JMenu menuModernos = new JMenu("FlatLaf");
+        estilizarItem(menuModernos, 140);
+        String[] modernos = {"Flat Dark", "Flat Light", "IntelliJ", "Darcula"};
+        for (String t : modernos) adicionarItemTema(menuModernos, t, atual);
 
-        // --- Submenu: FlatLaf (Modernos) ---
-        JMenu menuFlat = new JMenu("Modernos (FlatLaf)");
-        adicionarOpcaoTema(menuFlat, grupo, "Flat Light", atual);
-        adicionarOpcaoTema(menuFlat, grupo, "Flat Dark", atual);
-        adicionarOpcaoTema(menuFlat, grupo, "IntelliJ", atual);
-        adicionarOpcaoTema(menuFlat, grupo, "Darcula", atual);
-        menuTemas.add(menuFlat);
+        JMenu menuNativos = new JMenu("Padrão");
+        estilizarItem(menuNativos, 140);
+        String[] nativos = {"Sistema", "Nimbus", "Metal", "Motif"};
+        for (String t : nativos) adicionarItemTema(menuNativos, t, atual);
 
-        // --- Outros ---
-        adicionarOpcaoTema(menuTemas, grupo, "Material", atual);
+        menuTemas.add(menuModernos);
+        menuTemas.add(menuNativos);
 
         return menuTemas;
     }
 
+    private void adicionarItemTema(JMenu menu, String nome, String atual) {
+        JMenuItem item = new JMenuItem(nome);
+        estilizarItem(item, 140);
+
+        if (nome.equals(atual)) {
+            item.setFont(item.getFont().deriveFont(Font.BOLD));
+            item.setForeground(new Color(0, 102, 204));
+        }
+
+        item.addActionListener(e -> {
+            TemaService.configurarLookAndFeel(nome);
+            GerenciamentoTemaPadrao.salvaTema(nome);
+
+            SwingUtilities.updateComponentTreeUI(tela);
+            tela.setJMenuBar(null);
+            tela.revalidate();
+            tela.repaint();
+
+            tela.atualizarLookAndFeel();
+
+            tela.setJMenuBar(this.criarMenuBar());
+            tela.revalidate();
+            tela.repaint();
+
+            tela.atualizarLookAndFeel();
+        });
+
+        menu.add(item);
+    }
+
+    private JMenuItem criarItemSimples(String texto, java.awt.event.ActionListener acao) {
+        JMenuItem item = new JMenuItem(texto);
+        estilizarItem(item, 180); // Itens principais do dropdown com 180px
+        item.addActionListener(acao);
+        return item;
+    }
+
+    private void estilizarItem(JMenuItem item, int larguraMinima) {
+        item.setIcon(null);
+        item.setHorizontalAlignment(SwingConstants.LEFT);
+        item.setBorder(new EmptyBorder(5, 12, 5, 12));
+
+        int altura = 30;
+        int larguraTexto = item.getPreferredSize().width;
+
+        int larguraFinal = Math.max(larguraMinima, larguraTexto);
+
+        item.setPreferredSize(new Dimension(larguraFinal, altura));
+    }
 
     private void mostrarSobre() {
-        String message = "Super Gestão - Flyway Migration Assistant\n\n" +
-                "Versão: 1.0.0\n\n" +
-                "Ferramenta para gestão de migrações Flyway\n" +
-                "seguindo as Regras de Ouro de nomenclatura.\n\n" +
-                "Desenvolvido com Java 21 e Swing";
-
-        JOptionPane.showMessageDialog(tela, message, "Sobre",
-                JOptionPane.INFORMATION_MESSAGE);
+        String message = "Super Gestão - Flyway Migration Assistant\n\nVersão: 1.0.0";
+        JOptionPane.showMessageDialog(tela, message, "Sobre", JOptionPane.INFORMATION_MESSAGE);
     }
 }

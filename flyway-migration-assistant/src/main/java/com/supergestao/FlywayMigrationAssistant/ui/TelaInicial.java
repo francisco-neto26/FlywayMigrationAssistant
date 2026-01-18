@@ -15,9 +15,11 @@ public class TelaInicial extends JFrame {
     private PainelSql painelSql;
     private PainelMigration criaPainel;
     private JLabel statusBar;
+    private final GerenciadorLayout gerenciadorLayout;
 
     public TelaInicial() {
         this.arquivoService = new ArquivoService();
+        this.gerenciadorLayout = new GerenciadorLayout();
         inicializarTelaPrincipal();
         SwingUtilities.invokeLater(() -> carregarCaminhoPastaSalva());
     }
@@ -25,7 +27,9 @@ public class TelaInicial extends JFrame {
     private void inicializarTelaPrincipal() {
         setTitle("Super Gestão - Flyway Migration Assistant");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(1400, 850);
+        setMinimumSize(new Dimension(1024, 768));
+        setSize(1280, 800);
+        setExtendedState(JFrame.MAXIMIZED_BOTH);
         setLocationRelativeTo(null);
 
         criaMenuFuncao();
@@ -47,23 +51,16 @@ public class TelaInicial extends JFrame {
         painelSql = new PainelSql();
         criaPainel = new PainelMigration(arquivoService);
 
-        painelModulo.addModuloSelecionadoListener(module -> {
-            painelArquivos.carregarArquivos(module);
-            atualizarStatus("Módulo selecionado: " + module);
-        });
+        JPanel conteudo = gerenciadorLayout.montarEstruturaCompleta(
+                painelModulo, painelArquivos, painelSql, criaPainel
+        );
+        add(conteudo, BorderLayout.CENTER);
 
-        painelArquivos.addSeletorArquivosListener(arquivo -> {
-            painelSql.displayArquivo(arquivo);
-            atualizarStatus("Arquivo: " + arquivo.getnome());
-        });
+        add(gerenciadorLayout.criarBarraStatus("Selecione a pasta db/migration para começar"), BorderLayout.SOUTH);
 
-        criaPainel.addArquivoCriadoListener(() -> {
-            String moduloSelecionado = painelModulo.obterModuloSelecionado();
-            if (moduloSelecionado != null) {
-                painelArquivos.carregarArquivos(moduloSelecionado);
-            }
-            atualizarStatus("Novo arquivo de migração criado com sucesso!");
-        });
+        configurarEventos();
+
+        /*
 
         JPanel painelEsquerdo = new JPanel(new BorderLayout());
         painelEsquerdo.add(painelModulo, BorderLayout.CENTER);
@@ -88,7 +85,27 @@ public class TelaInicial extends JFrame {
         divisaoPrincipal.setDividerLocation(900);
 
         painelPrincipal.add(divisaoPrincipal, BorderLayout.CENTER);
-        add(painelPrincipal);
+        add(painelPrincipal);*/
+    }
+
+    private void configurarEventos() {
+        painelModulo.addModuloSelecionadoListener(modulo -> {
+            painelArquivos.carregarArquivos(modulo);
+            gerenciadorLayout.atualizarStatus("Módulo selecionado: " + modulo);
+        });
+
+        painelArquivos.addSeletorArquivosListener(arquivo -> {
+            painelSql.displayArquivo(arquivo);
+            gerenciadorLayout.atualizarStatus("Arquivo: " + arquivo.getnome());
+        });
+
+        criaPainel.addArquivoCriadoListener(() -> {
+            String moduloSelecionado = painelModulo.obterModuloSelecionado();
+            if (moduloSelecionado != null) {
+                painelArquivos.carregarArquivos(moduloSelecionado);
+            }
+            gerenciadorLayout.atualizarStatus("Novo arquivo de migração criado com sucesso!");
+        });
     }
 
     private void criaStatusBarra() {
@@ -160,7 +177,6 @@ public class TelaInicial extends JFrame {
             atualizarStatus("Pasta carregada: " + DiretorioSalvo.getAbsolutePath());
             System.out.println("Pasta raiz carregada automaticamente");
         } else {
-            // Não tem pasta configurada, mostrar diálogo
             SwingUtilities.invokeLater(() -> {
                 int opcao = JOptionPane.showConfirmDialog(this,
                         "Nenhuma pasta db/migration configurada.\n\n" +
@@ -198,6 +214,10 @@ public class TelaInicial extends JFrame {
                     "Sucesso",
                     JOptionPane.INFORMATION_MESSAGE);
         }
+    }
+
+    public void atualizarLookAndFeel() {
+        gerenciadorLayout.sincronizarUI(this);
     }
 
 }
