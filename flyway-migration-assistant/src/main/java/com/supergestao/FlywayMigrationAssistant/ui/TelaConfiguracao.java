@@ -22,7 +22,7 @@ public class TelaConfiguracao extends JDialog {
     }
 
     private void inicializarComponentes() {
-        setSize(800, 600);
+        setSize(1400, 350);
         setLocationRelativeTo(getOwner());
         setLayout(new BorderLayout());
         JPanel painelPrincipal = new JPanel(new BorderLayout());
@@ -44,39 +44,71 @@ public class TelaConfiguracao extends JDialog {
 
     private JPanel criaPainelDiretorio() {
         JPanel painelDiretorio = new JPanel(new GridBagLayout());
-        painelDiretorio.setBorder(new EmptyBorder(20, 20, 20, 20));
+        painelDiretorio.setBorder(new EmptyBorder(30, 30, 30, 30));
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.insets = new Insets(5, 5, 5, 5);
+        gbc.anchor = GridBagConstraints.WEST;
+        gbc.fill = GridBagConstraints.NONE;
 
+        //Campo do Migration
         gbc.gridx = 0; gbc.gridy = 0;
-        painelDiretorio.add(new JLabel("Diretório leitura arquivos Migration"), gbc);
+        gbc.gridwidth = 3;
 
+        //label migration
+        painelDiretorio.add(new JLabel("Diretório leitura arquivos Migration"), gbc);
         diretorioMigration = new JTextField(diretorioService.obterCaminhoRaizSalvo("Migration"));
         diretorioMigration.setEditable(false);
-        gbc.gridx = 0; gbc.gridy = 1; gbc.weightx = 1.0;
+        diretorioMigration.setColumns(100);
+        gbc.gridy = 1; gbc.gridwidth = 1; gbc.weightx = 1.0;
         painelDiretorio.add(diretorioMigration, gbc);
 
+        //botão alterar migration
         String textoBtnMig = diretorioService.obterCaminhoRaizSalvo("Migration").isEmpty() ? "Selecionar" : "Alterar";
         JButton btnSelecionarMigration = new JButton(textoBtnMig + " Diretorio");
         btnSelecionarMigration.addActionListener(e -> abrirSeletor("Migration"));
-
-        gbc.gridx = 1; gbc.gridy = 1; gbc.weightx = 0;
+        gbc.gridx = 1; gbc.weightx = 0;
         painelDiretorio.add(btnSelecionarMigration, gbc);
 
-        gbc.gridx = 0; gbc.gridy = 2;
+        //botão limpar migration
+        JButton btnLimparMigration = new JButton("Limpar");
+        btnLimparMigration.addActionListener(e -> limparCampo("Migration"));
+        gbc.gridx = 2; gbc.weightx = 0;
+        painelDiretorio.add(btnLimparMigration, gbc);
+
+        //espaçamento entre seção de diretórios
+        gbc.gridy = 2; gbc.gridheight = 1;
+        painelDiretorio.add(Box.createVerticalStrut(15), gbc);
+
+        //Campo do Modulos
+        gbc.gridx = 0; gbc.gridy = 3; gbc.gridwidth = 3;
         painelDiretorio.add(new JLabel("Diretório leitura Modulos"), gbc);
 
+        //label modulo
         diretorioModulos = new JTextField(diretorioService.obterCaminhoRaizSalvo("Modulo"));
         diretorioModulos.setEditable(false);
-        gbc.gridx = 0; gbc.gridy = 3; gbc.weightx = 1.0;
+        diretorioModulos.setColumns(100);
+        gbc.gridy = 4; gbc.gridwidth = 1; gbc.weightx = 1.0;
         painelDiretorio.add(diretorioModulos, gbc);
 
+        //botão alterar modulo
         String textoBtnMod = diretorioService.obterCaminhoRaizSalvo("Modulo").isEmpty() ? "Selecionar" : "Alterar";
         JButton btnSelecionarModulo = new JButton(textoBtnMod + " Diretorio");
         btnSelecionarModulo.addActionListener(e -> abrirSeletor("Modulo"));
-        gbc.gridx = 1; gbc.gridy = 3; gbc.weightx = 0;
+        gbc.gridx = 1; gbc.weightx = 0;
         painelDiretorio.add(btnSelecionarModulo, gbc);
+
+        //botão limpar modulo
+        JButton btnLimparModulo = new JButton("Limpar");
+        btnLimparModulo.addActionListener(e -> limparCampo("Modulo"));
+        gbc.gridx = 2; gbc.weightx = 0;
+        painelDiretorio.add(btnLimparModulo, gbc);
+
+        gbc.gridx = 3; gbc.weightx = 1.0;
+        painelDiretorio.add(new JLabel(""), gbc);
+
+        gbc.gridx = 0; gbc.gridy = 5; gbc.weighty = 1.0;
+        painelDiretorio.add(new JLabel(""), gbc);
 
         return painelDiretorio;
     }
@@ -95,6 +127,18 @@ public class TelaConfiguracao extends JDialog {
             } else if (opcao.equalsIgnoreCase("Modulo")) {
                 diretorioModulos.setText(seletor.getSelectedFile().getAbsolutePath());
             }
+        }
+    }
+
+    private void limparCampo(String opcao) {
+        if (opcao.equalsIgnoreCase("Migration")) {
+            diretorioMigration.setText("");
+        } else {
+            diretorioModulos.setText("");
+        }
+        alterado = true;
+        if (btnSairCancelar != null) {
+            btnSairCancelar.setText("Cancelar");
         }
     }
 

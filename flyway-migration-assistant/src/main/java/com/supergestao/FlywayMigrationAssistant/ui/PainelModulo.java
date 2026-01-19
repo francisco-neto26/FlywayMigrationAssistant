@@ -1,6 +1,7 @@
 package com.supergestao.FlywayMigrationAssistant.ui;
 
 import com.supergestao.FlywayMigrationAssistant.service.ArquivoService;
+import com.supergestao.FlywayMigrationAssistant.service.ModuloService;
 
 import javax.swing.*;
 import javax.swing.tree.DefaultMutableTreeNode;
@@ -13,12 +14,14 @@ import java.util.List;
 
 public class PainelModulo extends JPanel {
     private final ArquivoService arquivoService;
+    private final ModuloService moduloService;
     private JTree arvoreModulos;
     private DefaultTreeModel arvoreModelo;
     private final List<SeletorModuloListener> moduloSelecionado;
 
-    public PainelModulo(ArquivoService arquivoService) {
+    public PainelModulo(ArquivoService arquivoService, ModuloService moduloService) {
         this.arquivoService = arquivoService;
+        this.moduloService = moduloService;
         this.moduloSelecionado = new ArrayList<>();
         inicializarPainelModulo();
     }
@@ -27,7 +30,7 @@ public class PainelModulo extends JPanel {
         setLayout(new BorderLayout(5, 5));
         setBorder(BorderFactory.createTitledBorder("Módulos"));
 
-        DefaultMutableTreeNode root = new DefaultMutableTreeNode("db/migration");
+        DefaultMutableTreeNode root = new DefaultMutableTreeNode("Migration");
         arvoreModelo = new DefaultTreeModel(root);
         arvoreModulos = new JTree(arvoreModelo);
         arvoreModulos.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
