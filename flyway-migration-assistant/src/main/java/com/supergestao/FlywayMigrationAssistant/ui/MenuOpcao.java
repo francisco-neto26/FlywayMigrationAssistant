@@ -1,6 +1,7 @@
 package com.supergestao.FlywayMigrationAssistant.ui;
 
 import com.supergestao.FlywayMigrationAssistant.config.GerenciamentoTemaPadrao;
+import com.supergestao.FlywayMigrationAssistant.service.DiretorioService;
 import com.supergestao.FlywayMigrationAssistant.service.TemaService;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -8,23 +9,26 @@ import java.awt.*;
 
 public class MenuOpcao {
     private final TelaInicial tela;
+    private final DiretorioService diretorioService;
 
-    public MenuOpcao(TelaInicial tela) {
+    public MenuOpcao(TelaInicial tela, DiretorioService diretorioService) {
         this.tela = tela;
+        this.diretorioService = diretorioService;
     }
 
-    public JMenuBar criarMenuBar() {
+    public JMenuBar criarMenuBar(DiretorioService diretorioService) {
         JMenuBar menuBar = new JMenuBar();
         menuBar.setBorder(BorderFactory.createEmptyBorder());
 
-        JMenu menuConfig = new JMenu("Configurações");
+        JMenu menuConfig = new JMenu("Administração do Sistema");
         estilizarItem(menuConfig, 0);
-
-        menuConfig.add(criarItemSimples("Selecionar Pasta", e -> tela.MigrationSelecionadaDiretorio()));
+        JMenuItem adminItem = criarItemSimples("Configurações Gerais", e -> {
+            TelaConfiguracao dialog = new TelaConfiguracao(tela, diretorioService);
+            dialog.setVisible(true);
+        });
+        menuConfig.add(adminItem);
         menuConfig.addSeparator();
         menuConfig.add(criarMenuTemas());
-        menuConfig.addSeparator();
-        menuConfig.add(criarItemSimples("Limpar Configuração", e -> tela.limparConfiguracao()));
         menuConfig.addSeparator();
         menuConfig.add(criarItemSimples("Sair", e -> System.exit(0)));
 
@@ -80,7 +84,7 @@ public class MenuOpcao {
 
             tela.atualizarLookAndFeel();
 
-            tela.setJMenuBar(this.criarMenuBar());
+            tela.setJMenuBar(this.criarMenuBar(this.diretorioService));
             tela.revalidate();
             tela.repaint();
 
