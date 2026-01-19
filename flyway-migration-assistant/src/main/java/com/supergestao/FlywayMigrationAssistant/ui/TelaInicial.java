@@ -2,6 +2,8 @@ package com.supergestao.FlywayMigrationAssistant.ui;
 
 import com.supergestao.FlywayMigrationAssistant.config.GerenciamentoDiretorioPadrao;
 import com.supergestao.FlywayMigrationAssistant.service.ArquivoService;
+import com.supergestao.FlywayMigrationAssistant.service.DiretorioService;
+import com.supergestao.FlywayMigrationAssistant.service.ModuloService;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -10,18 +12,22 @@ import java.io.File;
 
 public class TelaInicial extends JFrame {
     private ArquivoService arquivoService;
+    private ModuloService moduloService;
     private PainelModulo painelModulo;
     private PainelArquivos painelArquivos;
     private PainelSql painelSql;
     private PainelMigration criaPainel;
     private JLabel statusBar;
+    private boolean configurando;
     private final GerenciadorLayout gerenciadorLayout;
+    private DiretorioService diretorioService;
 
     public TelaInicial() {
         this.arquivoService = new ArquivoService();
         this.gerenciadorLayout = new GerenciadorLayout();
+        this.diretorioService = new DiretorioService();
         inicializarTelaPrincipal();
-        SwingUtilities.invokeLater(() -> carregarCaminhoPastaSalva());
+        SwingUtilities.invokeLater(() -> validarDiretoriosLeitura());
     }
 
     private void inicializarTelaPrincipal() {
@@ -31,15 +37,13 @@ public class TelaInicial extends JFrame {
         setSize(1280, 800);
         setExtendedState(JFrame.MAXIMIZED_BOTH);
         setLocationRelativeTo(null);
-
         criaMenuFuncao();
         criaPainelPrincipal();
-        criaStatusBarra();
     }
 
     private void criaMenuFuncao() {
-        MenuOpcao menuOpcao = new MenuOpcao(this);
-        setJMenuBar(menuOpcao.criarMenuBar());
+        MenuOpcao menuOpcao = new MenuOpcao(this, diretorioService);
+        setJMenuBar(menuOpcao.criarMenuBar(diretorioService));
     }
 
     private void criaPainelPrincipal() {
@@ -56,36 +60,9 @@ public class TelaInicial extends JFrame {
         );
         add(conteudo, BorderLayout.CENTER);
 
-        add(gerenciadorLayout.criarBarraStatus("Selecione a pasta db/migration para começar"), BorderLayout.SOUTH);
+        add(gerenciadorLayout.criarBarraStatus("Validando configurações iniciais"), BorderLayout.SOUTH);
 
         configurarEventos();
-
-        /*
-
-        JPanel painelEsquerdo = new JPanel(new BorderLayout());
-        painelEsquerdo.add(painelModulo, BorderLayout.CENTER);
-        painelEsquerdo.setPreferredSize(new Dimension(250, 0));
-
-        JPanel painelCentral = new JPanel(new BorderLayout(5, 5));
-        JSplitPane divisaoCentral = new JSplitPane(JSplitPane.VERTICAL_SPLIT,
-                painelArquivos, painelSql);
-        divisaoCentral.setDividerLocation(300);
-        painelCentral.add(divisaoCentral, BorderLayout.CENTER);
-
-        JPanel painelDireito = new JPanel(new BorderLayout());
-        painelDireito.add(criaPainel, BorderLayout.CENTER);
-        painelDireito.setPreferredSize(new Dimension(400, 0));
-
-        JSplitPane divisaoCentralEsquerda = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,
-                painelEsquerdo, painelCentral);
-        divisaoCentralEsquerda.setDividerLocation(250);
-
-        JSplitPane divisaoPrincipal = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,
-                divisaoCentralEsquerda, painelDireito);
-        divisaoPrincipal.setDividerLocation(900);
-
-        painelPrincipal.add(divisaoPrincipal, BorderLayout.CENTER);
-        add(painelPrincipal);*/
     }
 
     private void configurarEventos() {
@@ -108,112 +85,56 @@ public class TelaInicial extends JFrame {
         });
     }
 
-    private void criaStatusBarra() {
-        statusBar = new JLabel("Selecione a pasta db/migration para começar");
-        statusBar.setBorder(new EmptyBorder(5, 5, 5, 5));
-        add(statusBar, BorderLayout.SOUTH);
-    }
-
-    public void MigrationSelecionadaDiretorio() {
-        System.out.println("=== Iniciando seleção de pasta ===");
-
-        JFileChooser diretorioDefinidoUsuario = new JFileChooser();
-        diretorioDefinidoUsuario.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-        diretorioDefinidoUsuario.setDialogTitle("Selecionar pasta db/migration");
-        diretorioDefinidoUsuario.setApproveButtonText("Selecionar");
-
-        File diretorioSelecionado = arquivoService.getpastaRaiz();
-        if (diretorioSelecionado != null) {
-            System.out.println("Pasta atual: " + diretorioSelecionado.getAbsolutePath());
-            diretorioDefinidoUsuario.setCurrentDirectory(diretorioSelecionado.getParentFile());
-        } else {
-            String diretorioUsuario = System.getProperty("user.home");
-            diretorioDefinidoUsuario.setCurrentDirectory(new File(diretorioUsuario));
-            System.out.println("Iniciando em: " + diretorioUsuario);
-        }
-
-        System.out.println("Abrindo JFileChooser...");
-        int opcao = diretorioDefinidoUsuario.showOpenDialog(this);
-
-        if (opcao == JFileChooser.APPROVE_OPTION) {
-            File selectedFolder = diretorioDefinidoUsuario.getSelectedFile();
-            System.out.println("Pasta selecionada: " + selectedFolder.getAbsolutePath());
-
-            arquivoService.setpastaRaiz(selectedFolder);
-
-            GerenciamentoDiretorioPadrao.salvaPastaRaiz(selectedFolder.getAbsolutePath());
-
-            painelModulo.atualizar();
-            criaPainel.atualizar();
-
-            atualizarStatus("Pasta selecionada: " + selectedFolder.getAbsolutePath());
-
-            JOptionPane.showMessageDialog(this,
-                    "Pasta configurada com sucesso!\n\n" +
-                            "Raiz: " + selectedFolder.getAbsolutePath() + "\n" +
-                            "Módulos encontrados: " + arquivoService.getModulos().size() + "\n\n" +
-                            "Esta pasta será lembrada na próxima vez.",
-                    "Sucesso", JOptionPane.INFORMATION_MESSAGE);
-        } else if (opcao == JFileChooser.CANCEL_OPTION) {
-            System.out.println("Seleção cancelada pelo usuário");
-        } else {
-            System.out.println("Erro ao abrir o seletor: " + opcao);
-        }
-
-        System.out.println("=== Fim da seleção de pasta ===");
-    }
-
     private void atualizarStatus(String message) {
         statusBar.setText(message);
     }
 
-    private void carregarCaminhoPastaSalva() {
-        File DiretorioSalvo = GerenciamentoDiretorioPadrao.obterPastaRaizComArquivo();
+    private void validarDiretoriosLeitura() {
+        configurando = true;
+        Boolean existeDiretorios = diretorioService.validaDiretorios();
 
-        if (DiretorioSalvo != null) {
-            arquivoService.setpastaRaiz(DiretorioSalvo);
-            painelModulo.atualizar();
-            criaPainel.atualizar();
-            atualizarStatus("Pasta carregada: " + DiretorioSalvo.getAbsolutePath());
-            System.out.println("Pasta raiz carregada automaticamente");
-        } else {
-            SwingUtilities.invokeLater(() -> {
-                int opcao = JOptionPane.showConfirmDialog(this,
-                        "Nenhuma pasta db/migration configurada.\n\n" +
-                                "Deseja selecionar a pasta agora?",
+        if (!existeDiretorios){
+            JOptionPane.showMessageDialog(this,
+                    "Configurações iniciais não encontradas. Por favor, defina os diretórios de trabalho.",
+                    "Configuração Inicial",
+                    JOptionPane.WARNING_MESSAGE);
+            TelaConfiguracao telaConfig = new TelaConfiguracao(this, this.diretorioService);
+            telaConfig.setVisible(true);
+            if (diretorioService.validaDiretorios()) {
+                carregarDadosIniciais();
+            } else {
+                Object[] opcoesBotoes = {"Sair", "Configurar"};
+                int opcao = JOptionPane.showOptionDialog(
+                        this,
+                        "Configurações iniciais não realizadas. O Sistema somente será executado caso configurado. " +
+                                "\n Deseja fechar o sistema ou realizar a configuração.",
                         "Configuração Inicial",
-                        JOptionPane.YES_NO_OPTION,
-                        JOptionPane.QUESTION_MESSAGE);
-
-                if (opcao == JOptionPane.YES_OPTION) {
-                    MigrationSelecionadaDiretorio();
-                } else {
-                    atualizarStatus("Selecione a pasta db/migration para começar");
+                        JOptionPane.DEFAULT_OPTION,
+                        JOptionPane.QUESTION_MESSAGE,
+                        null,
+                        opcoesBotoes,
+                        opcoesBotoes[0]);
+                if (opcao == 1){
+                    validarDiretoriosLeitura();
+                }else{
+                    System.exit(0);
                 }
-            });
+                atualizarStatus("Sistema sendo encerrado por falta de configurações.");
+            }
+        } else {
+            carregarDadosIniciais();
         }
     }
 
-    public void limparConfiguracao() {
-        int confirm = JOptionPane.showConfirmDialog(this,
-                "Deseja limpar a pasta configurada?\n\n" +
-                        "Você precisará selecioná-la novamente na próxima vez.",
-                "Limpar Configuração",
-                JOptionPane.YES_NO_OPTION,
-                JOptionPane.WARNING_MESSAGE);
-
-        if (confirm == JOptionPane.YES_OPTION) {
-            GerenciamentoDiretorioPadrao.limparPastaRaiz();
-            arquivoService.setpastaRaiz(null);
-            painelModulo.atualizar();
-            criaPainel.atualizar();
-            atualizarStatus("Configuração limpa. Selecione a pasta db/migration novamente.");
-
-            JOptionPane.showMessageDialog(this,
-                    "Configuração limpa com sucesso!",
-                    "Sucesso",
-                    JOptionPane.INFORMATION_MESSAGE);
-        }
+    private void carregarDadosIniciais() {
+        File diretorioMigration = new File(diretorioService.obterCaminhoRaizSalvo("Migration"));
+        File diretorioModulo = new File(diretorioService.obterCaminhoRaizSalvo("Modulo"));
+        arquivoService.setpastaRaiz(diretorioMigration);
+        moduloService.setpastaRaiz(diretorioModulo);
+        painelModulo.atualizar();
+        criaPainel.atualizar();
+        atualizarStatus("Diretório Migration: " + diretorioMigration.getAbsolutePath() +
+                " Diretório Modulos: " + diretorioModulo.getAbsolutePath());
     }
 
     public void atualizarLookAndFeel() {
