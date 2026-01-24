@@ -1,6 +1,5 @@
 package com.supergestao.FlywayMigrationAssistant.ui;
 
-import com.supergestao.FlywayMigrationAssistant.config.GerenciamentoDiretorioPadrao;
 import com.supergestao.FlywayMigrationAssistant.service.ArquivoService;
 import com.supergestao.FlywayMigrationAssistant.service.DiretorioService;
 import com.supergestao.FlywayMigrationAssistant.service.ModuloService;
@@ -18,14 +17,14 @@ public class TelaInicial extends JFrame {
     private PainelSql painelSql;
     private PainelMigration criaPainel;
     private JLabel statusBar;
-    private boolean configurando;
-    private final GerenciadorLayout gerenciadorLayout;
+   private final GerenciadorLayout gerenciadorLayout;
     private DiretorioService diretorioService;
 
     public TelaInicial() {
         this.arquivoService = new ArquivoService();
         this.gerenciadorLayout = new GerenciadorLayout();
         this.diretorioService = new DiretorioService();
+        this.moduloService = new ModuloService();
         inicializarTelaPrincipal();
         SwingUtilities.invokeLater(() -> validarDiretoriosLeitura());
     }
@@ -50,7 +49,7 @@ public class TelaInicial extends JFrame {
         JPanel painelPrincipal = new JPanel(new BorderLayout(10, 10));
         painelPrincipal.setBorder(new EmptyBorder(10, 10, 10, 10));
 
-        painelModulo = new PainelModulo(arquivoService);
+        painelModulo = new PainelModulo(arquivoService, moduloService, diretorioService);
         painelArquivos = new PainelArquivos(arquivoService);
         painelSql = new PainelSql();
         criaPainel = new PainelMigration(arquivoService);
@@ -59,13 +58,14 @@ public class TelaInicial extends JFrame {
                 painelModulo, painelArquivos, painelSql, criaPainel
         );
         add(conteudo, BorderLayout.CENTER);
-
-        add(gerenciadorLayout.criarBarraStatus("Validando configurações iniciais"), BorderLayout.SOUTH);
+        this.statusBar = gerenciadorLayout.criarBarraStatus("Validando configurações iniciais");
+        add(statusBar, BorderLayout.SOUTH);
 
         configurarEventos();
     }
 
     private void configurarEventos() {
+
         painelModulo.addModuloSelecionadoListener(modulo -> {
             painelArquivos.carregarArquivos(modulo);
             gerenciadorLayout.atualizarStatus("Módulo selecionado: " + modulo);
@@ -90,9 +90,7 @@ public class TelaInicial extends JFrame {
     }
 
     private void validarDiretoriosLeitura() {
-        configurando = true;
         Boolean existeDiretorios = diretorioService.validaDiretorios();
-
         if (!existeDiretorios){
             JOptionPane.showMessageDialog(this,
                     "Configurações iniciais não encontradas. Por favor, defina os diretórios de trabalho.",
@@ -130,7 +128,8 @@ public class TelaInicial extends JFrame {
         File diretorioMigration = new File(diretorioService.obterCaminhoRaizSalvo("Migration"));
         File diretorioModulo = new File(diretorioService.obterCaminhoRaizSalvo("Modulo"));
         arquivoService.setpastaRaiz(diretorioMigration);
-        moduloService.setpastaRaiz(diretorioModulo);
+        moduloService.setpastaRaizModulosNovos(diretorioModulo);
+        moduloService.setPastaRaizModulosExistentes(diretorioMigration);
         painelModulo.atualizar();
         criaPainel.atualizar();
         atualizarStatus("Diretório Migration: " + diretorioMigration.getAbsolutePath() +

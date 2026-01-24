@@ -30,7 +30,7 @@ public class GerenciadorLayout {
         return containerPrincipal;
     }
 
-    public Component criarBarraStatus(String mensagem) {
+    public JLabel criarBarraStatus(String mensagem) {
         statusBar = new JLabel(mensagem);
         statusBar.setBorder(new EmptyBorder(5, 5, 5, 5));
         return statusBar;

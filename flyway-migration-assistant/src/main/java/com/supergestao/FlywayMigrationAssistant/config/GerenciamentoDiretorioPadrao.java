@@ -26,10 +26,8 @@ public class GerenciamentoDiretorioPadrao {
         String caminho = "";
         if (opcao.equalsIgnoreCase("Migration")) {
             caminho = prefs.get(PREF_PASTA_MIGRATION, null);
-            System.out.println("Migration: " + caminho);
         } else if (opcao.equalsIgnoreCase("Modulo")) {
             caminho = prefs.get(PREF_PASTA_MODULO, null);
-            System.out.println("Modulo: " + caminho);
         }
         return caminho;
     }
@@ -50,29 +48,11 @@ public class GerenciamentoDiretorioPadrao {
 
     public static String carregaPastaRaiz() {
         String caminho = prefs.get(PREF_PASTA_MIGRATION, null);
-        if (caminho != null) {
-            System.out.println("Pasta raiz carregada das preferências: " + caminho);
-        }
         return caminho;
     }
 
     public static void limparPastaRaiz() {
         prefs.remove(PREF_PASTA_MIGRATION);
-        System.out.println("Pasta raiz removida das preferências");
-    }
-
-    public static File obterPastaRaizComArquivo() {
-        String caminho = carregaPastaRaiz();
-        if (caminho != null) {
-            File arquivo = new File(caminho);
-            if (arquivo.exists() && arquivo.isDirectory()) {
-                return arquivo;
-            } else {
-                System.out.println("Pasta salva não existe mais: " + caminho);
-                limparPastaRaiz();
-            }
-        }
-        return null;
     }
 
 }
