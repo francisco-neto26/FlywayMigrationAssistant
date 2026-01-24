@@ -1,6 +1,7 @@
 package com.supergestao.FlywayMigrationAssistant.ui;
 
 import com.supergestao.FlywayMigrationAssistant.service.ArquivoService;
+import com.supergestao.FlywayMigrationAssistant.service.DiretorioService;
 import com.supergestao.FlywayMigrationAssistant.service.ModuloService;
 
 import javax.swing.*;
@@ -8,20 +9,23 @@ import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreeSelectionModel;
 import java.awt.*;
+import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
+import java.util.*;
 import java.util.List;
 
 public class PainelModulo extends JPanel {
     private final ArquivoService arquivoService;
     private final ModuloService moduloService;
+    private final DiretorioService diretorioService;
     private JTree arvoreModulos;
     private DefaultTreeModel arvoreModelo;
     private final List<SeletorModuloListener> moduloSelecionado;
 
-    public PainelModulo(ArquivoService arquivoService, ModuloService moduloService) {
+    public PainelModulo(ArquivoService arquivoService, ModuloService moduloService, DiretorioService diretorioService) {
         this.arquivoService = arquivoService;
         this.moduloService = moduloService;
+        this.diretorioService = diretorioService;
         this.moduloSelecionado = new ArrayList<>();
         inicializarPainelModulo();
     }
@@ -54,6 +58,7 @@ public class PainelModulo extends JPanel {
     }
 
     public void atualizar() {
+        validaExisteModuloASerCriado();
         DefaultMutableTreeNode root = (DefaultMutableTreeNode) arvoreModelo.getRoot();
         root.removeAllChildren();
 
@@ -62,10 +67,33 @@ public class PainelModulo extends JPanel {
             DefaultMutableTreeNode node = new DefaultMutableTreeNode(modulo);
             root.add(node);
         }
-
         arvoreModelo.reload();
         expandirTodos();
     }
+
+    public void validaExisteModuloASerCriado() {
+        Set<String> modulosExistente = new TreeSet<>(moduloService.obterModulos(diretorioService.obterCaminhoRaizSalvo("Migration")));
+        Set<String> modulosCriar = new TreeSet<>(moduloService.obterModulosMainEnums(
+                diretorioService.obterCaminhoRaizSalvo("Modulo") + File.separator + "ModuloEnum.java"));
+        modulosCriar.removeAll(modulosExistente);
+        for (String modulo : modulosCriar) {
+            Object[] opcoesBotoes = {"Criar", "Sair"};
+            int opcao = JOptionPane.showOptionDialog(
+                    SwingUtilities.getWindowAncestor(this),
+                    "O Módulo " + modulo + " não existe. " +
+                            "\n Deseja criar o módulo?.",
+                    "Criação de Módulos",
+                    JOptionPane.DEFAULT_OPTION,
+                    JOptionPane.QUESTION_MESSAGE,
+                    null,
+                    opcoesBotoes,
+                    opcoesBotoes[0]);
+            if (opcao == 0) {
+                moduloService.criarModulo(modulo, diretorioService.obterCaminhoRaizSalvo("Migration"));
+            }
+        }
+    }
+
 
     private void expandirTodos() {
         for (int i = 0; i < arvoreModulos.getRowCount(); i++) {

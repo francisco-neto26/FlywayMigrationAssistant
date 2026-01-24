@@ -49,8 +49,7 @@ public class TelaInicial extends JFrame {
         JPanel painelPrincipal = new JPanel(new BorderLayout(10, 10));
         painelPrincipal.setBorder(new EmptyBorder(10, 10, 10, 10));
 
-        //painelModulo = new PainelModulo(arquivoService);
-        painelModulo = new PainelModulo(arquivoService, moduloService);
+        painelModulo = new PainelModulo(arquivoService, moduloService, diretorioService);
         painelArquivos = new PainelArquivos(arquivoService);
         painelSql = new PainelSql();
         criaPainel = new PainelMigration(arquivoService);
@@ -66,6 +65,7 @@ public class TelaInicial extends JFrame {
     }
 
     private void configurarEventos() {
+
         painelModulo.addModuloSelecionadoListener(modulo -> {
             painelArquivos.carregarArquivos(modulo);
             gerenciadorLayout.atualizarStatus("Módulo selecionado: " + modulo);
@@ -128,7 +128,8 @@ public class TelaInicial extends JFrame {
         File diretorioMigration = new File(diretorioService.obterCaminhoRaizSalvo("Migration"));
         File diretorioModulo = new File(diretorioService.obterCaminhoRaizSalvo("Modulo"));
         arquivoService.setpastaRaiz(diretorioMigration);
-        moduloService.setpastaRaiz(diretorioModulo);
+        moduloService.setpastaRaizModulosNovos(diretorioModulo);
+        moduloService.setPastaRaizModulosExistentes(diretorioMigration);
         painelModulo.atualizar();
         criaPainel.atualizar();
         atualizarStatus("Diretório Migration: " + diretorioMigration.getAbsolutePath() +
