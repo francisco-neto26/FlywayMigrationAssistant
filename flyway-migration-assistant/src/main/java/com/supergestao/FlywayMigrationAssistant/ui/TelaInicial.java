@@ -10,15 +10,15 @@ import java.awt.*;
 import java.io.File;
 
 public class TelaInicial extends JFrame {
-    private ArquivoService arquivoService;
-    private ModuloService moduloService;
+    private final ArquivoService arquivoService;
+    private final ModuloService moduloService;
     private PainelModulo painelModulo;
     private PainelArquivos painelArquivos;
     private PainelSql painelSql;
     private PainelMigration criaPainel;
     private JLabel statusBar;
-   private final GerenciadorLayout gerenciadorLayout;
-    private DiretorioService diretorioService;
+    private final GerenciadorLayout gerenciadorLayout;
+    private final DiretorioService diretorioService;
 
     public TelaInicial() {
         this.arquivoService = new ArquivoService();
@@ -26,7 +26,7 @@ public class TelaInicial extends JFrame {
         this.diretorioService = new DiretorioService();
         this.moduloService = new ModuloService();
         inicializarTelaPrincipal();
-        SwingUtilities.invokeLater(() -> validarDiretoriosLeitura());
+        SwingUtilities.invokeLater(this::validarDiretoriosLeitura);
     }
 
     private void inicializarTelaPrincipal() {
@@ -91,7 +91,7 @@ public class TelaInicial extends JFrame {
 
     private void validarDiretoriosLeitura() {
         Boolean existeDiretorios = diretorioService.validaDiretorios();
-        if (!existeDiretorios){
+        if (!existeDiretorios) {
             JOptionPane.showMessageDialog(this,
                     "Configurações iniciais não encontradas. Por favor, defina os diretórios de trabalho.",
                     "Configuração Inicial",
@@ -112,9 +112,9 @@ public class TelaInicial extends JFrame {
                         null,
                         opcoesBotoes,
                         opcoesBotoes[0]);
-                if (opcao == 1){
+                if (opcao == 1) {
                     validarDiretoriosLeitura();
-                }else{
+                } else {
                     System.exit(0);
                 }
                 atualizarStatus("Sistema sendo encerrado por falta de configurações.");
@@ -127,9 +127,9 @@ public class TelaInicial extends JFrame {
     private void carregarDadosIniciais() {
         File diretorioMigration = new File(diretorioService.obterCaminhoRaizSalvo("Migration"));
         File diretorioModulo = new File(diretorioService.obterCaminhoRaizSalvo("Modulo"));
-        arquivoService.setpastaRaiz(diretorioMigration);
-        moduloService.setpastaRaizModulosNovos(diretorioModulo);
-        moduloService.setPastaRaizModulosExistentes(diretorioMigration);
+        //arquivoService.setpastaRaiz(diretorioMigration);
+        //moduloService.setpastaRaizModulosNovos(diretorioModulo);
+        // moduloService.setPastaRaizModulosExistentes(diretorioMigration);
         painelModulo.atualizar();
         criaPainel.atualizar();
         atualizarStatus("Diretório Migration: " + diretorioMigration.getAbsolutePath() +
