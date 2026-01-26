@@ -6,6 +6,7 @@ import com.supergestao.FlywayMigrationAssistant.service.ModuloService;
 
 import javax.swing.*;
 import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.DefaultTreeCellRenderer;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreeSelectionModel;
 import java.awt.*;
@@ -34,27 +35,59 @@ public class PainelModulo extends JPanel {
         setLayout(new BorderLayout(5, 5));
         setBorder(BorderFactory.createTitledBorder("Módulos"));
 
-        DefaultMutableTreeNode root = new DefaultMutableTreeNode("Migration");
+        configurarArvore();
+        configurarBotoes();
+    }
+
+    private void configurarArvore() {
+        String caminhoRaiz = diretorioService.obterCaminhoRaizSalvo("Migration");
+        DiretorioTreeNode root = new DiretorioTreeNode(new File(caminhoRaiz));
+
         arvoreModelo = new DefaultTreeModel(root);
         arvoreModulos = new JTree(arvoreModelo);
         arvoreModulos.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
+
         arvoreModulos.addTreeSelectionListener(e -> moduloSelecionado());
+        arvoreModulos.addTreeWillExpandListener(new javax.swing.event.TreeWillExpandListener() {
+            @Override
+            public void treeWillExpand(javax.swing.event.TreeExpansionEvent event) {
+                DefaultMutableTreeNode node = (DefaultMutableTreeNode) event.getPath().getLastPathComponent();
+                if (node instanceof DiretorioTreeNode pastaNode && !pastaNode.isCarregado()) {
+                    carregarSubPastas(pastaNode);
+                }
+            }
+            @Override
+            public void treeWillCollapse(javax.swing.event.TreeExpansionEvent event) {}
+        });
 
-        JScrollPane scrollPainel = new JScrollPane(arvoreModulos);
-        add(scrollPainel, BorderLayout.CENTER);
+        arvoreModulos.setCellRenderer(new DefaultTreeCellRenderer() {
+            @Override
+            public Component getTreeCellRendererComponent(JTree tree, Object value, boolean sel,
+                                                          boolean exp, boolean leaf, int row, boolean hasFocus) {
+                super.getTreeCellRendererComponent(tree, value, sel, exp, leaf, row, hasFocus);
+                if (value instanceof DiretorioTreeNode node && node.getFile().isDirectory()) {
+                    setIcon(exp ? getOpenIcon() : getClosedIcon());
+                }
+                return this;
+            }
+        });
 
-        JPanel botaoNovoModulo = new JPanel(new GridLayout(2, 1, 5, 5));
-        botaoNovoModulo.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
+        add(new JScrollPane(arvoreModulos), BorderLayout.CENTER);
+    }
 
-        JButton botaoAtualizar = new JButton("🔄 Atualizar");
-        botaoAtualizar.addActionListener(e -> atualizar());
-        botaoNovoModulo.add(botaoAtualizar);
+    private void configurarBotoes() {
+        JPanel painelBotoes = new JPanel(new GridLayout(2, 1, 5, 5));
+        painelBotoes.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
 
-        JButton newModuleButton = new JButton("➕ Novo Módulo");
-        newModuleButton.addActionListener(e -> CriaNovoModulo());
-        botaoNovoModulo.add(newModuleButton);
+        JButton btnAtualizar = new JButton("🔄 Atualizar");
+        btnAtualizar.addActionListener(e -> atualizar());
 
-        add(botaoNovoModulo, BorderLayout.SOUTH);
+        JButton btnNovoModulo = new JButton("➕ Novo Módulo");
+        btnNovoModulo.addActionListener(e -> CriaNovoModulo());
+
+        painelBotoes.add(btnAtualizar);
+        painelBotoes.add(btnNovoModulo);
+        add(painelBotoes, BorderLayout.SOUTH);
     }
 
     public void atualizar() {
@@ -62,13 +95,19 @@ public class PainelModulo extends JPanel {
         DefaultMutableTreeNode root = (DefaultMutableTreeNode) arvoreModelo.getRoot();
         root.removeAllChildren();
 
-        List<String> modulos = arquivoService.getModulos();
-        for (String modulo : modulos) {
-            DefaultMutableTreeNode node = new DefaultMutableTreeNode(modulo);
-            root.add(node);
+        String caminhoRaiz = diretorioService.obterCaminhoRaizSalvo("Migration");
+        File pastaRaiz = new File(caminhoRaiz);
+
+        if (pastaRaiz.exists() && pastaRaiz.isDirectory()) {
+            File[] modulos = pastaRaiz.listFiles(File::isDirectory);
+            if (modulos != null) {
+                Arrays.sort(modulos, Comparator.comparing(File::getName));
+                for (File m : modulos) {
+                    root.add(new DiretorioTreeNode(m));
+                }
+            }
         }
         arvoreModelo.reload();
-        expandirTodos();
     }
 
     public void validaExisteModuloASerCriado() {
@@ -94,20 +133,29 @@ public class PainelModulo extends JPanel {
         }
     }
 
+    private void carregarSubPastas(DiretorioTreeNode pai) {
+        pai.removeAllChildren();
+        File diretorio = pai.getFile();
+        File[] arquivos = diretorio.listFiles(File::isDirectory);
 
-    private void expandirTodos() {
-        for (int i = 0; i < arvoreModulos.getRowCount(); i++) {
-            arvoreModulos.expandRow(i);
+        if (arquivos != null) {
+            Arrays.sort(arquivos, Comparator.comparing(File::getName));
+            for (File f : arquivos) {
+                pai.add(new DiretorioTreeNode(f));
+            }
         }
+        pai.setCarregado(true);
+        arvoreModelo.nodeStructureChanged(pai);
     }
+
 
     private void moduloSelecionado() {
         DefaultMutableTreeNode node = (DefaultMutableTreeNode)
                 arvoreModulos.getLastSelectedPathComponent();
 
         if (node != null && !node.isRoot()) {
-            String modulonome = node.getUserObject().toString();
-            notificaListeners(modulonome);
+            String moduloNome = node.getUserObject().toString();
+            notificaListeners(moduloNome);
         }
     }
 

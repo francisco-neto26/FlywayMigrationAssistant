@@ -5,7 +5,7 @@ import javax.swing.border.EmptyBorder;
 import java.awt.*;
 
 public class GerenciadorLayout {
-        private JSplitPane divisaoPrincipal;
+    private JSplitPane divisaoPrincipal;
     private JSplitPane divisaoCentralEsquerda;
     private JSplitPane divisaoCentral;
     private JLabel statusBar;

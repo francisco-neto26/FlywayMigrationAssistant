@@ -125,7 +125,7 @@ public class PainelMigration extends JPanel {
 
         add(PainelMigration, BorderLayout.NORTH);
 
-        JPanel PainelTemplate = new JPanel(new BorderLayout(5, 5));
+        /*JPanel PainelTemplate = new JPanel(new BorderLayout(5, 5));
         PainelTemplate.setBorder(BorderFactory.createTitledBorder("Template SQL"));
 
         areaTemplate = new JTextArea();
@@ -138,7 +138,7 @@ public class PainelMigration extends JPanel {
 
         add(PainelTemplate, BorderLayout.CENTER);
 
-        atualizarTemplate();
+        atualizarTemplate();*/
     }
 
     public void atualizar() {

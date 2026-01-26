@@ -15,8 +15,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class PainelSql extends JPanel {
-    private JTextPane vizualizadorSql;
-    private ArquivoService arquivoService;
+    private JTextPane visualizadorSql;
+    private final ArquivoService arquivoService;
     private StyledDocument documento;
 
     private static final Set<String> SqlPalavras = new HashSet<>(Arrays.asList(
@@ -43,14 +43,14 @@ public class PainelSql extends JPanel {
         setLayout(new BorderLayout());
         setBorder(BorderFactory.createTitledBorder("Visualizador SQL"));
 
-        vizualizadorSql = new JTextPane();
-        vizualizadorSql.setEditable(false);
-        vizualizadorSql.setFont(new Font("Consolas", Font.PLAIN, 13));
-        documento = vizualizadorSql.getStyledDocument();
+        visualizadorSql = new JTextPane();
+        visualizadorSql.setEditable(false);
+        visualizadorSql.setFont(new Font("Consolas", Font.PLAIN, 13));
+        documento = visualizadorSql.getStyledDocument();
 
         defineEstilos();
 
-        JScrollPane scrollPainel = new JScrollPane(vizualizadorSql);
+        JScrollPane scrollPainel = new JScrollPane(visualizadorSql);
         scrollPainel.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
         scrollPainel.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
 
@@ -86,7 +86,7 @@ public class PainelSql extends JPanel {
         try {
             String conteudo = arquivoService.lerConteudoArquivo(arquivo.getarquivo());
             destacarSql(conteudo);
-            vizualizadorSql.setCaretPosition(0);
+            visualizadorSql.setCaretPosition(0);
         } catch (IOException e) {
             limparDefinirTexto("Erro ao ler arquivo:\n\n" + e.getMessage(), "normal");
         }
