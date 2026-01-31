@@ -9,6 +9,7 @@ import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -62,7 +63,7 @@ public class PainelArquivos extends JPanel {
         add(scrollPainel, BorderLayout.CENTER);
     }
 
-    public void carregarArquivos(String moduloNome) {
+    public void carregarArquivos(File moduloNome) {
         todosArquivos = arquivoService.obterArquivosModulo(moduloNome);
         atualizarLista(todosArquivos);
         campoPesquisa.setText("");

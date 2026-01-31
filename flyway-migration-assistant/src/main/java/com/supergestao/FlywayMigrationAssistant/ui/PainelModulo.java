@@ -153,18 +153,17 @@ public class PainelModulo extends JPanel {
         DefaultMutableTreeNode node = (DefaultMutableTreeNode)
                 arvoreModulos.getLastSelectedPathComponent();
 
-        if (node != null && !node.isRoot()) {
-            String moduloNome = node.getUserObject().toString();
-            notificaListeners(moduloNome);
+        if (node instanceof DiretorioTreeNode noDiretorio) {
+            File pastaSelecionada = noDiretorio.getFile();
+            notificaListeners(pastaSelecionada);
         }
     }
 
-    public String obterModuloSelecionado() {
-        DefaultMutableTreeNode node = (DefaultMutableTreeNode)
+    public File obterModuloSelecionado() {
+        DefaultMutableTreeNode no = (DefaultMutableTreeNode)
                 arvoreModulos.getLastSelectedPathComponent();
-
-        if (node != null && !node.isRoot()) {
-            return node.getUserObject().toString();
+        if (no instanceof DiretorioTreeNode noDiretorio) {
+            return noDiretorio.getFile();
         }
         return null;
     }
@@ -173,9 +172,9 @@ public class PainelModulo extends JPanel {
         moduloSelecionado.add(listener);
     }
 
-    private void notificaListeners(String module) {
+    private void notificaListeners(File pastaSelecionada) {
         for (SeletorModuloListener listener : moduloSelecionado) {
-            listener.onModuloSelecionado(module);
+            listener.onModuloSelecionado(pastaSelecionada);
         }
     }
 
@@ -243,6 +242,6 @@ public class PainelModulo extends JPanel {
 
     @FunctionalInterface
     public interface SeletorModuloListener {
-        void onModuloSelecionado(String modulo);
+        void onModuloSelecionado(File pasta);
     }
 }

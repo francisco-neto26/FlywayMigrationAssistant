@@ -40,30 +40,35 @@ public class ArquivoService {
         return modulos;
     }
 
-    public List<Arquivo> obterArquivosModulo(String nomeModulo) {
-        List<Arquivo> arquivos = new ArrayList<>();
-
-        if (pastaRaiz == null) {
-            return arquivos;
+    public List<Arquivo> obterArquivosModulo(File pastaModulo) {
+        List<Arquivo> arquivosEncontrados = new ArrayList<>();
+        if (pastaModulo == null || !pastaModulo.exists() || !pastaModulo.isDirectory()) {
+            return arquivosEncontrados;
         }
 
-        File pastaModulo = new File(pastaRaiz, nomeModulo);
-        if (!pastaModulo.exists() || !pastaModulo.isDirectory()) {
-            return arquivos;
-        }
+        try (var fluxo = java.nio.file.Files.list(pastaModulo.toPath())) {
+            List<File> arquivosSql = fluxo
+                    .filter(java.nio.file.Files::isRegularFile)
+                    .map(java.nio.file.Path::toFile)
+                    .filter(f -> f.getName().toLowerCase().endsWith(".sql"))
+                    .sorted(java.util.Comparator.comparing(File::getName))
+                    .toList();
 
-        File[] arquivoSql = pastaModulo.listFiles((dir, nome) -> nome.endsWith(".sql"));
-        if (arquivoSql != null) {
-            Arrays.sort(arquivoSql, Comparator.comparing(File::getName));
+            for (File arquivoFisico : arquivosSql) {
+                Tipo tipo = arquivoFisico.getName().startsWith("V") ? Tipo.VERSIONED : Tipo.REPEATABLE;
 
-            for (File arquivo : arquivoSql) {
-                Tipo tipo = arquivo.getName().startsWith("V") ?
-                        Tipo.VERSIONED : Tipo.REPEATABLE;
-                arquivos.add(new Arquivo(arquivo.getName(), nomeModulo, arquivo, tipo));
+                arquivosEncontrados.add(new Arquivo(
+                        arquivoFisico.getName(),
+                        pastaModulo.getName(),
+                        arquivoFisico,
+                        tipo
+                ));
             }
+        } catch (java.io.IOException e) {
+            System.err.println("Erro ao ler arquivos da pasta: " + e.getMessage());
         }
 
-        return arquivos;
+        return arquivosEncontrados;
     }
 
     public String lerConteudoArquivo(File arquivo) throws IOException {
@@ -74,7 +79,7 @@ public class ArquivoService {
     }
 
     public void criarArquivo(String nomeModulo, String nomeArquivo,
-                                    String conteudo) throws IOException {
+                             String conteudo) throws IOException {
         if (pastaRaiz == null) {
             throw new IOException("Pasta raiz não definida");
         }
@@ -94,7 +99,7 @@ public class ArquivoService {
         }
 
         File pastaModulo = new File(pastaRaiz, nomeModulo);
-        File arquivo= new File(pastaModulo, nomeArquivo);
+        File arquivo = new File(pastaModulo, nomeArquivo);
         return arquivo.exists();
     }
 
