@@ -284,10 +284,14 @@ public class PainelModulo extends JPanel {
     }
 
     public void setStatusListener(java.util.function.Consumer<String> listener) {
+
         this.statusListener = listener;
     }
 
     private void enviarMensagemStatus(String msg) {
-        if (statusListener != null) statusListener.accept(msg);
+
+        if (statusListener != null){
+            statusListener.accept(msg);
+        }
     }
 }

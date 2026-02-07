@@ -5,6 +5,8 @@ import javax.swing.*;
 import java.awt.*;
 import java.io.File;
 import java.nio.file.*;
+import java.util.HashSet;
+import java.util.Set;
 
 public class TelaInicial extends JFrame {
     private final ArquivoService arquivoService = new ArquivoService();
@@ -33,7 +35,6 @@ public class TelaInicial extends JFrame {
     private void montarComponentes() {
         MenuOpcao menu = new MenuOpcao(this, diretorioService);
         setJMenuBar(menu.criarMenuBar(diretorioService));
-
         explorador = new PainelModulo(arquivoService, moduloService, diretorioService);
         painelSql = new PainelSql();
         painelCriacao = new PainelMigration(arquivoService);
@@ -123,7 +124,27 @@ public class TelaInicial extends JFrame {
 
     private void carregarDados() {
         String caminho = diretorioService.obterCaminhoRaizSalvo("Migration");
-        if (caminho != null) arquivoService.setpastaRaiz(new File(caminho));
+        Set<String> modulosCriar = new HashSet<>();
+        if (caminho != null) {
+            arquivoService.setpastaRaiz(new File(caminho));
+        }
+        modulosCriar = ModuloService.obterModulosMainEnums(diretorioService.obterCaminhoRaizSalvo("Modulo") + File.separator+ "ModuloEnum.java", caminho);
+
+        if (!modulosCriar.isEmpty()) {
+            for (String modulo : modulosCriar) {
+                int resp = JOptionPane.showConfirmDialog(this,
+                        "O módulos " + modulo + " não existe."
+                                +"\nDeseja criar o modulo agora?",
+                        "Criação de módulos inexistentes",
+                        JOptionPane.YES_NO_OPTION,
+                        JOptionPane.QUESTION_MESSAGE);
+
+                if (resp == JOptionPane.YES_OPTION) {
+                    moduloService.criarModulo(modulo, caminho);
+                    gerenciadorLayout.atualizarStatus("Modulo " + modulo + " criado com sucesso.");
+                }
+            }
+        }
         explorador.atualizar();
         painelCriacao.atualizar();
     }

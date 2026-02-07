@@ -7,41 +7,19 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class ModuloService {
-
-    private File pastaRaizModulosNovos;
-    private File pastaRaizModulosExistentes;
-
-    public File getpastaRaizModulosNovos() {
-        return pastaRaizModulosNovos;
-    }
-
-    public void setpastaRaizModulosNovos(File pastaRaiz) {
-        this.pastaRaizModulosNovos = pastaRaiz;
-    }
-
-    public File getPastaRaizModulosExistentes() {
-        return pastaRaizModulosExistentes;
-    }
-
-    public void setPastaRaizModulosExistentes(File pastaRaizModulosExistentes) {
-        this.pastaRaizModulosExistentes = pastaRaizModulosExistentes;
-    }
-
-    public Set<String> obterModulosMainEnums(String diretorioEntrada) {
+    public static Set<String> obterModulosMainEnums(String diretorioModulo, String diretorioMigration) {
         Set<Modulo> modulosCriar = new HashSet<>();
         Set<String> modulosCriarNome = new HashSet<>();
+        Set<String> modulosExistentes = new HashSet<String>();
         try {
 
             //le todo o arquivo que esta no caminho de entrada
-            String conteudo = Files.readString(Path.of(diretorioEntrada));
+            String conteudo = Files.readString(Path.of(diretorioModulo));
 
             // Regex explicada:
             // (\\w+)             -> Grupo 1: Constante
@@ -70,21 +48,34 @@ public class ModuloService {
         } catch (IOException e) {
             System.err.println("Erro ao ler o arquivo externo: " + e.getMessage());
         }
-        for (Modulo moduloRetorno : modulosCriar){
+        for (Modulo moduloRetorno : modulosCriar) {
             modulosCriarNome.add(moduloRetorno.getNome());
         }
-        return modulosCriarNome;
+        modulosCriarNome.stream()
+                .sorted()
+                .toList();
+        modulosExistentes = obterModulos(diretorioMigration);
+
+        return obterModulosCriar(modulosCriarNome, modulosExistentes);
     }
 
-    public List<String> obterModulos(String diretorioEntrada) {
-        List<String> modulos = new ArrayList<>();
+    public static Set<String> obterModulosCriar(Set<String> modulosNovos, Set<String> modulosExistentes){
+        Set<String> modulosFaltantes = new HashSet<>(modulosNovos);
+        modulosFaltantes.removeAll(modulosExistentes);
+        return modulosFaltantes;
+    }
+
+    public static Set<String> obterModulos(String diretorioEntrada) {
+        Set<String> modulos = new HashSet<>();
         File diretorioEntradaFile = new File(diretorioEntrada);
         File[] pastaModulos = diretorioEntradaFile.listFiles(File::isDirectory);
         if (pastaModulos != null) {
             for (File dir : pastaModulos) {
                 modulos.add(dir.getName());
             }
-            modulos.sort(String::compareTo);
+            modulos.stream()
+                    .sorted()
+                    .toList();
         }
         return modulos;
     }
