@@ -1,143 +1,151 @@
 package com.supergestao.FlywayMigrationAssistant.ui;
 
-import com.supergestao.FlywayMigrationAssistant.service.ArquivoService;
-import com.supergestao.FlywayMigrationAssistant.service.DiretorioService;
-import com.supergestao.FlywayMigrationAssistant.service.ModuloService;
-
+import com.supergestao.FlywayMigrationAssistant.service.*;
 import javax.swing.*;
-import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.io.File;
+import java.nio.file.*;
+import java.util.HashSet;
+import java.util.Set;
 
 public class TelaInicial extends JFrame {
-    private final ArquivoService arquivoService;
-    private final ModuloService moduloService;
-    private PainelModulo painelModulo;
-    private PainelArquivos painelArquivos;
+    private final ArquivoService arquivoService = new ArquivoService();
+    private final DiretorioService diretorioService = new DiretorioService();
+    private final ModuloService moduloService = new ModuloService();
+    private final GerenciadorLayout gerenciadorLayout = new GerenciadorLayout();
+
+    private PainelModulo explorador;
     private PainelSql painelSql;
-    private PainelMigration criaPainel;
-    private JLabel statusBar;
-    private final GerenciadorLayout gerenciadorLayout;
-    private final DiretorioService diretorioService;
+    private PainelMigration painelCriacao;
 
     public TelaInicial() {
-        this.arquivoService = new ArquivoService();
-        this.gerenciadorLayout = new GerenciadorLayout();
-        this.diretorioService = new DiretorioService();
-        this.moduloService = new ModuloService();
-        inicializarTelaPrincipal();
-        SwingUtilities.invokeLater(this::validarDiretoriosLeitura);
+        configurarJanela();
+        montarComponentes();
+        SwingUtilities.invokeLater(this::validarConfiguracoes);
     }
 
-    private void inicializarTelaPrincipal() {
+    private void configurarJanela() {
         setTitle("Super Gestão - Flyway Migration Assistant");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setMinimumSize(new Dimension(1024, 768));
-        setSize(1280, 800);
         setExtendedState(JFrame.MAXIMIZED_BOTH);
+        setMinimumSize(new Dimension(1100, 800));
         setLocationRelativeTo(null);
-        criaMenuFuncao();
-        criaPainelPrincipal();
     }
 
-    private void criaMenuFuncao() {
-        MenuOpcao menuOpcao = new MenuOpcao(this, diretorioService);
-        setJMenuBar(menuOpcao.criarMenuBar(diretorioService));
-    }
-
-    private void criaPainelPrincipal() {
-        JPanel painelPrincipal = new JPanel(new BorderLayout(10, 10));
-        painelPrincipal.setBorder(new EmptyBorder(10, 10, 10, 10));
-
-        painelModulo = new PainelModulo(arquivoService, moduloService, diretorioService);
-        painelArquivos = new PainelArquivos(arquivoService);
+    private void montarComponentes() {
+        MenuOpcao menu = new MenuOpcao(this, diretorioService);
+        setJMenuBar(menu.criarMenuBar(diretorioService));
+        explorador = new PainelModulo(arquivoService, moduloService, diretorioService);
         painelSql = new PainelSql();
-        criaPainel = new PainelMigration(arquivoService);
+        painelCriacao = new PainelMigration(arquivoService);
 
-        JPanel conteudo = gerenciadorLayout.montarEstruturaCompleta(
-                painelModulo, painelArquivos, painelSql, criaPainel
-        );
-        add(conteudo, BorderLayout.CENTER);
-        this.statusBar = gerenciadorLayout.criarBarraStatus("Validando configurações iniciais");
-        add(statusBar, BorderLayout.SOUTH);
+        JPanel workspace = gerenciadorLayout.montarEstruturaCompleta(explorador, painelSql, painelCriacao);
+        JPanel status = gerenciadorLayout.criarBarraStatusComPainel("Pronto.");
 
-        configurarEventos();
+        setLayout(new BorderLayout());
+        add(workspace, BorderLayout.CENTER);
+        add(status, BorderLayout.SOUTH);
+
+        vincularEventos();
     }
 
-    private void configurarEventos() {
-
-        painelModulo.addModuloSelecionadoListener(modulo -> {
-            painelArquivos.carregarArquivos(modulo);
-            gerenciadorLayout.atualizarStatus("Módulo selecionado: " + modulo);
+    private void vincularEventos() {
+        explorador.addArquivoSelecionadoListener(arq -> {
+            painelSql.displayArquivo(arq);
+            painelCriacao.preencherCamposPeloArquivo(arq);
+            gerenciadorLayout.atualizarStatus("Visualizando arquivo: " + arq.getnome());
         });
 
-        painelArquivos.addSeletorArquivosListener(arquivo -> {
-            painelSql.displayArquivo(arquivo);
-            gerenciadorLayout.atualizarStatus("Arquivo: " + arquivo.getnome());
+        painelCriacao.setTemplateListener((sql, editavel) -> {
+            painelSql.setConteudo(sql, "Preview", editavel, false);
         });
 
-        criaPainel.addArquivoCriadoListener(() -> {
-            String moduloSelecionado = painelModulo.obterModuloSelecionado();
-            if (moduloSelecionado != null) {
-                painelArquivos.carregarArquivos(moduloSelecionado);
-            }
-            gerenciadorLayout.atualizarStatus("Novo arquivo de migração criado com sucesso!");
+        painelCriacao.setAcaoCriar(e -> {
+            painelCriacao.limpar(true);
+            painelSql.setEditable(true);
         });
+
+        painelCriacao.setAcaoAlterar(e -> {
+            painelCriacao.setEstadoInterface(false, true);
+            painelSql.setEditable(true);
+        });
+
+        painelCriacao.setAcaoCancelar(e -> {
+            painelCriacao.setEstadoInterface(false, false);
+            painelSql.limpar("Visualizador SQL");
+        });
+
+        painelCriacao.setAcaoSalvar(e -> salvarProcesso());
+        painelSql.setOnSave(sql -> salvarProcesso());
+        explorador.setStatusListener(gerenciadorLayout::atualizarStatus);
     }
 
-    private void atualizarStatus(String message) {
-        statusBar.setText(message);
-    }
-
-    private void validarDiretoriosLeitura() {
-        Boolean existeDiretorios = diretorioService.validaDiretorios();
-        if (!existeDiretorios) {
-            JOptionPane.showMessageDialog(this,
-                    "Configurações iniciais não encontradas. Por favor, defina os diretórios de trabalho.",
-                    "Configuração Inicial",
-                    JOptionPane.WARNING_MESSAGE);
-            TelaConfiguracao telaConfig = new TelaConfiguracao(this, this.diretorioService);
-            telaConfig.setVisible(true);
-            if (diretorioService.validaDiretorios()) {
-                carregarDadosIniciais();
-            } else {
-                Object[] opcoesBotoes = {"Sair", "Configurar"};
-                int opcao = JOptionPane.showOptionDialog(
-                        this,
-                        "Configurações iniciais não realizadas. O Sistema somente será executado caso configurado. " +
-                                "\n Deseja fechar o sistema ou realizar a configuração.",
-                        "Configuração Inicial",
-                        JOptionPane.DEFAULT_OPTION,
-                        JOptionPane.QUESTION_MESSAGE,
-                        null,
-                        opcoesBotoes,
-                        opcoesBotoes[0]);
-                if (opcao == 1) {
-                    validarDiretoriosLeitura();
-                } else {
-                    System.exit(0);
-                }
-                atualizarStatus("Sistema sendo encerrado por falta de configurações.");
-            }
-        } else {
-            carregarDadosIniciais();
+    private void salvarProcesso() {
+        String nome = painelCriacao.getNome();
+        File dir = painelCriacao.getModulo();
+        if (nome.isEmpty() || dir == null) {
+            JOptionPane.showMessageDialog(this, "Nome do arquivo ou módulo não definidos.", "Aviso", JOptionPane.WARNING_MESSAGE);
+            return;
         }
-    }
 
-    private void carregarDadosIniciais() {
-        File diretorioMigration = new File(diretorioService.obterCaminhoRaizSalvo("Migration"));
-        File diretorioModulo = new File(diretorioService.obterCaminhoRaizSalvo("Modulo"));
-        //arquivoService.setpastaRaiz(diretorioMigration);
-        //moduloService.setpastaRaizModulosNovos(diretorioModulo);
-        // moduloService.setPastaRaizModulosExistentes(diretorioMigration);
-        painelModulo.atualizar();
-        criaPainel.atualizar();
-        atualizarStatus("Diretório Migration: " + diretorioMigration.getAbsolutePath() +
-                " Diretório Modulos: " + diretorioModulo.getAbsolutePath());
+        try {
+            File arquivoFinal = new File(dir, nome);
+            if (arquivoFinal.exists()) {
+                File pastaBackup = new File(dir, ".backup");
+                if (!pastaBackup.exists()){
+                    pastaBackup.mkdirs();
+                }
+                Files.copy(arquivoFinal.toPath(), new File(pastaBackup, arquivoFinal.getName() + "." + System.currentTimeMillis() + ".bak").toPath(), StandardCopyOption.REPLACE_EXISTING);
+            }
+
+            String relativo = arquivoService.getpastaRaiz().toPath().relativize(dir.toPath()).toString();
+            arquivoService.criarArquivo(relativo, nome, painelSql.getTexto());
+
+            JOptionPane.showMessageDialog(this, "Arquivo salvo com sucesso!");
+            explorador.atualizar();
+            painelCriacao.limpar(false);
+            painelSql.limpar("Visualizador SQL");
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, "Erro ao salvar: " + ex.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
+        }
     }
 
     public void atualizarLookAndFeel() {
         gerenciadorLayout.sincronizarUI(this);
     }
 
+    private void validarConfiguracoes() {
+        if (!diretorioService.validaDiretorios()) {
+            new TelaConfiguracao(this, diretorioService).setVisible(true);
+            if (diretorioService.validaDiretorios()) carregarDados();
+            else System.exit(0);
+        } else carregarDados();
+    }
+
+    private void carregarDados() {
+        String caminho = diretorioService.obterCaminhoRaizSalvo("Migration");
+        Set<String> modulosCriar = new HashSet<>();
+        if (caminho != null) {
+            arquivoService.setpastaRaiz(new File(caminho));
+        }
+        modulosCriar = ModuloService.obterModulosMainEnums(diretorioService.obterCaminhoRaizSalvo("Modulo") + File.separator+ "ModuloEnum.java", caminho);
+
+        if (!modulosCriar.isEmpty()) {
+            for (String modulo : modulosCriar) {
+                int resp = JOptionPane.showConfirmDialog(this,
+                        "O módulos " + modulo + " não existe."
+                                +"\nDeseja criar o modulo agora?",
+                        "Criação de módulos inexistentes",
+                        JOptionPane.YES_NO_OPTION,
+                        JOptionPane.QUESTION_MESSAGE);
+
+                if (resp == JOptionPane.YES_OPTION) {
+                    moduloService.criarModulo(modulo, caminho);
+                    gerenciadorLayout.atualizarStatus("Modulo " + modulo + " criado com sucesso.");
+                }
+            }
+        }
+        explorador.atualizar();
+        painelCriacao.atualizar();
+    }
 }
