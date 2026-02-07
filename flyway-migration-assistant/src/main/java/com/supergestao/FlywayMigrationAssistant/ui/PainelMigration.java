@@ -1,260 +1,357 @@
 package com.supergestao.FlywayMigrationAssistant.ui;
 
-import com.supergestao.FlywayMigrationAssistant.model.Tipo;
+import com.supergestao.FlywayMigrationAssistant.model.*;
 import com.supergestao.FlywayMigrationAssistant.service.ArquivoService;
-import com.supergestao.FlywayMigrationAssistant.util.GeradorNomeArquivo;
-import com.supergestao.FlywayMigrationAssistant.util.GeradorTemplateSql;
+import com.supergestao.FlywayMigrationAssistant.util.*;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
-import java.io.IOException;
-import java.util.ArrayList;
+import java.awt.event.*;
+import java.io.File;
+import java.util.*;
 import java.util.List;
 
 public class PainelMigration extends JPanel {
-    private ArquivoService arquivoService;
-    private JTextField descricaoCampo;
-    private JComboBox<String> comboBoxModulo;
-    private JRadioButton BotaoVersioned;
-    private JRadioButton BotaoRepeatable;
-    private JRadioButton BotaoUndo;
-    private JTextField previsualizacaoCampo;
-    private JTextArea areaTemplate;
-    private List<ArquivoCriadoListener> listeners;
+    private final ArquivoService arquivoService;
+    private JTextField descricaoCampo, previsualizacaoCampo;
+    private JComboBox<File> comboBoxModulo;
+    private JComboBox<Tipo> comboBoxTipo;
+    private JComboBox<Acao> comboBoxAcao;
+    private JComboBox<ObjetoBanco> comboBoxObjeto;
+    private JComboBox<Arquivo> comboBoxArquivoOrigem;
+    private JLabel labelAcao, labelObjeto, labelOrigem, labelDescricao;
+    private JButton botaoCriar, botaoAlterar, botaoSalvar, botaoCancelar;
+    private java.util.function.BiConsumer<String, Boolean> templateListener;
+    private boolean isCarregando = false;
 
     public PainelMigration(ArquivoService arquivoService) {
         this.arquivoService = arquivoService;
-        this.listeners = new ArrayList<>();
-        inicializaPainelMigration();
+        inicializaPainel();
     }
 
-    private void inicializaPainelMigration() {
+    private void inicializaPainel() {
         setLayout(new BorderLayout(5, 5));
-        setBorder(BorderFactory.createTitledBorder("Criar Nova Migração"));
+        setBorder(BorderFactory.createTitledBorder("Gerenciador de Migration"));
+        JPanel p = new JPanel(new GridBagLayout());
+        p.setBorder(new EmptyBorder(10, 10, 10, 10));
+        GridBagConstraints g = new GridBagConstraints();
+        g.insets = new Insets(5, 5, 5, 5);
+        g.fill = GridBagConstraints.HORIZONTAL;
 
-        JPanel PainelMigration = new JPanel(new GridBagLayout());
-        PainelMigration.setBorder(new EmptyBorder(10, 10, 10, 10));
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(5, 5, 5, 5);
-        gbc.fill = GridBagConstraints.HORIZONTAL;
+        g.gridx = 0;
+        g.gridy = 0;
+        p.add(new JLabel("Módulo:"), g);
+        g.gridx = 1;
+        g.weightx = 1.0;
+        comboBoxModulo = new JComboBox<>();
+        configurarRenderizador();
+        comboBoxModulo.addActionListener(e -> {
+            carregarOrigens();
+            atualizaPrevisualizacao();
+        });
+        p.add(comboBoxModulo, g);
 
-        gbc.gridx = 0;
-        gbc.gridy = 0;
-        gbc.weightx = 0;
-        PainelMigration.add(new JLabel("Descrição:"), gbc);
+        g.gridx = 0;
+        g.gridy = 1;
+        p.add(new JLabel("Tipo:"), g);
+        g.gridx = 1;
+        comboBoxTipo = new JComboBox<>(Tipo.values());
+        comboBoxTipo.addActionListener(e -> {
+            gerenciarComponentes();
+            atualizaPrevisualizacao();
+            atualizarTemplate(false);
+        });
+        p.add(comboBoxTipo, g);
 
-        gbc.gridx = 1;
-        gbc.weightx = 1.0;
-        descricaoCampo = new JTextField(25);
+        g.gridx = 0;
+        g.gridy = 2;
+        labelAcao = new JLabel("Ação:");
+        p.add(labelAcao, g);
+        g.gridx = 1;
+        comboBoxAcao = new JComboBox<>(Acao.values());
+        comboBoxAcao.addActionListener(e -> {
+            filtrarObjetos();
+            atualizaPrevisualizacao();
+            atualizarTemplate(false);
+        });
+        p.add(comboBoxAcao, g);
+
+        g.gridx = 0;
+        g.gridy = 3;
+        labelObjeto = new JLabel("Objeto:");
+        p.add(labelObjeto, g);
+        g.gridx = 1;
+        comboBoxObjeto = new JComboBox<>();
+        comboBoxObjeto.addActionListener(e -> {
+            atualizaPrevisualizacao();
+            atualizarTemplate(false);
+        });
+        p.add(comboBoxObjeto, g);
+
+        g.gridx = 0;
+        g.gridy = 4;
+        labelOrigem = new JLabel("Origem:");
+        p.add(labelOrigem, g);
+        g.gridx = 1;
+        comboBoxArquivoOrigem = new JComboBox<>();
+        comboBoxArquivoOrigem.addActionListener(e -> {
+            vincularDescricao();
+            atualizaPrevisualizacao();
+            atualizarTemplate(true);
+        });
+        p.add(comboBoxArquivoOrigem, g);
+
+        g.gridx = 0;
+        g.gridy = 5;
+        labelDescricao = new JLabel("Descrição:");
+        p.add(labelDescricao, g);
+        g.gridx = 1;
+        descricaoCampo = new JTextField();
         descricaoCampo.addKeyListener(new KeyAdapter() {
             @Override
             public void keyReleased(KeyEvent e) {
                 atualizaPrevisualizacao();
+                atualizarTemplate(false);
             }
         });
-        PainelMigration.add(descricaoCampo, gbc);
+        p.add(descricaoCampo, g);
 
-        gbc.gridx = 0;
-        gbc.gridy = 1;
-        gbc.weightx = 0;
-        PainelMigration.add(new JLabel("Módulo:"), gbc);
-
-        gbc.gridx = 1;
-        gbc.weightx = 1.0;
-        comboBoxModulo = new JComboBox<>();
-        comboBoxModulo.addActionListener(e -> atualizaPrevisualizacao());
-        PainelMigration.add(comboBoxModulo, gbc);
-
-        gbc.gridx = 0;
-        gbc.gridy = 2;
-        gbc.weightx = 0;
-        PainelMigration.add(new JLabel("Tipo:"), gbc);
-
-        gbc.gridx = 1;
-        gbc.weightx = 1.0;
-        JPanel PainelTipo = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        ButtonGroup GrupoBotaoTipo = new ButtonGroup();
-        BotaoVersioned = new JRadioButton("V - Imutável (Tabelas/Colunas)", true);
-        BotaoRepeatable = new JRadioButton("R - Mutável (Funções/Views)");
-        GrupoBotaoTipo.add(BotaoVersioned);
-        GrupoBotaoTipo.add(BotaoRepeatable);
-        PainelTipo.add(BotaoVersioned);
-        PainelTipo.add(BotaoRepeatable);
-
-        BotaoVersioned.addActionListener(e -> {
-            atualizaPrevisualizacao();
-            atualizarTemplate();
-        });
-        BotaoRepeatable.addActionListener(e -> {
-            atualizaPrevisualizacao();
-            atualizarTemplate();
-        });
-
-        PainelMigration.add(PainelTipo, gbc);
-
-        gbc.gridx = 0;
-        gbc.gridy = 3;
-        gbc.weightx = 0;
-        PainelMigration.add(new JLabel("Pré-Visualização:"), gbc);
-
-        gbc.gridx = 1;
-        gbc.weightx = 1.0;
+        g.gridx = 0;
+        g.gridy = 6;
+        p.add(new JLabel("Nome Arquivo:"), g);
+        g.gridx = 1;
         previsualizacaoCampo = new JTextField();
         previsualizacaoCampo.setEditable(false);
-        previsualizacaoCampo.setBackground(new Color(240, 240, 240));
-        previsualizacaoCampo.setFont(new Font("Monospaced", Font.PLAIN, 11));
-        PainelMigration.add(previsualizacaoCampo, gbc);
+        previsualizacaoCampo.setBackground(new Color(230, 230, 230));
+        p.add(previsualizacaoCampo, g);
 
-        gbc.gridx = 0;
-        gbc.gridy = 4;
-        gbc.gridwidth = 2;
-        JPanel botoesPainel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        g.gridx = 0;
+        g.gridy = 7;
+        g.gridwidth = 2;
+        JPanel bp = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        botaoAlterar = new JButton("Alterar");
+        botaoCriar = new JButton("Novo");
+        botaoSalvar = new JButton("Salvar");
+        botaoCancelar = new JButton("Cancelar");
+        bp.add(botaoAlterar);
+        bp.add(botaoCriar);
+        bp.add(botaoSalvar);
+        bp.add(botaoCancelar);
+        p.add(bp, g);
 
-        JButton botaoLimpar = new JButton("Limpar");
-        botaoLimpar.addActionListener(e -> limparFormulario());
+        add(p, BorderLayout.NORTH);
+        setEstadoInterface(false, false);
+    }
 
-        JButton botaoCriarArquivo = new JButton("Criar Arquivo");
-        botaoCriarArquivo.addActionListener(e -> criaArquivo());
+    public void setEstadoInterface(boolean editavel, boolean editandoSql) {
+        comboBoxModulo.setEnabled(editavel);
+        comboBoxTipo.setEnabled(editavel);
+        comboBoxAcao.setEnabled(editavel);
+        comboBoxObjeto.setEnabled(editavel);
+        comboBoxArquivoOrigem.setEnabled(editavel);
 
-        botoesPainel.add(botaoLimpar);
-        botoesPainel.add(botaoCriarArquivo);
-        PainelMigration.add(botoesPainel, gbc);
+        labelDescricao.setVisible(editavel);
+        descricaoCampo.setVisible(editavel);
 
-        add(PainelMigration, BorderLayout.NORTH);
+        botaoCriar.setVisible(!editandoSql);
+        Tipo t = (Tipo) comboBoxTipo.getSelectedItem();
+        botaoAlterar.setVisible(!editandoSql && t != null && t != Tipo.VERSIONED);
+        botaoSalvar.setVisible(editandoSql);
+        botaoCancelar.setVisible(editandoSql);
 
-        /*JPanel PainelTemplate = new JPanel(new BorderLayout(5, 5));
-        PainelTemplate.setBorder(BorderFactory.createTitledBorder("Template SQL"));
+        revalidate();
+        repaint();
+    }
 
-        areaTemplate = new JTextArea();
-        areaTemplate.setFont(new Font("Monospaced", Font.PLAIN, 11));
-        areaTemplate.setLineWrap(false);
-        areaTemplate.setTabSize(4);
+    public void preencherCamposPeloArquivo(Arquivo arq) {
+        isCarregando = true;
+        String nome = arq.getnome();
+        comboBoxModulo.setSelectedItem(arq.getarquivo().getParentFile());
 
-        JScrollPane scrollPainel = new JScrollPane(areaTemplate);
-        PainelTemplate.add(scrollPainel, BorderLayout.CENTER);
+        if (nome.startsWith("V")) comboBoxTipo.setSelectedItem(Tipo.VERSIONED);
+        else if (nome.startsWith("R")) comboBoxTipo.setSelectedItem(Tipo.REPEATABLE);
+        else if (nome.startsWith("U")) comboBoxTipo.setSelectedItem(Tipo.UNDO);
 
-        add(PainelTemplate, BorderLayout.CENTER);
+        String[] partes = nome.split("__");
+        if (partes.length > 1) {
+            String miolo = partes[1].toLowerCase();
+            for (Acao a : Acao.values()) {
+                if (miolo.contains(a.getValorArquivo().toLowerCase())) {
+                    comboBoxAcao.setSelectedItem(a);
+                    break;
+                }
+            }
+            filtrarObjetos();
+            for (int i = 0; i < comboBoxObjeto.getItemCount(); i++) {
+                ObjetoBanco obj = comboBoxObjeto.getItemAt(i);
+                if (miolo.contains(obj.getValorArquivo().toLowerCase())) {
+                    comboBoxObjeto.setSelectedItem(obj);
+                    break;
+                }
+            }
+        }
+        previsualizacaoCampo.setText(nome);
+        gerenciarComponentes();
+        isCarregando = false;
+        setEstadoInterface(false, false);
+    }
 
-        atualizarTemplate();*/
+    public void limpar(boolean editavel) {
+        isCarregando = true;
+        descricaoCampo.setText("");
+        previsualizacaoCampo.setText("");
+        comboBoxTipo.setSelectedIndex(0);
+        gerenciarComponentes();
+        isCarregando = false;
+        setEstadoInterface(editavel, true);
+        atualizaPrevisualizacao();
+    }
+
+    private void atualizarTemplate(boolean isOrigem) {
+        if (isCarregando) return;
+        Tipo t = (Tipo) comboBoxTipo.getSelectedItem();
+        File d = (File) comboBoxModulo.getSelectedItem();
+        String sql = "";
+        if (isOrigem && comboBoxArquivoOrigem.getSelectedItem() != null) {
+            try {
+                sql = arquivoService.lerConteudoArquivo(((Arquivo) comboBoxArquivoOrigem.getSelectedItem()).getarquivo());
+            } catch (Exception e) {
+            }
+        } else if (t != null && d != null) {
+            String mod = d.getAbsolutePath().replace(arquivoService.getpastaRaiz().getAbsolutePath(), arquivoService.getpastaRaiz().getName());
+            sql = GeradorTemplateSql.gerar(descricaoCampo.getText(), t, (Acao) comboBoxAcao.getSelectedItem(), (ObjetoBanco) comboBoxObjeto.getSelectedItem(), mod);
+        }
+        if (templateListener != null) templateListener.accept(sql, false);
+    }
+
+    private void gerenciarComponentes() {
+        Tipo t = (Tipo) comboBoxTipo.getSelectedItem();
+        labelAcao.setVisible(t == Tipo.VERSIONED);
+        comboBoxAcao.setVisible(t == Tipo.VERSIONED);
+        labelObjeto.setVisible(t != Tipo.UNDO);
+        comboBoxObjeto.setVisible(t != Tipo.UNDO);
+        labelOrigem.setVisible(t == Tipo.UNDO);
+        comboBoxArquivoOrigem.setVisible(t == Tipo.UNDO);
+        descricaoCampo.setText("");
+        filtrarObjetos();
+        carregarOrigens();
+    }
+
+    private void vincularDescricao() {
+        if (isCarregando) return;
+        Arquivo o = (Arquivo) comboBoxArquivoOrigem.getSelectedItem();
+        if (o != null && comboBoxTipo.getSelectedItem() == Tipo.UNDO && o.getnome().contains("__")) {
+            descricaoCampo.setText(o.getnome().substring(o.getnome().indexOf("__") + 2).replace(".sql", ""));
+        }
+    }
+
+    private void filtrarObjetos() {
+        Acao a = (Acao) comboBoxAcao.getSelectedItem();
+        Tipo t = (Tipo) comboBoxTipo.getSelectedItem();
+        Object selecionadoObjeto = comboBoxObjeto.getSelectedItem();
+
+        isCarregando = true;
+        comboBoxObjeto.removeAllItems();
+
+        if (t == Tipo.REPEATABLE) {
+            Arrays.asList(ObjetoBanco.VIEW, ObjetoBanco.VIEW_MATERIALIZADA, ObjetoBanco.FUNCAO,
+                            ObjetoBanco.PROCEDIMENTO, ObjetoBanco.GATILHO, ObjetoBanco.TIPO)
+                    .forEach(comboBoxObjeto::addItem);
+        } else if (t == Tipo.VERSIONED && a != null) {
+            switch (a) {
+                case CRIAR -> Arrays.asList(ObjetoBanco.TABELA, ObjetoBanco.SEQUENCIA, ObjetoBanco.ESQUEMA,
+                        ObjetoBanco.EXTENSAO, ObjetoBanco.TIPO, ObjetoBanco.DOMINIO,
+                        ObjetoBanco.INDICE, ObjetoBanco.POLITICA).forEach(comboBoxObjeto::addItem);
+                case ALTERAR -> Arrays.asList(ObjetoBanco.TABELA, ObjetoBanco.COLUNA, ObjetoBanco.CONSTRAINT,
+                        ObjetoBanco.SEQUENCIA).forEach(comboBoxObjeto::addItem);
+                default -> Arrays.asList(ObjetoBanco.TABELA, ObjetoBanco.COLUNA, ObjetoBanco.CONSTRAINT,
+                        ObjetoBanco.INDICE).forEach(comboBoxObjeto::addItem);
+            }
+        }
+
+        if (selecionadoObjeto != null) comboBoxObjeto.setSelectedItem(selecionadoObjeto);
+        isCarregando = false;
+    }
+
+    private void carregarOrigens() {
+        comboBoxArquivoOrigem.removeAllItems();
+        File d = (File) comboBoxModulo.getSelectedItem();
+        Tipo t = (Tipo) comboBoxTipo.getSelectedItem();
+        if (d != null && t != null) {
+            arquivoService.obterArquivosModulo(d).forEach(arq -> {
+                if (t == Tipo.UNDO && arq.getnome().startsWith("V")) comboBoxArquivoOrigem.addItem(arq);
+                else if (t == Tipo.REPEATABLE && arq.getnome().startsWith("R")) comboBoxArquivoOrigem.addItem(arq);
+            });
+        }
+    }
+
+    public void setTemplateListener(java.util.function.BiConsumer<String, Boolean> l) {
+        this.templateListener = l;
+    }
+
+    public void setAcaoCriar(ActionListener l) {
+        botaoCriar.addActionListener(l);
+    }
+
+    public void setAcaoAlterar(ActionListener l) {
+        botaoAlterar.addActionListener(l);
+    }
+
+    public void setAcaoSalvar(ActionListener l) {
+        botaoSalvar.addActionListener(l);
+    }
+
+    public void setAcaoCancelar(ActionListener l) {
+        botaoCancelar.addActionListener(l);
+    }
+
+    public File getModulo() {
+        return (File) comboBoxModulo.getSelectedItem();
+    }
+
+    public String getNome() {
+        return previsualizacaoCampo.getText();
     }
 
     public void atualizar() {
         comboBoxModulo.removeAllItems();
-        List<String> modulos = arquivoService.getModulos();
-        for (String modulo : modulos) {
-            comboBoxModulo.addItem(modulo);
+        File r = arquivoService.getpastaRaiz();
+        if (r != null) {
+            List<File> l = new ArrayList<>();
+            l.add(r);
+            addDirs(r, l);
+            l.forEach(comboBoxModulo::addItem);
         }
+    }
+
+    private void addDirs(File p, List<File> r) {
+        File[] f = p.listFiles(File::isDirectory);
+        if (f != null) {
+            Arrays.sort(f, Comparator.comparing(File::getName));
+            for (File s : f) {
+                r.add(s);
+                addDirs(s, r);
+            }
+        }
+    }
+
+    private void configurarRenderizador() {
+        comboBoxModulo.setRenderer(new DefaultListCellRenderer() {
+            @Override
+            public Component getListCellRendererComponent(JList<?> l, Object v, int i, boolean s, boolean f) {
+                super.getListCellRendererComponent(l, v, i, s, f);
+                if (v instanceof File dir && arquivoService.getpastaRaiz() != null)
+                    setText(dir.getAbsolutePath().replace(arquivoService.getpastaRaiz().getAbsolutePath(), arquivoService.getpastaRaiz().getName()));
+                return this;
+            }
+        });
     }
 
     private void atualizaPrevisualizacao() {
-        String descricao = descricaoCampo.getText().trim();
-        String modulo = (String) comboBoxModulo.getSelectedItem();
-
-        if (descricao.isEmpty() || modulo == null) {
-            previsualizacaoCampo.setText("");
-            return;
-        }
-
-        Tipo tipo = BotaoVersioned.isSelected() ?
-                Tipo.VERSIONED : Tipo.REPEATABLE;
-
-        String nomeArquivo = GeradorNomeArquivo.geradorNomeArquivo(descricao, modulo, tipo);
-        previsualizacaoCampo.setText(nomeArquivo);
-    }
-
-    private void atualizarTemplate() {
-        String descricao = descricaoCampo.getText().trim();
-        if (descricao.isEmpty()) {
-            descricao = "Nova migração";
-        }
-
-        Tipo tipo = BotaoVersioned.isSelected() ?
-                Tipo.VERSIONED : Tipo.REPEATABLE;
-
-        String template = GeradorTemplateSql.geradorTemplateSql(descricao, tipo);
-        areaTemplate.setText(template);
-        areaTemplate.setCaretPosition(0);
-    }
-
-    private void criaArquivo() {
-        String descricao = descricaoCampo.getText().trim();
-        String modulo = (String) comboBoxModulo.getSelectedItem();
-        String nomeArquivo = previsualizacaoCampo.getText();
-
-        if (descricao.isEmpty()) {
-            JOptionPane.showMessageDialog(this,
-                    "Por favor, preencha a descrição",
-                    "Validação", JOptionPane.WARNING_MESSAGE);
-            descricaoCampo.requestFocus();
-            return;
-        }
-
-        if (modulo == null) {
-            JOptionPane.showMessageDialog(this,
-                    "Por favor, selecione um módulo",
-                    "Validação", JOptionPane.WARNING_MESSAGE);
-            return;
-        }
-
-        if (arquivoService.getpastaRaiz() == null) {
-            JOptionPane.showMessageDialog(this,
-                    "Por favor, selecione a pasta db/migration primeiro",
-                    "Erro", JOptionPane.ERROR_MESSAGE);
-            return;
-        }
-
-        if (arquivoService.existeArquivo(modulo, nomeArquivo)) {
-            int result = JOptionPane.showConfirmDialog(this,
-                    "O arquivo já existe. Deseja sobrescrever?",
-                    "Confirmar", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
-
-            if (result != JOptionPane.YES_OPTION) {
-                return;
-            }
-        }
-
-        try {
-            String conteudo = areaTemplate.getText();
-            arquivoService.criarArquivo(modulo, nomeArquivo, conteudo);
-
-            JOptionPane.showMessageDialog(this,
-                    "Arquivo criado com sucesso!\n\n" +
-                            "Módulo: " + modulo + "\n" +
-                            "Arquivo: " + nomeArquivo,
-                    "Sucesso", JOptionPane.INFORMATION_MESSAGE);
-
-            limparFormulario();
-            notificaListeners();
-
-        } catch (IOException e) {
-            JOptionPane.showMessageDialog(this,
-                    "Erro ao criar arquivo:\n\n" + e.getMessage(),
-                    "Erro", JOptionPane.ERROR_MESSAGE);
-        }
-    }
-
-    private void limparFormulario() {
-        descricaoCampo.setText("");
-        previsualizacaoCampo.setText("");
-        atualizarTemplate();
-        descricaoCampo.requestFocus();
-    }
-
-    public void addArquivoCriadoListener(ArquivoCriadoListener listener) {
-        listeners.add(listener);
-    }
-
-    private void notificaListeners() {
-        for (ArquivoCriadoListener listener : listeners) {
-            listener.onArquivoCriado();
-        }
-    }
-
-    @FunctionalInterface
-    public interface ArquivoCriadoListener {
-        void onArquivoCriado();
+        if (isCarregando || !labelDescricao.isVisible()) return;
+        File d = (File) comboBoxModulo.getSelectedItem();
+        if (d == null) return;
+        previsualizacaoCampo.setText(GeradorNomeArquivo.gerarNomeCompleto(descricaoCampo.getText(), (Acao) comboBoxAcao.getSelectedItem(), (ObjetoBanco) comboBoxObjeto.getSelectedItem(), d.getName(), (Tipo) comboBoxTipo.getSelectedItem(), (Arquivo) comboBoxArquivoOrigem.getSelectedItem()));
     }
 }

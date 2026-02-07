@@ -1,6 +1,5 @@
 package com.supergestao.FlywayMigrationAssistant.service;
 
-import com.supergestao.FlywayMigrationAssistant.config.ModuloConfig;
 import com.supergestao.FlywayMigrationAssistant.model.Arquivo;
 import com.supergestao.FlywayMigrationAssistant.model.Tipo;
 
@@ -9,8 +8,6 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
 import java.util.List;
 
 public class ArquivoService {
@@ -113,12 +110,7 @@ public class ArquivoService {
             return false;
         }
 
-        boolean criado = pastaModulo.mkdirs();
-        if (criado && prefixo != null && !prefixo.isEmpty()) {
-            ModuloConfig.addModule(nomeModulo, prefixo);//precisa revisar para descontinuar o moduloConfig
-        }
-
-        return criado;
+        return pastaModulo.mkdirs();
     }
 
 }
