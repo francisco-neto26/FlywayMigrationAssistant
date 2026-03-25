@@ -28,6 +28,7 @@ public class PainelModulo extends JPanel {
     private JTextField campoPesquisa;
     private final List<SeletorArquivoListener> arquivoSelecionadoListeners = new ArrayList<>();
     private java.util.function.Consumer<String> statusListener;
+    private Runnable acaoPosCriarModulo;
 
     public PainelModulo(ArquivoService arquivoService, ModuloService moduloService, DiretorioService diretorioService) {
         this.arquivoService = arquivoService;
@@ -265,6 +266,9 @@ public class PainelModulo extends JPanel {
             File novaPasta = new File(paiSelecionado, nomeModulo);
             if (novaPasta.mkdirs()) {
                 atualizar();
+                if (acaoPosCriarModulo != null) {
+                    acaoPosCriarModulo.run();
+                }
                 enviarMensagemStatus("Módulo '" + nomeModulo + "' criado com sucesso.");
             } else {
                 JOptionPane.showMessageDialog(this, "Não foi possível criar a pasta.", "Erro", JOptionPane.ERROR_MESSAGE);
@@ -293,5 +297,9 @@ public class PainelModulo extends JPanel {
         if (statusListener != null){
             statusListener.accept(msg);
         }
+    }
+
+    public void setAcaoPosCriarModulo(Runnable r) {
+        this.acaoPosCriarModulo = r;
     }
 }

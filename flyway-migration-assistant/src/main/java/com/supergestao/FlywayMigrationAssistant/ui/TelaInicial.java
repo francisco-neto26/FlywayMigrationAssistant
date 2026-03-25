@@ -78,6 +78,11 @@ public class TelaInicial extends JFrame {
         painelCriacao.setAcaoSalvar(e -> salvarProcesso());
         painelSql.setOnSave(sql -> salvarProcesso());
         explorador.setStatusListener(gerenciadorLayout::atualizarStatus);
+
+        explorador.setAcaoPosCriarModulo(() -> {
+            painelCriacao.atualizar();
+            gerenciadorLayout.atualizarStatus("Lista de módulos atualizada.");
+        });
     }
 
     private void salvarProcesso() {
