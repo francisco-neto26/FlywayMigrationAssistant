@@ -22,13 +22,13 @@ public class GeradorTemplateSql {
             return "nome_objeto";
         }
 
-        String s = descricao.trim().toLowerCase();
+        String descricaoAjustada = descricao.trim().toLowerCase();
 
-        if (s.contains("__")) {
-            s = s.substring(s.indexOf("__") + 2);
+        if (descricaoAjustada.contains("__")) {
+            descricaoAjustada = descricaoAjustada.substring(descricaoAjustada.indexOf("__") + 2);
         }
 
-        return s.replaceAll("\\s+", "_")
+        return descricaoAjustada.replaceAll("\\s+", "_")
                 .replaceAll("[^a-z0-9_]", "")
                 .replaceAll("_+", "_");
     }

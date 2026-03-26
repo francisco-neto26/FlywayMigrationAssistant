@@ -21,9 +21,10 @@ public class PainelMigration extends JPanel {
     private JComboBox<ObjetoBanco> comboBoxObjeto;
     private JComboBox<Arquivo> comboBoxArquivoOrigem;
     private JLabel labelAcao, labelObjeto, labelOrigem, labelDescricao;
-    private JButton botaoCriar, botaoAlterar, botaoSalvar, botaoCancelar;
+    private JButton botaoCriar, botaoAlterar, botaoSalvar, botaoCancelar, botaoProsseguir;
     private java.util.function.BiConsumer<String, Boolean> templateListener;
     private boolean isCarregando = false;
+    private boolean sqlEditavel = false;
 
     public PainelMigration(ArquivoService arquivoService) {
         this.arquivoService = arquivoService;
@@ -39,86 +40,56 @@ public class PainelMigration extends JPanel {
         g.insets = new Insets(5, 5, 5, 5);
         g.fill = GridBagConstraints.HORIZONTAL;
 
-        g.gridx = 0;
-        g.gridy = 0;
+        g.gridx = 0; g.gridy = 0;
         p.add(new JLabel("Módulo:"), g);
-        g.gridx = 1;
-        g.weightx = 1.0;
+        g.gridx = 1; g.weightx = 1.0;
         comboBoxModulo = new JComboBox<>();
         configurarRenderizador();
-        comboBoxModulo.addActionListener(e -> {
-            carregarOrigens();
-            atualizaPrevisualizacao();
-        });
+        comboBoxModulo.addActionListener(e -> { carregarOrigens(); atualizaPrevisualizacao(); });
         p.add(comboBoxModulo, g);
 
-        g.gridx = 0;
-        g.gridy = 1;
+        g.gridx = 0; g.gridy = 1;
         p.add(new JLabel("Tipo:"), g);
         g.gridx = 1;
         comboBoxTipo = new JComboBox<>(Tipo.values());
-        comboBoxTipo.addActionListener(e -> {
-            gerenciarComponentes();
-            atualizaPrevisualizacao();
-            atualizarTemplate(false);
-        });
+        comboBoxTipo.addActionListener(e -> { gerenciarComponentes(); atualizaPrevisualizacao(); atualizarTemplate(); });
         p.add(comboBoxTipo, g);
 
-        g.gridx = 0;
-        g.gridy = 2;
+        g.gridx = 0; g.gridy = 2;
         labelAcao = new JLabel("Ação:");
         p.add(labelAcao, g);
         g.gridx = 1;
         comboBoxAcao = new JComboBox<>(Acao.values());
-        comboBoxAcao.addActionListener(e -> {
-            filtrarObjetos();
-            atualizaPrevisualizacao();
-            atualizarTemplate(false);
-        });
+        comboBoxAcao.addActionListener(e -> { filtrarObjetos(); atualizaPrevisualizacao(); atualizarTemplate(); });
         p.add(comboBoxAcao, g);
 
-        g.gridx = 0;
-        g.gridy = 3;
+        g.gridx = 0; g.gridy = 3;
         labelObjeto = new JLabel("Objeto:");
         p.add(labelObjeto, g);
         g.gridx = 1;
         comboBoxObjeto = new JComboBox<>();
-        comboBoxObjeto.addActionListener(e -> {
-            atualizaPrevisualizacao();
-            atualizarTemplate(false);
-        });
+        comboBoxObjeto.addActionListener(e -> { atualizaPrevisualizacao(); atualizarTemplate(); });
         p.add(comboBoxObjeto, g);
 
-        g.gridx = 0;
-        g.gridy = 4;
+        g.gridx = 0; g.gridy = 4;
         labelOrigem = new JLabel("Origem:");
         p.add(labelOrigem, g);
         g.gridx = 1;
         comboBoxArquivoOrigem = new JComboBox<>();
-        comboBoxArquivoOrigem.addActionListener(e -> {
-            vincularDescricao();
-            atualizaPrevisualizacao();
-            atualizarTemplate(true);
-        });
+        comboBoxArquivoOrigem.addActionListener(e -> { vincularDescricao(); atualizaPrevisualizacao(); atualizarTemplate(); });
         p.add(comboBoxArquivoOrigem, g);
 
-        g.gridx = 0;
-        g.gridy = 5;
+        g.gridx = 0; g.gridy = 5;
         labelDescricao = new JLabel("Descrição:");
         p.add(labelDescricao, g);
         g.gridx = 1;
         descricaoCampo = new JTextField();
         descricaoCampo.addKeyListener(new KeyAdapter() {
-            @Override
-            public void keyReleased(KeyEvent e) {
-                atualizaPrevisualizacao();
-                atualizarTemplate(false);
-            }
+            @Override public void keyReleased(KeyEvent e) { atualizaPrevisualizacao(); atualizarTemplate(); }
         });
         p.add(descricaoCampo, g);
 
-        g.gridx = 0;
-        g.gridy = 6;
+        g.gridx = 0; g.gridy = 6;
         p.add(new JLabel("Nome Arquivo:"), g);
         g.gridx = 1;
         previsualizacaoCampo = new JTextField();
@@ -126,39 +97,64 @@ public class PainelMigration extends JPanel {
         previsualizacaoCampo.setBackground(new Color(230, 230, 230));
         p.add(previsualizacaoCampo, g);
 
-        g.gridx = 0;
-        g.gridy = 7;
-        g.gridwidth = 2;
+        g.gridx = 0; g.gridy = 7; g.gridwidth = 2;
         JPanel bp = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         botaoAlterar = new JButton("Alterar");
         botaoCriar = new JButton("Novo");
+        botaoProsseguir = new JButton("Prosseguir para SQL");
         botaoSalvar = new JButton("Salvar");
         botaoCancelar = new JButton("Cancelar");
-        bp.add(botaoAlterar);
-        bp.add(botaoCriar);
-        bp.add(botaoSalvar);
-        bp.add(botaoCancelar);
+
+        bp.add(botaoAlterar); bp.add(botaoCriar); bp.add(botaoProsseguir); bp.add(botaoSalvar); bp.add(botaoCancelar);
         p.add(bp, g);
 
         add(p, BorderLayout.NORTH);
+
+        // Ação interna do Prosseguir
+        botaoProsseguir.addActionListener(e -> {
+            if(validarCampos()) setEstadoInterface(false, true);
+        });
+
         setEstadoInterface(false, false);
     }
 
-    public void setEstadoInterface(boolean editavel, boolean editandoSql) {
-        comboBoxModulo.setEnabled(editavel);
-        comboBoxTipo.setEnabled(editavel);
-        comboBoxAcao.setEnabled(editavel);
-        comboBoxObjeto.setEnabled(editavel);
-        comboBoxArquivoOrigem.setEnabled(editavel);
+    private boolean validarCampos() {
+        if (descricaoCampo.getText().trim().isEmpty() && comboBoxTipo.getSelectedItem() != Tipo.UNDO) {
+            JOptionPane.showMessageDialog(this, "Informe a descrição antes de prosseguir.", "Aviso", JOptionPane.WARNING_MESSAGE);
+            return false;
+        }
+        if (comboBoxModulo.getSelectedItem() == null) return false;
+        return true;
+    }
 
-        labelDescricao.setVisible(editavel);
-        descricaoCampo.setVisible(editavel);
+    public void setEstadoInterface(boolean camposEditaveis, boolean sqlEditavel) {
+        this.sqlEditavel = sqlEditavel;
 
-        botaoCriar.setVisible(!editandoSql);
+        // Controle de inputs
+        comboBoxModulo.setEnabled(camposEditaveis);
+        comboBoxTipo.setEnabled(camposEditaveis);
+        comboBoxAcao.setEnabled(camposEditaveis);
+        comboBoxObjeto.setEnabled(camposEditaveis);
+        comboBoxArquivoOrigem.setEnabled(camposEditaveis);
+        descricaoCampo.setEditable(camposEditaveis);
+        labelDescricao.setVisible(camposEditaveis || !previsualizacaoCampo.getText().isEmpty());
+        descricaoCampo.setVisible(camposEditaveis || !previsualizacaoCampo.getText().isEmpty());
+
+        // Controle de Botões
+        boolean modoVisualizacao = !camposEditaveis && !sqlEditavel;
+        boolean modoDefinicao = camposEditaveis && !sqlEditavel;
+        boolean modoEdicaoSql = !camposEditaveis && sqlEditavel;
+
+        botaoCriar.setVisible(modoVisualizacao);
         Tipo t = (Tipo) comboBoxTipo.getSelectedItem();
-        botaoAlterar.setVisible(!editandoSql && t != null && t != Tipo.VERSIONED);
-        botaoSalvar.setVisible(editandoSql);
-        botaoCancelar.setVisible(editandoSql);
+        botaoAlterar.setVisible(modoVisualizacao && t != null && t != Tipo.VERSIONED);
+
+        botaoProsseguir.setVisible(modoDefinicao);
+        botaoSalvar.setVisible(modoEdicaoSql);
+        botaoCancelar.setVisible(modoDefinicao || modoEdicaoSql);
+
+        // Atualiza o editor SQL para refletir o novo estado de edição
+        atualizarTemplate();
 
         revalidate();
         repaint();
@@ -204,25 +200,28 @@ public class PainelMigration extends JPanel {
         comboBoxTipo.setSelectedIndex(0);
         gerenciarComponentes();
         isCarregando = false;
-        setEstadoInterface(editavel, true);
-        atualizaPrevisualizacao();
+        setEstadoInterface(editavel, false); // Começa em modo de definição (Campos ON, SQL OFF)
     }
 
-    private void atualizarTemplate(boolean isOrigem) {
+    private void atualizarTemplate() {
         if (isCarregando) return;
         Tipo t = (Tipo) comboBoxTipo.getSelectedItem();
         File d = (File) comboBoxModulo.getSelectedItem();
         String sql = "";
-        if (isOrigem && comboBoxArquivoOrigem.getSelectedItem() != null) {
+
+        // Se houver origem selecionada (UNDO/REPEATABLE existente)
+        if (comboBoxArquivoOrigem.getSelectedItem() != null) {
             try {
                 sql = arquivoService.lerConteudoArquivo(((Arquivo) comboBoxArquivoOrigem.getSelectedItem()).getarquivo());
-            } catch (Exception e) {
-            }
+            } catch (Exception e) {}
         } else if (t != null && d != null) {
             String mod = d.getAbsolutePath().replace(arquivoService.getpastaRaiz().getAbsolutePath(), arquivoService.getpastaRaiz().getName());
             sql = GeradorTemplateSql.gerar(descricaoCampo.getText(), t, (Acao) comboBoxAcao.getSelectedItem(), (ObjetoBanco) comboBoxObjeto.getSelectedItem(), mod);
         }
-        if (templateListener != null) templateListener.accept(sql, false);
+
+        if (templateListener != null) {
+            templateListener.accept(sql, sqlEditavel);
+        }
     }
 
     private void gerenciarComponentes() {
@@ -231,9 +230,8 @@ public class PainelMigration extends JPanel {
         comboBoxAcao.setVisible(t == Tipo.VERSIONED);
         labelObjeto.setVisible(t != Tipo.UNDO);
         comboBoxObjeto.setVisible(t != Tipo.UNDO);
-        labelOrigem.setVisible(t == Tipo.UNDO);
-        comboBoxArquivoOrigem.setVisible(t == Tipo.UNDO);
-        descricaoCampo.setText("");
+        labelOrigem.setVisible(t == Tipo.UNDO || t == Tipo.REPEATABLE);
+        comboBoxArquivoOrigem.setVisible(t == Tipo.UNDO || t == Tipo.REPEATABLE);
         filtrarObjetos();
         carregarOrigens();
     }
@@ -286,33 +284,13 @@ public class PainelMigration extends JPanel {
         }
     }
 
-    public void setTemplateListener(java.util.function.BiConsumer<String, Boolean> l) {
-        this.templateListener = l;
-    }
-
-    public void setAcaoCriar(ActionListener l) {
-        botaoCriar.addActionListener(l);
-    }
-
-    public void setAcaoAlterar(ActionListener l) {
-        botaoAlterar.addActionListener(l);
-    }
-
-    public void setAcaoSalvar(ActionListener l) {
-        botaoSalvar.addActionListener(l);
-    }
-
-    public void setAcaoCancelar(ActionListener l) {
-        botaoCancelar.addActionListener(l);
-    }
-
-    public File getModulo() {
-        return (File) comboBoxModulo.getSelectedItem();
-    }
-
-    public String getNome() {
-        return previsualizacaoCampo.getText();
-    }
+    public void setTemplateListener(java.util.function.BiConsumer<String, Boolean> l) { this.templateListener = l; }
+    public void setAcaoCriar(ActionListener l) { botaoCriar.addActionListener(l); }
+    public void setAcaoAlterar(ActionListener l) { botaoAlterar.addActionListener(l); }
+    public void setAcaoSalvar(ActionListener l) { botaoSalvar.addActionListener(l); }
+    public void setAcaoCancelar(ActionListener l) { botaoCancelar.addActionListener(l); }
+    public File getModulo() { return (File) comboBoxModulo.getSelectedItem(); }
+    public String getNome() { return previsualizacaoCampo.getText(); }
 
     public void atualizar() {
         comboBoxModulo.removeAllItems();
@@ -349,7 +327,7 @@ public class PainelMigration extends JPanel {
     }
 
     private void atualizaPrevisualizacao() {
-        if (isCarregando || !labelDescricao.isVisible()) return;
+        if (isCarregando || !comboBoxModulo.isEnabled()) return;
         File d = (File) comboBoxModulo.getSelectedItem();
         if (d == null) return;
         previsualizacaoCampo.setText(GeradorNomeArquivo.gerarNomeCompleto(descricaoCampo.getText(), (Acao) comboBoxAcao.getSelectedItem(), (ObjetoBanco) comboBoxObjeto.getSelectedItem(), d.getName(), (Tipo) comboBoxTipo.getSelectedItem(), (Arquivo) comboBoxArquivoOrigem.getSelectedItem()));
