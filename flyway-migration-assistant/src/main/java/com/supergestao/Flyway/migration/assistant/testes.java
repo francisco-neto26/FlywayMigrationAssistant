@@ -11,12 +11,11 @@ public class testes {
     public static void testarGeradorDataHora() {
 
         GeradorDataHora gerador = new GeradorDataHora();
-
         try {
             System.out.println("Data flyway: " +
-                    gerador.gerarDataFlyway( ZONA_PADRAO));
+                    gerador.gerarDataFlyway(ZONA_PADRAO));
             System.out.println("Data formatada: " +
-                    gerador.gerarTimestampLocalidade("dd/mm hh:mm:ss", ZONA_PADRAO));
+                    gerador.gerarTimestampLocalidade("", ZONA_PADRAO));
         } catch (ValidacaoException e) {
             System.out.println("Erro: " + e.getMessage());
         }
