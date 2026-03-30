@@ -7,7 +7,10 @@ public enum MensagemErro {
     FORMATO_DATA_NULL("Formato de data/hora não informado."),
     LOCALIDADE_DATA_INVALIDA("Localidade para data/hora não informada."),
     SQL_INVALIDO("SQL inválido."),
-    ERRO_GENERICO("Erro inesperado.");
+    ERRO_GENERICO("Erro inesperado."),
+    ARQUIVO_NAO_JAVA("O arquivo de entrada não é um arquivo .java. \nVerifique o caminho do arquivo de entrada dos módulos, caminho usado: \n%s"),
+    ERRO_PROCESSAR_ARQ_MODULO("Erro ao processar o arquivo de entrada dos módulos:"),
+    ERRO_PROCESSAR_MOD_EXISTENTE("Erro ao processar o módulos existente:");
 
     private final String mensagem;
 

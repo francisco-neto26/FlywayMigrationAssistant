@@ -7,9 +7,9 @@ public class Modulo {
 
     private final Long id;
     private final String nome;
-    private final String constante;
+    private String constante;
     private final String prefixo;
-    private final String descricao;
+    private String descricao;
 
     public Modulo(Long id, String nome, String constante, String prefixo, String descricao) {
 
@@ -34,6 +34,29 @@ public class Modulo {
         this.constante = constante;
         this.prefixo = prefixo;
         this.descricao = descricao;
+    }
+
+    public Modulo(Long id, String nome, String prefixo) {
+
+        if (id == null) {
+            throw new ValidacaoException(MensagemErro.CAMPO_OBRIGATORIO.MensagemComParametro("Id do módulo"));
+        }
+
+        if (nome == null || nome.isBlank()) {
+            throw new ValidacaoException(MensagemErro.CAMPO_OBRIGATORIO.MensagemComParametro("Nome do módulo"));
+        }
+
+        if (prefixo == null || prefixo.isBlank()) {
+            throw new ValidacaoException(MensagemErro.CAMPO_OBRIGATORIO.MensagemComParametro("Prefixo do módulo"));
+        }
+
+        this.id = id;
+        this.nome = nome;
+        this.prefixo = prefixo;
+    }
+
+    public Long getId() {
+        return id;
     }
 
     public String getNome() {
