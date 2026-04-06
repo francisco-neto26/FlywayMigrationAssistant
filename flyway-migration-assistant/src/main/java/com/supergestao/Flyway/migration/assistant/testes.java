@@ -1,25 +1,53 @@
 package com.supergestao.Flyway.migration.assistant;
 
-import com.supergestao.Flyway.migration.assistant.aplicacao.sincronizar.ModulosExistentes;
-import com.supergestao.Flyway.migration.assistant.aplicacao.sincronizar.ModulosOrigem;
+
 import com.supergestao.Flyway.migration.assistant.aplicacao.sincronizar.SincronizarModulos;
-import com.supergestao.Flyway.migration.assistant.dominio.modelo.Modulo;
 import com.supergestao.Flyway.migration.assistant.exception.ValidacaoException;
+import com.supergestao.Flyway.migration.assistant.persistencia.modulo.RepositorioModulo;
+import com.supergestao.Flyway.migration.assistant.persistencia.modulo.RepositorioModuloDisco;
 
 import java.time.ZoneId;
-import java.util.Map;
+
 
 public class testes {
     private static final ZoneId ZONA_PADRAO = ZoneId.systemDefault();
 
     public static void testarGeradorDataHora() {
+        String caminhoOrigem = "C:\\Users\\User\\Desktop\\ERP-Super-Gestao\\backend\\supergestao\\src\\main\\java\\br\\com\\supergestao\\supergestao\\administracao\\modulos\\enums\\ModuloEnum.java";
+        String caminhoExistentes = "C:\\Users\\User\\Desktop\\ERP-Super-Gestao\\backend\\supergestao\\src\\main\\resources\\db\\migration";
+        // 1. Instanciamos a sua classe de Infraestrutura (Quem lê do HD)
+        RepositorioModulo repositorioDisco = new RepositorioModuloDisco();
 
+        // 2. Injetamos o Repositório na sua classe de Negócio (Inversão de Dependência)
+        SincronizarModulos sincronizarModulos = new SincronizarModulos(repositorioDisco);
 
         try {
-            Map<String, Modulo> modulos = ModulosOrigem.obterModuloOrigem("C:\\Users\\User\\Desktop\\ERP-Super-Gestao\\backend\\supergestao\\src\\main\\java\\br\\com\\supergestao\\supergestao\\administracao\\modulos\\enums\\ModuloEnum.java");
-            Map<String, Modulo> modulosExistentes = ModulosExistentes.obterModulosExistentes("C:\\Users\\User\\Desktop\\ERP-Super-Gestao\\backend\\supergestao\\src\\main\\resources\\db\\migration");
-            Map<String, Modulo> modulosnovos = SincronizarModulos.obterModulosNovos(modulosExistentes, modulos);
+            // 3. Chamamos o método separado que apenas CONSULTA (Query)
+            boolean existemNovos = sincronizarModulos.existeModuloParaSincronizar(caminhoOrigem, caminhoExistentes);
 
+            if (existemNovos) {
+                System.out.println("Módulos novos detectados! Iniciando sincronização...");
+
+                // 4. Chamamos o método que EXECUTA a ação de fato (Command)
+                sincronizarModulos.executarSincronizacao(caminhoOrigem, caminhoExistentes);
+
+                System.out.println("Módulos novos criados com sucesso!");
+            } else {
+                System.out.println("Nenhum módulo novo encontrado. Sistema já está atualizado.");
+            }
+        } catch (ValidacaoException e) {
+            // Qualquer erro do Domínio ou de Disco convertido para Domínio cai lindamente aqui!
+            System.err.println("Erro na Validação/Sincronização: " + e.getMessage());
+            // Se quiser ver aquele rastro do erro técnico (o stack trace), pode colocar um e.printStackTrace();
+        }
+
+
+        /*
+        try {
+            //Map<String, Modulo> modulos = ModulosOrigem.obterModuloOrigem(caminhoOrigem);
+            //Map<String, Modulo> modulosExistentes = ModulosExistentes.obterModulosExistentes(caminhoExistentes);
+           // boolean modulosnovos = sincronizarModulos.sincronizarModulos(caminhoOrigem, caminhoExistentes, "consultar");
+/*
             modulos.forEach((constante, objetoModulo) -> {
                 System.out.println("Chave: " + constante);
                 System.out.println("Nome do Módulo: " + objetoModulo.getNome());
@@ -43,6 +71,6 @@ public class testes {
 
         } catch (ValidacaoException e) {
             System.out.println("Erro: " + e.getMessage());
-        }
+        }*/
     }
 }
