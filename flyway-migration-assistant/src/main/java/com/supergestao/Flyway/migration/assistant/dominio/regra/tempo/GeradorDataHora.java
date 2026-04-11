@@ -30,4 +30,22 @@ public class GeradorDataHora {
             throw new ValidacaoException(MensagemErro.FORMATO_DATA_INVALIDO.MensagemComParametro(formato), e);
         }
     }
+
+    public static String formatarTimestampLocalidade(LocalDateTime datahora, String formato) {
+
+        if (datahora == null) {
+            throw new ValidacaoException(MensagemErro.CAMPO_OBRIGATORIO.MensagemComParametro("Data/Hora para formatação"));
+        }
+
+        if (formato == null || formato.isBlank()) {
+            throw new ValidacaoException(MensagemErro.FORMATO_DATA_NULL.getMensagem());
+        }
+        try {
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern(formato);
+            return datahora.format(formatter);
+        } catch (IllegalArgumentException e) {
+            throw new ValidacaoException(MensagemErro.FORMATO_DATA_INVALIDO.MensagemComParametro(formato), e);
+        }
+    }
+
 }

@@ -3,6 +3,9 @@ package com.supergestao.Flyway.migration.assistant.dominio.modelo;
 import com.supergestao.Flyway.migration.assistant.dominio.mensagem.MensagemErro;
 import com.supergestao.Flyway.migration.assistant.exception.ValidacaoException;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class Modulo {
 
     private final Long id;
@@ -10,6 +13,7 @@ public class Modulo {
     private String constante;
     private final String prefixo;
     private String descricao;
+    private final List<Funcao> funcoes = new ArrayList<>();
 
     public Modulo(Long id, String nome, String constante, String prefixo, String descricao) {
 
@@ -73,6 +77,16 @@ public class Modulo {
 
     public String getDescricao() {
         return descricao;
+    }
+
+    public List<Funcao> getFuncoes() {
+        return funcoes;
+    }
+
+    public void adicionarFuncao(Funcao funcao) {
+        if (funcao != null) {
+            this.funcoes.add(funcao);
+        }
     }
 
     public boolean pertenceAoModulo(String nomeArquivo) {

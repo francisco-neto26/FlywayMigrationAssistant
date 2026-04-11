@@ -12,7 +12,10 @@ public enum MensagemErro {
     ERRO_PROCESSAR_MOD_EXISTENTE("Erro ao processar o módulos existente."),
     ERRO_SALVAR_MODULO("Erro ao salvar o módulo: %s"),
     ERRO_PROCESSAR_FUN_EXISTENTE("Erro ao processar as funções existentes."),
+    ERRO_PROCESSAR_ARQ_EXISTENTE("Erro ao processar o arquivo migration: %s"),
+    ERRO_ACESSAR_ARQ_EXISTENTE("Erro ao acessar os arquivos da função %s"),
     ERRO_SALVAR_FUNCAO("Erro ao salvar a função: %s"),
+    NAO_ARQUIVO_MIGRATION("O arquivo não é uma migration válida do Flyway!"),
     ERRO_GENERICO("Erro inesperado: %s");
 
     private final String mensagem;

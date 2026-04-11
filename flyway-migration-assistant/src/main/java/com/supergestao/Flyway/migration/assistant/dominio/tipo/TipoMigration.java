@@ -1,5 +1,8 @@
 package com.supergestao.Flyway.migration.assistant.dominio.tipo;
 
+import com.supergestao.Flyway.migration.assistant.dominio.mensagem.MensagemErro;
+import com.supergestao.Flyway.migration.assistant.exception.ValidacaoException;
+
 public enum TipoMigration {
 
     VERSIONED("V", "Versioned Migrations", true),
@@ -28,16 +31,14 @@ public enum TipoMigration {
         return requerTimestamp;
     }
 
-    public boolean isVersioned() {
-        return this == VERSIONED;
-    }
-
-    public boolean isRepeatable() {
-        return this == REPEATABLE;
-    }
-
-    public boolean isUndo() {
-        return this == UNDO;
+    public static TipoMigration obterTipoMigration(String nomeArquivo){
+        return switch (nomeArquivo.toUpperCase().charAt(0)) {
+            case 'V' -> TipoMigration.VERSIONED;
+            case 'U' -> TipoMigration.UNDO;
+            case 'R' -> TipoMigration.REPEATABLE;
+            default ->
+                    throw new ValidacaoException(MensagemErro.NAO_ARQUIVO_MIGRATION.getMensagem());
+        };
     }
 
     @Override

@@ -1,12 +1,19 @@
 package com.supergestao.Flyway.migration.assistant;
 
 
+import com.supergestao.Flyway.migration.assistant.aplicacao.buscar.BuscarArquivosModulosFuncao;
 import com.supergestao.Flyway.migration.assistant.aplicacao.sincronizar.SincronizarModulos;
+import com.supergestao.Flyway.migration.assistant.dominio.modelo.Arquivo;
+import com.supergestao.Flyway.migration.assistant.dominio.modelo.Funcao;
+import com.supergestao.Flyway.migration.assistant.dominio.modelo.Modulo;
+import com.supergestao.Flyway.migration.assistant.dominio.regra.tempo.GeradorDataHora;
 import com.supergestao.Flyway.migration.assistant.exception.ValidacaoException;
 import com.supergestao.Flyway.migration.assistant.persistencia.modulo.RepositorioModulo;
 import com.supergestao.Flyway.migration.assistant.persistencia.modulo.RepositorioModuloDisco;
 
 import java.time.ZoneId;
+import java.util.HashSet;
+import java.util.Map;
 
 
 public class testes {
@@ -20,10 +27,50 @@ public class testes {
 
         // 2. Injetamos o Repositório na sua classe de Negócio (Inversão de Dependência)
         SincronizarModulos sincronizarModulos = new SincronizarModulos(repositorioDisco);
+        BuscarArquivosModulosFuncao listaarquivos = new BuscarArquivosModulosFuncao(repositorioDisco);
 
         try {
             // 3. Chamamos o método separado que apenas CONSULTA (Query)
             boolean existemNovos = sincronizarModulos.existeModuloParaSincronizar(caminhoOrigem, caminhoExistentes);
+            Map<String, Modulo> modulosExistentes = sincronizarModulos.obterModulosExistentes(caminhoExistentes);
+
+            for (Map.Entry<String, Modulo> entry : modulosExistentes.entrySet()) {
+                String chave = entry.getKey();
+                Modulo modulo = entry.getValue();
+                System.out.println("Chave: " + chave);
+                System.out.println("Nome do Módulo: " + modulo.getNome());
+                System.out.println("ID: " + modulo.getId());
+                System.out.println("Prefixo: " + modulo.getPrefixo());
+                System.out.println("Funções: " + modulo.getFuncoes().stream().map(Funcao::getNome).toList());
+                for (Funcao funcao : modulo.getFuncoes()){
+                    HashSet<Arquivo> arquivos = listaarquivos.carregarArquivos(caminhoExistentes, modulo.getNome(), funcao.getNome());
+                    if(arquivos.isEmpty()){
+                        System.out.println("Nenhum arquivo encontrado para a função: " + funcao.getNome());
+                        continue;
+                    }else{
+                        System.out.println("arquivos existentes\n");
+                        for (Arquivo arquivo : arquivos) {
+                            System.out.println("Funçao: " + funcao.getNome());
+                            System.out.println("Nome do Arquivo: " + arquivo.getNome());
+
+                        }
+                    }
+                }
+
+                //System.out.println("Modulos existentes\n");
+                if(modulo.getNome().equalsIgnoreCase("Administração")){
+                    sincronizarModulos.criarNovaFuncao(modulo.getNome(), "NovaFuncaoTeste", caminhoExistentes);
+                }
+            }
+
+            HashSet<Arquivo> arquivos = listaarquivos.carregarArquivos(caminhoExistentes, "Compras", "Nota Fisca");
+
+            for (Arquivo arquivo : arquivos) {
+                System.out.println("Nome do Arquivo: " + arquivo.getNome());
+                System.out.println("arquivos existentes\n");
+
+            }
+
 
             if (existemNovos) {
                 System.out.println("Módulos novos detectados! Iniciando sincronização...");

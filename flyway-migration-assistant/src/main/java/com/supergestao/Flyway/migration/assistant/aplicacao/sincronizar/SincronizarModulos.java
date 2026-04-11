@@ -19,7 +19,7 @@ public class SincronizarModulos {
     public boolean existeModuloParaSincronizar(String caminhoOrigem, String caminhoExistentes) {
         Map<String, Modulo> novosModulos = obterModulosNovos(
                 repositorioModulo.obterModuloOrigem(caminhoOrigem),
-                repositorioModulo.obterModulosExistentes(caminhoExistentes)
+                repositorioModulo.obterModulosFuncoes(caminhoExistentes)
         );
         return !novosModulos.isEmpty();
     }
@@ -27,20 +27,30 @@ public class SincronizarModulos {
     public void executarSincronizacao(String caminhoOrigem, String caminhoExistentes) {
         Map<String, Modulo> novosModulos = obterModulosNovos(
                 repositorioModulo.obterModuloOrigem(caminhoOrigem),
-                repositorioModulo.obterModulosExistentes(caminhoExistentes)
+                repositorioModulo.obterModulosFuncoes(caminhoExistentes)
         );
-        criarNovosModulos(novosModulos, caminhoExistentes);
+        criarNovoModulo(novosModulos, caminhoExistentes);
     }
 
-    public void criarNovosModulos(Map<String, Modulo> modulosNovos, String caminhoExistentes) {
+    public void criarNovoModulo(Map<String, Modulo> modulosNovos, String caminhoExistentes) {
         for (Modulo modulo : modulosNovos.values()) {
             String nome = modulo.getNome();
             String caminhoCompleto = Paths.get(caminhoExistentes, nome).toString();
-            repositorioModulo.criarDiretorioModulo(caminhoCompleto);
+            repositorioModulo.salvarDiretorio(caminhoCompleto);
         }
     }
 
-    public  Map<String, Modulo> obterModulosNovos(Map<String, Modulo> moduloOrigem, Map<String, Modulo> modulosExistentes) {
+    public void criarNovaFuncao(String modulo, String funcao, String caminhoExistentes) {
+        String caminhoCompleto = Paths.get(caminhoExistentes, modulo, funcao).toString();
+        repositorioModulo.salvarDiretorio(caminhoCompleto);
+
+    }
+
+    public Map<String, Modulo> obterModulosExistentes(String caminhoExistentes) {
+        return repositorioModulo.obterModulosFuncoes(caminhoExistentes);
+    }
+
+    public Map<String, Modulo> obterModulosNovos(Map<String, Modulo> moduloOrigem, Map<String, Modulo> modulosExistentes) {
 
         Set<String> nomesExistentes = modulosExistentes.values().stream()
                 .map(Modulo::getNome)
