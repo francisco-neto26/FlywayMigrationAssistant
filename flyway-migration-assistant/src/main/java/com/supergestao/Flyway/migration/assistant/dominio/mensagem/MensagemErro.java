@@ -6,7 +6,6 @@ public enum MensagemErro {
     FORMATO_DATA_INVALIDO("O Formato %s para data/hora é inválido."),
     FORMATO_DATA_NULL("Formato de data/hora não informado."),
     LOCALIDADE_DATA_INVALIDA("Localidade para data/hora não informada."),
-    SQL_INVALIDO("SQL inválido."),
     ARQUIVO_NAO_JAVA("O arquivo de entrada não é um arquivo .java. \nVerifique o caminho do arquivo de entrada dos módulos, caminho usado: \n%s"),
     ERRO_PROCESSAR_ARQ_MODULO("Erro ao processar o arquivo de entrada dos módulos."),
     ERRO_PROCESSAR_MOD_EXISTENTE("Erro ao processar o módulos existente."),
@@ -15,6 +14,10 @@ public enum MensagemErro {
     ERRO_PROCESSAR_ARQ_EXISTENTE("Erro ao processar o arquivo migration: %s"),
     ERRO_ACESSAR_ARQ_EXISTENTE("Erro ao acessar os arquivos da função %s"),
     ERRO_SALVAR_FUNCAO("Erro ao salvar a função: %s"),
+    ERRO_SALVAR_ARQUIVO("Erro ao salvar a função: %s"),
+    ERRO_OBTER_ACAO_BANCO("Erro ao converte Acao Banco: %s"),
+    ERRO_CONVERTER_NOME_UNDO("Erro ao converte nome do arquivo Undo: %s"),
+    ERRO_ARQUIVO_NAO_VERSIONED("O Arquivo não é do tipo Versioned Migration"),
     NAO_ARQUIVO_MIGRATION("O arquivo não é uma migration válida do Flyway!"),
     ERRO_GENERICO("Erro inesperado: %s");
 

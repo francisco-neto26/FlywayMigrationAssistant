@@ -27,7 +27,7 @@ public enum TipoMigration {
         return descricao;
     }
 
-    public boolean isRequerTimestamp() {
+    public boolean getRequerTimestamp() {
         return requerTimestamp;
     }
 

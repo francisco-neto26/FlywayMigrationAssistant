@@ -31,12 +31,14 @@ public enum ObjetoBanco {
         this.identificador = identificador;
     }
 
+    public String getIdentificador() {
+        return identificador;
+    }
+
     @Override
     public String toString() {
         return identificador;
     }
 
-    public String getIdentificador() {
-        return identificador;
-    }
+
 }

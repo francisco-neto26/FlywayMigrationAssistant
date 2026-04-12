@@ -1,7 +1,7 @@
 package com.supergestao.Flyway.migration.assistant.aplicacao.sincronizar;
 
 import com.supergestao.Flyway.migration.assistant.dominio.modelo.Modulo;
-import com.supergestao.Flyway.migration.assistant.persistencia.modulo.RepositorioModulo;
+import com.supergestao.Flyway.migration.assistant.persistencia.gerenciador.modulos.arquivos.GerenciadorModulosArquivos;
 
 import java.nio.file.Paths;
 import java.util.Map;
@@ -10,9 +10,9 @@ import java.util.stream.Collectors;
 
 public class SincronizarModulos {
 
-    private final RepositorioModulo repositorioModulo;
+    private final GerenciadorModulosArquivos repositorioModulo;
 
-    public SincronizarModulos(RepositorioModulo repositorioModulo) {
+    public SincronizarModulos(GerenciadorModulosArquivos repositorioModulo) {
         this.repositorioModulo = repositorioModulo;
     }
 
@@ -36,13 +36,13 @@ public class SincronizarModulos {
         for (Modulo modulo : modulosNovos.values()) {
             String nome = modulo.getNome();
             String caminhoCompleto = Paths.get(caminhoExistentes, nome).toString();
-            repositorioModulo.salvarDiretorio(caminhoCompleto);
+            repositorioModulo.salvarModulo(caminhoCompleto);
         }
     }
 
     public void criarNovaFuncao(String modulo, String funcao, String caminhoExistentes) {
         String caminhoCompleto = Paths.get(caminhoExistentes, modulo, funcao).toString();
-        repositorioModulo.salvarDiretorio(caminhoCompleto);
+        repositorioModulo.salvarModulo(caminhoCompleto);
 
     }
 

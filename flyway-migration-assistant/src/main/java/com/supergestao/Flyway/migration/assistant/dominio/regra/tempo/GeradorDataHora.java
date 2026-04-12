@@ -10,8 +10,8 @@ import java.time.format.DateTimeFormatter;
 public class GeradorDataHora {
 
     /** * Gera timestamp no padrão Flyway Ex: 20260328153045 */
-    public String gerarDataFlyway(ZoneId localidade) {
-        return gerarTimestampLocalidade("yyyyMMddHHmmss", localidade);
+    public String gerarDataFlyway() {
+        return gerarTimestampLocalidade("yyyyMMddHHmmss", ZoneId.systemDefault());
     }
 
     public String gerarTimestampLocalidade(String formato, ZoneId zona) {

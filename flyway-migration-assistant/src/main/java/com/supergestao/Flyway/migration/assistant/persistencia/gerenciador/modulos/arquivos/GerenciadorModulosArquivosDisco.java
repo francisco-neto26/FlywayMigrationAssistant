@@ -1,4 +1,4 @@
-package com.supergestao.Flyway.migration.assistant.persistencia.modulo;
+package com.supergestao.Flyway.migration.assistant.persistencia.gerenciador.modulos.arquivos;
 
 import com.supergestao.Flyway.migration.assistant.dominio.mensagem.MensagemErro;
 import com.supergestao.Flyway.migration.assistant.dominio.modelo.Arquivo;
@@ -20,26 +20,44 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-public class RepositorioModuloDisco implements RepositorioModulo {
+public class GerenciadorModulosArquivosDisco implements GerenciadorModulosArquivos {
     @Override
-    public void salvarDiretorio(String caminhoCompleto) {
+    public void salvarModulo(String caminhoDoModulo) {
         try {
-            Files.createDirectories(Paths.get(caminhoCompleto));
+            Files.createDirectories(Paths.get(caminhoDoModulo));
         } catch (IOException e) {
-            throw new ValidacaoException(MensagemErro.ERRO_SALVAR_MODULO.MensagemComParametro(caminhoCompleto), e);
+            throw new ValidacaoException(MensagemErro.ERRO_SALVAR_MODULO.MensagemComParametro(caminhoDoModulo), e);
         }
     }
 
     @Override
-    public HashMap<String, Modulo> obterModulosFuncoes(String caminho) {
+    public String buscarConteudoArquivo(String caminhoDoArquivo) {
+        try {
+            return Files.readString(Paths.get(caminhoDoArquivo));
+        } catch (IOException e) {
+            throw new ValidacaoException(MensagemErro.ERRO_SALVAR_ARQUIVO.MensagemComParametro(Paths.get(caminhoDoArquivo).getFileName().toString()), e);
+        }
+    }
+
+    @Override
+    public void salvarArquivo(String caminhoDoArquivo, String conteudoSQL) {
+        try {
+            Files.writeString(Paths.get(caminhoDoArquivo), conteudoSQL);
+        } catch (IOException e) {
+            throw new ValidacaoException(MensagemErro.ERRO_SALVAR_ARQUIVO.MensagemComParametro(Paths.get(caminhoDoArquivo).getFileName().toString()), e);
+        }
+    }
+
+    @Override
+    public HashMap<String, Modulo> obterModulosFuncoes(String diretorioRaiz) {
 
         try {
-            if (caminho == null || caminho.isBlank()) {
+            if (diretorioRaiz == null || diretorioRaiz.isBlank()) {
                 throw new ValidacaoException(MensagemErro.CAMPO_OBRIGATORIO.MensagemComParametro("Diretório dos módulos de entrada não informado"));
             }
 
             HashMap<String, Modulo> modulosExistentes = new HashMap<>();
-            File[] pastas = new File(caminho).listFiles(File::isDirectory);
+            File[] pastas = new File(diretorioRaiz).listFiles(File::isDirectory);
             if (pastas != null) {
                 Long id = 0L;
                 for (File dirModulo : pastas) {
@@ -70,15 +88,15 @@ public class RepositorioModuloDisco implements RepositorioModulo {
     }
 
     @Override
-    public HashMap<String, Modulo> obterModuloOrigem(String caminho) {
+    public HashMap<String, Modulo> obterModuloOrigem(String diretorioRaiz) {
 
-        if (!caminho.toLowerCase().endsWith(".java")) {
-            throw new ValidacaoException(MensagemErro.ARQUIVO_NAO_JAVA.MensagemComParametro(caminho));
+        if (!diretorioRaiz.toLowerCase().endsWith(".java")) {
+            throw new ValidacaoException(MensagemErro.ARQUIVO_NAO_JAVA.MensagemComParametro(diretorioRaiz));
         }
 
         try {
             //le o arquivo de entrada
-            String conteudo = Files.readString(Path.of(caminho));
+            String conteudo = Files.readString(Path.of(diretorioRaiz));
             // Regex explicada:
             // (\\w+)             -> Grupo 1: Constante
             // (\\d+)L?           -> Grupo 2: ID numérico, ignora o 'L' se houver (1)
@@ -115,15 +133,14 @@ public class RepositorioModuloDisco implements RepositorioModulo {
         }
     }
 
-
-
     @Override
-    public HashSet<Arquivo> carregarArquivos(File dirFuncao) {
-        File[] arquivosFisicos = dirFuncao.listFiles();
+    public HashSet<Arquivo> carregarArquivos(String caminhoFuncao, String nomeModulo, String nomeFuncao) {
+        File pastasFuncoes = Paths.get(caminhoFuncao, nomeModulo, nomeFuncao).toFile();
+        File[] arquivosFisicos = pastasFuncoes.listFiles();
         HashSet<Arquivo> arquivoEncontrado = new HashSet<>();
-        if (arquivosFisicos != null){
+        if (arquivosFisicos != null) {
             for (File arquivo : arquivosFisicos) {
-                if (!arquivo.getName().endsWith(".sql")){
+                if (!arquivo.getName().endsWith(".sql")) {
                     continue;
                 }
                 try {

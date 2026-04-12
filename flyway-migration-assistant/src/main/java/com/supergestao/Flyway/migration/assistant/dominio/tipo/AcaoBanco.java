@@ -1,5 +1,8 @@
 package com.supergestao.Flyway.migration.assistant.dominio.tipo;
 
+import com.supergestao.Flyway.migration.assistant.dominio.mensagem.MensagemErro;
+import com.supergestao.Flyway.migration.assistant.exception.ValidacaoException;
+
 public enum AcaoBanco {
     CREATE("create"),
     ALTER("alter"),
@@ -18,13 +21,30 @@ public enum AcaoBanco {
         return acao;
     }
 
-    public boolean isCreate() {
-        return this == CREATE;
+    public AcaoBanco getOposto() {
+        return switch (this) {
+            case CREATE -> DROP;
+            case DROP   -> CREATE;
+            case ADD    -> REMOVE;
+            case REMOVE -> ADD;
+            case ALTER  -> ALTER;
+            case UPDATE -> UPDATE;
+        };
     }
 
-    public boolean isDropOrRemove() {
-        return this == DROP || this == REMOVE;
+    public static AcaoBanco obterAcaoBanco(String nome){
+        return switch (nome.toLowerCase()) {
+            case "create" -> AcaoBanco.CREATE;
+            case "drop" -> AcaoBanco.DROP;
+            case  "add" -> AcaoBanco.ADD;
+            case "remove" -> AcaoBanco.REMOVE;
+            case "alter"  -> AcaoBanco.ALTER;
+            case "update" -> AcaoBanco.UPDATE;
+            default ->
+                    throw new ValidacaoException(MensagemErro.ERRO_OBTER_ACAO_BANCO.MensagemComParametro(nome));
+        };
     }
+
 
     @Override
     public String toString() {
