@@ -10,11 +10,11 @@ import java.text.Normalizer;
 
 public class GerarNomeArquivoMigration {
     public String gerarNomeArquivoMigration(TipoMigration tipoMigration,
-                                                   AcaoBanco acaoBanco,
-                                                   ObjetoBanco objetoBanco,
-                                                   String dataHoraFlyway,
-                                                   String funcao,
-                                                   String nome) {
+                                            AcaoBanco acaoBanco,
+                                            ObjetoBanco objetoBanco,
+                                            String dataHoraFlyway,
+                                            String funcao,
+                                            String nome) {
 
         if (tipoMigration == null) {
             throw new ValidacaoException(MensagemErro.CAMPO_OBRIGATORIO.MensagemComParametro("Tipo de migration"));
@@ -82,11 +82,11 @@ public class GerarNomeArquivoMigration {
         return resultado.toString();
     }
 
-    public String gerarNomeArquivoMigrationUndo (String nomeArquivo) {
+    public String gerarNomeArquivoMigrationUndo(String nomeArquivo) {
         if (nomeArquivo == null || !nomeArquivo.contains("__")) {
             throw new ValidacaoException(MensagemErro.ERRO_CONVERTER_NOME_UNDO.MensagemComParametro(nomeArquivo));
         }
-        if(!nomeArquivo.toUpperCase().startsWith("V")){
+        if (!nomeArquivo.toUpperCase().startsWith("V")) {
             throw new ValidacaoException(MensagemErro.ERRO_ARQUIVO_NAO_VERSIONED.getMensagem());
         }
         nomeArquivo = nomeArquivo.replace(".sql", "");
@@ -99,7 +99,7 @@ public class GerarNomeArquivoMigration {
             String acao = nomeSeparado[1];
             AcaoBanco acaoBanco = AcaoBanco.obterAcaoBanco(acao);
             StringBuilder finalNomeConcatenado = new StringBuilder();
-            if (nomeSeparado.length > 2){
+            if (nomeSeparado.length > 2) {
                 for (int i = 2; i < nomeSeparado.length; i++) {
                     finalNomeConcatenado.append("_").append(nomeSeparado[i]);
                 }

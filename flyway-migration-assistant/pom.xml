@@ -116,6 +116,12 @@
             <version>1.1.4</version>
         </dependency>
 
+        <dependency>
+            <groupId>org.antlr</groupId>
+            <artifactId>antlr4-runtime</artifactId>
+            <version>4.13.1</version>
+        </dependency>
+
     </dependencies>
 
     <build>
@@ -164,6 +170,43 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>3.2.2</version>
+            </plugin>
+
+            <plugin>
+                <groupId>org.antlr</groupId>
+                <artifactId>antlr4-maven-plugin</artifactId>
+                <version>4.13.1</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>antlr4</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <visitor>true</visitor>
+                    <listener>true</listener>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <version>3.5.0</version>
+                <executions>
+                    <execution>
+                        <id>add-source</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>add-source</goal>
+                        </goals>
+                        <configuration>
+                            <sources>
+                                <source>${project.build.directory}/generated-sources/antlr4</source>
+                            </sources>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
 
             <!-- Shade Plugin - JAR único otimizado (alternativa) -->

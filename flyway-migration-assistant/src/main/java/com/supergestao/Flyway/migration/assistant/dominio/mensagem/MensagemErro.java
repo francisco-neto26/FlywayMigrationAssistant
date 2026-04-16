@@ -19,6 +19,10 @@ public enum MensagemErro {
     ERRO_CONVERTER_NOME_UNDO("Erro ao converte nome do arquivo Undo: %s"),
     ERRO_ARQUIVO_NAO_VERSIONED("O Arquivo não é do tipo Versioned Migration"),
     NAO_ARQUIVO_MIGRATION("O arquivo não é uma migration válida do Flyway!"),
+    SCRIPT_VAZIO("O script SQL está completamente vazio e não tem efeito."),
+    SCRIPT_NAO_PERMITIDO("No script SQL existe comandos não permitidos. %s"),
+    SCRIPT_NAO_SEM_CONDICIONAL("No script SQL existe comandos que deveriam conter condicional. %s"),
+    SCRIPT_ERRO_SINTAXE("O script SQL erro na sintaxe."),
     ERRO_GENERICO("Erro inesperado: %s");
 
     private final String mensagem;
