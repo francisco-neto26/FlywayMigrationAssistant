@@ -3,22 +3,15 @@ package com.supergestao.Flyway.migration.assistant;
 
 import com.supergestao.Flyway.migration.assistant.aplicacao.buscar.BuscarArquivos;
 import com.supergestao.Flyway.migration.assistant.aplicacao.sincronizar.SincronizarModulos;
-import com.supergestao.Flyway.migration.assistant.dominio.modelo.Arquivo;
-import com.supergestao.Flyway.migration.assistant.dominio.modelo.Funcao;
-import com.supergestao.Flyway.migration.assistant.dominio.modelo.Modulo;
 import com.supergestao.Flyway.migration.assistant.dominio.regra.migration.GerarNomeArquivoMigration;
+import com.supergestao.Flyway.migration.assistant.dominio.regra.sql.validacao.ValidacaoCompletaSql;
 import com.supergestao.Flyway.migration.assistant.dominio.regra.tempo.GeradorDataHora;
-import com.supergestao.Flyway.migration.assistant.dominio.tipo.AcaoBanco;
-import com.supergestao.Flyway.migration.assistant.dominio.tipo.ObjetoBanco;
-import com.supergestao.Flyway.migration.assistant.dominio.tipo.TipoMigration;
 import com.supergestao.Flyway.migration.assistant.exception.ValidacaoException;
 import com.supergestao.Flyway.migration.assistant.persistencia.gerenciador.modulos.arquivos.GerenciadorModulosArquivos;
 import com.supergestao.Flyway.migration.assistant.persistencia.gerenciador.modulos.arquivos.GerenciadorModulosArquivosDisco;
 
 import java.text.Normalizer;
 import java.time.ZoneId;
-import java.util.HashSet;
-import java.util.Map;
 
 import static java.time.LocalDateTime.now;
 
@@ -36,22 +29,33 @@ public class testes {
         SincronizarModulos sincronizarModulos = new SincronizarModulos(repositorioDisco);
         BuscarArquivos listaarquivos = new BuscarArquivos(repositorioDisco);
         GerarNomeArquivoMigration novonome = new GerarNomeArquivoMigration();
+        ValidacaoCompletaSql validacaoCompletaSql = new ValidacaoCompletaSql();
         GeradorDataHora hora = new GeradorDataHora();
         try {
 
+            String scriptFunctionComErro =
+                    "CREATE OR REPLACE FUNCTION formatar_hora(data_hora TIMESTAMP) \n" +
+                            "RETORNS VARCHAR AS $$\n" +
+                            "BEGIN\n" +
+                            "    RETURN to_char(data_hora, 'HH24:MI:SS');\n" +
+                            "END;\n" +
+                            "$$ LANGUAGE plpgsql;";
 
-            // 3. Chamamos o método separado que apenas CONSULTA (Query)
+            validacaoCompletaSql.validarScriptCompleto(scriptFunctionComErro);
+
+
+            /*
             boolean existemNovos = sincronizarModulos.existeModuloParaSincronizar(caminhoOrigem, caminhoExistentes);
             Map<String, Modulo> modulosExistentes = sincronizarModulos.obterModulosExistentes(caminhoExistentes);
 
-            String nomearquivo = novonome.gerarNomeArquivoMigration(TipoMigration.REPEATABLE, AcaoBanco.CREATE, ObjetoBanco.TABLE, hora.gerarDataFlyway(), "minha_funcao", "MeuNome");
+            String nomearquivo = novonome.gerarNomeArquivoMigration(TipoMigration.UNDO, AcaoBanco.CREATE, ObjetoBanco.TABLE, hora.gerarDataFlyway(), "minha_funcao", "MeuNome");
 
             System.out.println(nomearquivo);
             String undo = novonome.gerarNomeArquivoMigrationUndo(nomearquivo);
             System.out.println(undo);
 
 
-            /*
+
             for (Map.Entry<String, Modulo> entry : modulosExistentes.entrySet()) {
                 String chave = entry.getKey();
                 Modulo modulo = entry.getValue();

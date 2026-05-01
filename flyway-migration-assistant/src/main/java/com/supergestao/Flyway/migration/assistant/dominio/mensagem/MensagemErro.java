@@ -22,7 +22,9 @@ public enum MensagemErro {
     SCRIPT_VAZIO("O script SQL está completamente vazio e não tem efeito."),
     SCRIPT_NAO_PERMITIDO("No script SQL existe comandos não permitidos. %s"),
     SCRIPT_NAO_SEM_CONDICIONAL("No script SQL existe comandos que deveriam conter condicional. %s"),
-    SCRIPT_ERRO_SINTAXE("O script SQL erro na sintaxe."),
+    SCRIPT_ERRO_SINTAXE("O script SQL contem erro de sintaxe: %s"),
+    SCRIPT_SEM_DICIONARIO("Ausência de Dicionário de Dados: Faltou a instrução 'COMMENT ON' para documentar a criação: %s"),
+    SCRIPT_SEM_PADRAO_SQL("Não segue o padrão SQL: %s"),
     ERRO_GENERICO("Erro inesperado: %s");
 
     private final String mensagem;

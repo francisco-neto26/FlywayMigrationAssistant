@@ -21,24 +21,25 @@ public class ValidarScriptSQL implements RegraValidacaoSql {
         lexer.removeErrorListeners();
         parser.removeErrorListeners();
 
-        CapturarErrosSintaxe capturador = new CapturarErrosSintaxe();
-        lexer.addErrorListener(capturador);
-        parser.addErrorListener(capturador);
+        CapturarErrosSintaxe capturarErros = new CapturarErrosSintaxe();
+        lexer.addErrorListener(capturarErros);
+        parser.addErrorListener(capturarErros);
 
-        parser.root();
-
-
-        if (!capturador.getErros().isEmpty()) {
-            throw new SqlException(MensagemErro.SCRIPT_ERRO_SINTAXE.MensagemComParametro(String.join("\n", capturador.getErros())));
+        PostgreSQLParser.RootContext arvore = parser.root();
+        if (!capturarErros.getErros().isEmpty()) {
+            throw new SqlException(MensagemErro.SCRIPT_ERRO_SINTAXE.MensagemComParametro(String.join("\n", capturarErros.getErros())));
         }
+        org.antlr.v4.runtime.tree.ParseTreeWalker walker = new org.antlr.v4.runtime.tree.ParseTreeWalker();
+        ValidadorAntlrSql fiscalizador = new ValidadorAntlrSql();
+        walker.walk(fiscalizador, arvore);
     }
+
     private static class CapturarErrosSintaxe extends BaseErrorListener {
         private final List<String> erros = new ArrayList<>();
 
         @Override
-        public void syntaxError(Recognizer<?, ?> recognizer, Object offendingSymbol,
-                                int linha, int posicaoColuna, String msg_erro, RecognitionException e) {
-            erros.add(String.format("Erro [Linha %d:%d] -> %s", linha, posicaoColuna, msg_erro));
+        public void syntaxError(Recognizer<?, ?> recognizer, Object offendingSymbol, int linha, int posicaoColuna, String msg_erro, RecognitionException e) {
+            erros.add(String.format("Erro na linha: %d coluna: %d \n Mensagem: %s", linha, posicaoColuna, msg_erro));
         }
 
         public List<String> getErros() {
