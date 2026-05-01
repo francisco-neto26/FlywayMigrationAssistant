@@ -1,4 +1,4 @@
-package com.supergestao.Flyway.migration.assistant.dominio.regra.sql.template;
+package com.supergestao.Flyway.migration.assistant.dominio.regra.sql.template.padrao;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;

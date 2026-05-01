@@ -1,5 +1,6 @@
-package com.supergestao.Flyway.migration.assistant.dominio.regra.sql.template;
+package com.supergestao.Flyway.migration.assistant.dominio.regra.sql.template.padrao;
 
+import com.supergestao.Flyway.migration.assistant.dominio.regra.sql.template.GerarTemplate;
 import com.supergestao.Flyway.migration.assistant.dominio.tipo.AcaoBanco;
 import com.supergestao.Flyway.migration.assistant.dominio.tipo.ObjetoBanco;
 import com.supergestao.Flyway.migration.assistant.dominio.tipo.SubAcaoBanco;
