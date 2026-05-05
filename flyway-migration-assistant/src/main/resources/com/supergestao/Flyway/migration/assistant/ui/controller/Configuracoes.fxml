@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<VBox prefWidth="500.0" spacing="15.0" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.supergestao.Flyway.migration.assistant.ui.controller.ConfiguracoesController">
+    <children>
+        <HBox alignment="CENTER_LEFT" prefHeight="40.0" style="-fx-background-color: #2c3e50;">
+            <children>
+                <Label text="Configurações do Sistema" textFill="WHITE">
+                    <font><Font name="System Bold" size="14.0" /></font>
+                </Label>
+            </children>
+            <padding><Insets left="15.0" /></padding>
+        </HBox>
+        <VBox prefHeight="209.0" prefWidth="470.0" spacing="15.0">
+            <VBox.margin><Insets left="15.0" right="15.0" top="10.0" /></VBox.margin>
+            <children>
+
+                <VBox spacing="5.0">
+                    <children>
+                        <Label text="Diretório Arquivos Migration" />
+                        <HBox spacing="5.0">
+                            <children>
+                                <TextField fx:id="txtDiretorioArquivos" editable="false" HBox.hgrow="ALWAYS" />
+                                <Button fx:id="btnProcurarDiretorioArquivos" text="Procurar..." />
+                            </children>
+                        </HBox>
+                    </children>
+                </VBox>
+
+                <VBox spacing="5.0">
+                    <children>
+                        <Label text="Diretório dos Módulos (.JAVA):" />
+                        <HBox spacing="5.0">
+                            <children>
+                                <TextField fx:id="txtDiretorioModulos" editable="false" HBox.hgrow="ALWAYS" />
+                                <Button fx:id="btnProcurarDiretorioModulos" text="Procurar..." />
+                            </children>
+                        </HBox>
+                    </children>
+                </VBox>
+            <VBox layoutX="10.0" layoutY="74.0" spacing="5.0">
+               <children>
+                  <Label text="Tema:" />
+                  <HBox alignment="CENTER_LEFT" spacing="15.0">
+                     <children>
+                            <ComboBox fx:id="comboTema" prefWidth="290.0" />
+                                <Button fx:id="btnCancelar" prefWidth="75.0" text="Cancelar">
+                               <HBox.margin>
+                                  <Insets />
+                               </HBox.margin></Button>
+                                <Button fx:id="btnSalvar" prefWidth="75.0" style="-fx-background-color: #27ae60; -fx-text-fill: white;" text="Salvar">
+                               <HBox.margin>
+                                  <Insets />
+                               </HBox.margin></Button>
+                     </children>
+                  </HBox>
+               </children>
+            </VBox>
+
+            </children>
+        </VBox>
+    </children>
+</VBox>

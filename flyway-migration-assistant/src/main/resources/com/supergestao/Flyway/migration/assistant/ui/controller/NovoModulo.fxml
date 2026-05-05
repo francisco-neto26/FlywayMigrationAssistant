@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<VBox prefWidth="400.0" spacing="15.0" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.supergestao.Flyway.migration.assistant.ui.NovoModuloController">
+    <children>
+        <HBox alignment="CENTER_LEFT" prefHeight="40.0" style="-fx-background-color: #2c3e50;">
+            <children>
+                <Label text="Novo Módulo" textFill="WHITE">
+                    <font><Font name="System Bold" size="14.0" /></font>
+                </Label>
+            </children>
+            <padding><Insets left="15.0" /></padding>
+        </HBox>
+        <VBox spacing="5.0">
+            <VBox.margin><Insets left="15.0" right="15.0" top="10.0" /></VBox.margin>
+            <children>
+                <Label text="Nome do Módulo:" />
+                <TextField fx:id="txtNomeModulo" promptText="Ex: financeiro" />
+            </children>
+        </VBox>
+        <HBox alignment="CENTER_RIGHT" spacing="10.0">
+            <VBox.margin><Insets bottom="15.0" left="15.0" right="15.0" top="10.0" /></VBox.margin>
+            <children>
+                <Button fx:id="btnCancelar" text="Cancelar" />
+                <Button fx:id="btnCriarModulo" style="-fx-background-color: #27ae60; -fx-text-fill: white;" text="Criar Módulo" />
+            </children>
+        </HBox>
+    </children>
+</VBox>

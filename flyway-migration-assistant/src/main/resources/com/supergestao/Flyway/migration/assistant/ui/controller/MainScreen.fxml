@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.SplitPane?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.TreeView?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<BorderPane prefHeight="800.0" prefWidth="1200.0" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.supergestao.Flyway.migration.assistant.ui.MainScreenController">
+
+    <!-- Barra Superior (Top) -->
+    <top>
+        <HBox alignment="CENTER_LEFT" prefHeight="50.0" style="-fx-background-color: #2c3e50;" BorderPane.alignment="CENTER">
+            <children>
+                <Label text="Flyway Migration Assistant" textFill="WHITE">
+                    <font>
+                        <Font name="System Bold" size="18.0" />
+                    </font>
+                </Label>
+            </children>
+            <padding>
+                <Insets left="20.0" />
+            </padding>
+        </HBox>
+    </top>
+
+    <!-- Centro -->
+    <center>
+        <SplitPane dividerPositions="0.25" BorderPane.alignment="CENTER">
+            <items>
+
+                <!-- PAINEL ESQUERDO: EXPLORADOR -->
+                <VBox spacing="10.0" style="-fx-background-color: #f8f9fa;">
+                    <padding>
+                        <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+                    </padding>
+                    <children>
+                        <Label text="Buscar arquivo" textFill="#34495e">
+                            <font><Font name="System Bold" size="14.0" /></font>
+                        </Label>
+                        <HBox spacing="5.0">
+                            <children>
+                                <TextField fx:id="txtBuscarArquivo" promptText="Digite para buscar..." HBox.hgrow="ALWAYS" />
+                                <Button fx:id="btnBuscar" text="🔍" />
+                            </children>
+                        </HBox>
+                        <TreeView fx:id="treeArquivos" VBox.vgrow="ALWAYS" />
+                    </children>
+                </VBox>
+
+                <!-- PAINEL DIREITO: EDITOR E MENSAGENS -->
+                <SplitPane dividerPositions="0.75" orientation="VERTICAL">
+                    <items>
+                        <!-- Área do SQL -->
+                        <VBox spacing="5.0">
+                            <padding>
+                                <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+                            </padding>
+                            <children>
+                                <!-- Barra de Ferramentas do Editor -->
+                                <HBox alignment="CENTER_LEFT" spacing="10.0">
+                                    <children>
+                                        <Label text="Editor SQL" textFill="#2980b9">
+                                            <font><Font name="System Bold" size="14.0" /></font>
+                                        </Label>
+                                        <HBox HBox.hgrow="ALWAYS" />
+                                        <Button fx:id="btnIndentar" disable="true" prefWidth="100.0" text="≡ Indentar" />
+                                        <Button fx:id="btnValidarSql" disable="true" prefWidth="100.0" style="-fx-background-color: #27ae60; -fx-text-fill: white;" text="Validar SQL" />
+                                        <Button fx:id="btnCancelarEdicao" disable="true" prefWidth="100.0" style="-fx-background-color: red; -fx-text-fill: white;" text="✕ Cancelar" />
+                                        <Button fx:id="btnSalvarSql" disable="true" prefWidth="100.0" style="-fx-background-color: #27ae60; -fx-text-fill: white;" text="💾 Salvar" />
+                                    </children>
+                                    <VBox.margin><Insets bottom="5.0" /></VBox.margin>
+                                </HBox>
+                                <!-- O Editor de Fato -->
+                                <TextArea fx:id="txtAreaSql" promptText="Escreva ou carregue seu código SQL aqui..." VBox.vgrow="ALWAYS">
+                                    <font><Font name="Consolas" size="14.0" /></font>
+                                </TextArea>
+                            </children>
+                        </VBox>
+
+                        <!-- Área de Mensagens / Validação -->
+                        <VBox spacing="5.0" style="-fx-background-color: #f1f2f6;">
+                            <padding>
+                                <Insets bottom="10.0" left="10.0" right="10.0" top="5.0" />
+                            </padding>
+                            <children>
+                                <Label text="Mensagens e Validação" textFill="#7f8c8d">
+                                    <font><Font name="System Bold" size="12.0" /></font>
+                                </Label>
+                                <TextArea fx:id="txtAreaMensagens" disable="true" editable="false" style="-fx-text-fill: #c0392b;" VBox.vgrow="ALWAYS">
+                                    <font><Font name="Consolas" size="13.0" /></font>
+                                </TextArea>
+                            </children>
+                        </VBox>
+                    </items>
+                </SplitPane>
+            </items>
+        </SplitPane>
+    </center>
+
+    <!-- Rodapé (Botões de Ação) -->
+    <bottom>
+        <HBox alignment="CENTER_LEFT" prefHeight="45.0" spacing="15.0" style="-fx-background-color: #ecf0f1;" BorderPane.alignment="CENTER">
+            <padding>
+                <Insets left="20.0" right="20.0" />
+            </padding>
+            <children>
+                <Button fx:id="btnAtualizar" prefWidth="100.0" style="-fx-background-color: #34495e; -fx-text-fill: white;" text="Atualizar Árvore" />
+                <Button fx:id="btnNovoModulo" prefWidth="100.0" style="-fx-background-color: #34495e; -fx-text-fill: white;" text="Novo Módulo" />
+                <Button fx:id="btnNovaFuncao" prefWidth="100.0" style="-fx-background-color: #34495e; -fx-text-fill: white;" text="Nova Função" />
+                <Button fx:id="btnNovoMigration" prefWidth="100.0" style="-fx-background-color: #34495e; -fx-text-fill: white;" text="Novo Migration" />
+                <HBox alignment="CENTER_LEFT" prefHeight="43.0" prefWidth="583.0" HBox.hgrow="ALWAYS">
+               <children>
+                      <Button fx:id="btnConfiguracoes" alignment="CENTER" contentDisplay="RIGHT" minWidth="-Infinity" prefWidth="100.0" style="-fx-background-color: #34495e; -fx-text-fill: white;" text="Configurações" />
+               </children></HBox>
+            </children>
+        </HBox>
+    </bottom>
+</BorderPane>
