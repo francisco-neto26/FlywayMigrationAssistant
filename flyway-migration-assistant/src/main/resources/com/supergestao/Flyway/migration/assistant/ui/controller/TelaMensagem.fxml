@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<VBox prefHeight="324.0" prefWidth="500.0" spacing="15.0" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.supergestao.Flyway.migration.assistant.ui.controller.TelaMensagemController">
+    <children>
+        <HBox alignment="CENTER_LEFT" prefHeight="60.0" prefWidth="501.0" style="-fx-background-color: #2c3e50;">
+            <children>
+                <Label fx:id="lblTitulo" text="Mensagem do Sistema" textFill="WHITE">
+                    <font><Font name="System Bold" size="14.0" /></font>
+                </Label>
+            </children>
+            <padding><Insets left="15.0" /></padding>
+        </HBox>
+        <VBox spacing="10.0" VBox.vgrow="ALWAYS">
+            <VBox.margin><Insets left="15.0" right="15.0" /></VBox.margin>
+            <children>
+            <Label fx:id="lblMensagem" prefHeight="18.0" prefWidth="472.0" text="Mensagem">
+                <font><Font name="System Bold" size="14.0" /></font>
+            </Label>
+                <TextArea fx:id="txtAreaDetalhes" editable="false" style="-fx-background-color: transparent; -fx-control-inner-background: transparent; -fx-border-width: 0; -fx-focus-color: transparent; -fx-faint-focus-color: transparent; -fx-padding: 0;" wrapText="true" VBox.vgrow="ALWAYS">
+                    <font><Font name="Consolas" size="13.0" /></font>
+                </TextArea>
+            </children>
+        </VBox>
+        <HBox alignment="CENTER_RIGHT" spacing="10.0">
+            <VBox.margin><Insets bottom="15.0" left="15.0" right="15.0" top="5.0" /></VBox.margin>
+            <children>
+                <Button fx:id="btnFechar" prefWidth="75.0" style="-fx-background-color: #27ae60; -fx-text-fill: white;" text="Fechar" />
+            </children>
+        </HBox>
+    </children>
+</VBox>

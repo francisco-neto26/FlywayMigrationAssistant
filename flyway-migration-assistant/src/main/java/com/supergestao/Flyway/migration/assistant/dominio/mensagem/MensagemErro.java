@@ -25,6 +25,7 @@ public enum MensagemErro {
     SCRIPT_ERRO_SINTAXE("O script SQL contem erro de sintaxe: %s"),
     SCRIPT_SEM_DICIONARIO("Ausência de Dicionário de Dados: Faltou a instrução 'COMMENT ON' para documentar a criação: %s"),
     SCRIPT_SEM_PADRAO_SQL("Não segue o padrão SQL: %s"),
+    ERRO_ABERTURA_TELA("Erro ao tentar abrir a tela de: %s"),
     ERRO_GENERICO("Erro inesperado: %s");
 
     private final String mensagem;
