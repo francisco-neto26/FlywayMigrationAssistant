@@ -12,6 +12,7 @@ public class GerenciadorConfiguracao {
 
     private static final String CHAVE_DIRETORIO_MODULO = "DIRETORIO_MODULO";
     private static final String CHAVE_DIRETORIO_ARQUIVO = "DIRETORIO_ARQUIVO";
+    private static final String CHAVE_TEMA = "TEMA_SISTEMA";
     public static final List<Theme> CHAVE_TEMAS_DISPONIVEIS = List.of(
             new PrimerLight(), new PrimerDark(),
             new CupertinoLight(), new CupertinoDark(),
@@ -35,12 +36,24 @@ public class GerenciadorConfiguracao {
     }
 
     public static void salvarTema(String tema) {
-        prefs.put(CHAVE_TEMAS_DISPONIVEIS.toString(), tema);
+        prefs.put(CHAVE_TEMA, tema);
     }
 
-    public static String getTema() {
-        return prefs.get(CHAVE_TEMAS_DISPONIVEIS.toString(), "Primer Claro (Padrão)");
+    public static Theme getTema() {
+        String temaSalvo = prefs.get(CHAVE_TEMA, "Primer Light");
+
+        for (Theme tema : CHAVE_TEMAS_DISPONIVEIS) {
+            if (tema.getName().equals(temaSalvo)) {
+                return tema;
+            }
+        }
+        return new PrimerLight();
     }
+
+    public static List<Theme> getListaTema() {
+        return CHAVE_TEMAS_DISPONIVEIS;
+    }
+
 
     public static void aplicarTema(Theme tema) {
         if (tema != null) {

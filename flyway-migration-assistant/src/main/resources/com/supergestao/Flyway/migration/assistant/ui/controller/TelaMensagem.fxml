@@ -5,9 +5,9 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
 
-<VBox prefHeight="324.0" prefWidth="500.0" spacing="15.0" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.supergestao.Flyway.migration.assistant.ui.controller.TelaMensagemController">
+<VBox prefHeight="324.0" prefWidth="500.0" spacing="15.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.supergestao.Flyway.migration.assistant.ui.controller.TelaMensagemController">
     <children>
-        <HBox alignment="CENTER_LEFT" prefHeight="60.0" prefWidth="501.0" style="-fx-background-color: #2c3e50;">
+        <HBox fx:id="hboxTopo" alignment="CENTER_LEFT" prefHeight="60.0" prefWidth="501.0" style="-fx-background-color: #2c3e50;">
             <children>
                 <Label fx:id="lblTitulo" text="Mensagem do Sistema" textFill="WHITE">
                     <font><Font name="System Bold" size="14.0" /></font>

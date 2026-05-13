@@ -1,18 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.geometry.Insets?>
-<?import javafx.scene.control.Button?>
-<?import javafx.scene.control.Label?>
-<?import javafx.scene.control.SplitPane?>
-<?import javafx.scene.control.TextArea?>
-<?import javafx.scene.control.TextField?>
-<?import javafx.scene.control.TreeView?>
-<?import javafx.scene.layout.BorderPane?>
-<?import javafx.scene.layout.HBox?>
-<?import javafx.scene.layout.VBox?>
-<?import javafx.scene.text.Font?>
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
 
-<BorderPane prefHeight="800.0" prefWidth="1200.0" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.supergestao.Flyway.migration.assistant.ui.MainScreenController">
+<BorderPane prefHeight="800.0" prefWidth="1200.0" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.supergestao.Flyway.migration.assistant.ui.controller.TelaPrincipalController">
 
     <!-- Barra Superior (Top) -->
     <top>
@@ -111,14 +104,14 @@
                 <Insets left="20.0" right="20.0" />
             </padding>
             <children>
-                <Button fx:id="btnAtualizar" prefWidth="100.0" style="-fx-background-color: #34495e; -fx-text-fill: white;" text="Atualizar Árvore" />
-                <Button fx:id="btnNovoModulo" prefWidth="100.0" style="-fx-background-color: #34495e; -fx-text-fill: white;" text="Novo Módulo" />
-                <Button fx:id="btnNovaFuncao" prefWidth="100.0" style="-fx-background-color: #34495e; -fx-text-fill: white;" text="Nova Função" />
-                <Button fx:id="btnNovoMigration" prefWidth="100.0" style="-fx-background-color: #34495e; -fx-text-fill: white;" text="Novo Migration" />
-                <HBox alignment="CENTER_LEFT" prefHeight="43.0" prefWidth="583.0" HBox.hgrow="ALWAYS">
-               <children>
-                      <Button fx:id="btnConfiguracoes" alignment="CENTER" contentDisplay="RIGHT" minWidth="-Infinity" prefWidth="100.0" style="-fx-background-color: #34495e; -fx-text-fill: white;" text="Configurações" />
-               </children></HBox>
+                <Button fx:id="btnAtualizar" prefHeight="28.0" prefWidth="125.0" style="-fx-background-color: #34495e; -fx-text-fill: white;" text="Atual. Módulos">
+               <HBox.margin>
+                  <Insets left="-10.0" />
+               </HBox.margin></Button>
+                <Button fx:id="btnNovoModulo" prefHeight="28.0" prefWidth="125.0" style="-fx-background-color: #34495e; -fx-text-fill: white;" text="Novo Módulo" />
+                <Button fx:id="btnNovaFuncao" prefHeight="28.0" prefWidth="125.0" style="-fx-background-color: #34495e; -fx-text-fill: white;" text="Nova Função" />
+                <Button fx:id="btnNovoMigration" prefHeight="28.0" prefWidth="125.0" style="-fx-background-color: #34495e; -fx-text-fill: white;" text="Novo Migration" />
+                <Button fx:id="btnConfiguracoes" prefHeight="28.0" prefWidth="125.0" style="-fx-background-color: #34495e; -fx-text-fill: white;" text="Configurações" />
             </children>
         </HBox>
     </bottom>

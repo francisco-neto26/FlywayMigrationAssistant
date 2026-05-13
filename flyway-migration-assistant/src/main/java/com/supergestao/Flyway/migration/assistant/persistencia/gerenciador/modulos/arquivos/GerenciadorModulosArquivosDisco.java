@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
 
 public class GerenciadorModulosArquivosDisco implements GerenciadorModulosArquivos {
     @Override
-    public void salvarModulo(String caminhoDoModulo) {
+    public void salvarModuloFuncao(String caminhoDoModulo) {
         try {
             Files.createDirectories(Paths.get(caminhoDoModulo));
         } catch (IOException e) {

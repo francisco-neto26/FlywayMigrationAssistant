@@ -16,13 +16,13 @@ import java.nio.file.Paths;
 
 public class GerenciadorJanelas implements Mensageiro{
     @Override
-    public void exibirMensagem(String titulo, String mensagem, String detalhes) {
+    public void exibirMensagem(String titulo, String mensagem, String detalhes, TipoMensagem tipoMensagem) {
         try {
             FXMLLoader loader = new FXMLLoader(GerenciadorJanelas.class.getResource("/com/supergestao/Flyway/migration/assistant/ui/controller/TelaMensagem.fxml"));
             Parent root = loader.load();
 
             TelaMensagemController telaMensagemController = loader.getController();
-            telaMensagemController.exibirMensagem(titulo, mensagem, detalhes);
+            telaMensagemController.exibirMensagem(titulo, mensagem, detalhes, tipoMensagem);
 
             Stage stage = new Stage();
             stage.setTitle(titulo);

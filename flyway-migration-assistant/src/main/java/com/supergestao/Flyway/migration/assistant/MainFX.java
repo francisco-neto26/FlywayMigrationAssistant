@@ -1,32 +1,39 @@
 package com.supergestao.Flyway.migration.assistant;
 
+import com.supergestao.Flyway.migration.assistant.dominio.configuracao.GerenciadorConfiguracao;
 import javafx.application.Application;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.Label;
-import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
+import atlantafx.base.theme.Theme;
+import javafx.application.Platform;
 
 public class MainFX extends Application {
 
     @Override
-    public void start(Stage palcoPrincipal) {
-        // Criamos um texto simples
-        Label texto = new Label("Bem-vindo ao Flyway Assistant com JavaFX!");
+    public void start(Stage primaryStage ) throws Exception {
+        Theme temaSalvo = GerenciadorConfiguracao.getTema();
+        Application.setUserAgentStylesheet(temaSalvo.getUserAgentStylesheet());
 
-        // Colocamos o texto no meio da tela
-        StackPane layout = new StackPane(texto);
+        FXMLLoader loaderTelaPrincipal = new FXMLLoader(getClass().getResource("/com/supergestao/Flyway/migration/assistant/ui/controller/TelaPrincipal.fxml"));
+        Parent root = loaderTelaPrincipal.load();
 
-        // Criamos uma Cena com 600 de largura por 400 de altura
-        Scene cena = new Scene(layout, 600, 400);
+        Scene scene = new Scene(root, 1000, 700);
 
-        // Configuramos a Janela
-        palcoPrincipal.setTitle("Flyway Migration Assistant");
-        palcoPrincipal.setScene(cena);
-        palcoPrincipal.show();
+        primaryStage.setTitle("Flyway Migration Assistant");
+        primaryStage.setScene(scene);
+        primaryStage.setMaximized(true);
+
+        primaryStage.setOnCloseRequest(event -> {
+            Platform.exit();
+            System.exit(0);
+        });
+
+        primaryStage .show();
     }
 
     public static void main(String[] args) {
-        // Dispara o JavaFX
         launch(args);
     }
 }
