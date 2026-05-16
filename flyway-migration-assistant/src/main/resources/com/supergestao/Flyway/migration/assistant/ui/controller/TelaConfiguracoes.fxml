@@ -3,20 +3,11 @@
 <?import javafx.geometry.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<?import javafx.scene.text.*?>
 
-<VBox prefWidth="500.0" spacing="15.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.supergestao.Flyway.migration.assistant.ui.controller.TelaConfiguracoesController">
+<VBox prefHeight="246.0" prefWidth="553.0" spacing="15.0" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.supergestao.Flyway.migration.assistant.ui.controller.TelaConfiguracoesController">
     <children>
-        <HBox alignment="CENTER_LEFT" prefHeight="50.0" prefWidth="500.0" style="-fx-background-color: #2c3e50;">
-            <children>
-                <Label text="Configurações do Sistema" textFill="WHITE">
-                    <font><Font name="System Bold" size="14.0" /></font>
-                </Label>
-            </children>
-            <padding><Insets left="15.0" /></padding>
-        </HBox>
-        <VBox prefHeight="209.0" prefWidth="470.0" spacing="15.0">
-            <VBox.margin><Insets left="15.0" right="15.0" top="10.0" /></VBox.margin>
+        <VBox prefHeight="214.0" prefWidth="519.0" spacing="15.0">
+            <VBox.margin><Insets bottom="10.0" left="10.0" right="10.0" top="10.0" /></VBox.margin>
             <children>
 
                 <VBox spacing="5.0">
@@ -47,12 +38,12 @@
                   <Label text="Tema:" />
                   <HBox alignment="CENTER_LEFT" spacing="15.0">
                      <children>
-                            <ComboBox fx:id="comboTema" prefWidth="290.0" />
-                                <Button fx:id="btnCancelar" prefWidth="75.0" style="-fx-background-color: #e74c3c; -fx-text-fill: white;" text="Cancelar">
+                            <ComboBox fx:id="comboTema" prefHeight="25.0" prefWidth="323.0" />
+                                <Button fx:id="btnCancelar" prefWidth="100.0" style="-fx-background-color: #e74c3c; -fx-text-fill: white;" text="Cancelar">
                                <HBox.margin>
                                   <Insets />
                                </HBox.margin></Button>
-                                <Button fx:id="btnSalvar" prefWidth="75.0" style="-fx-background-color: #27ae60; -fx-text-fill: white;" text="Salvar">
+                                <Button fx:id="btnSalvar" prefWidth="100.0" style="-fx-background-color: #27ae60; -fx-text-fill: white;" text="Salvar">
                                <HBox.margin>
                                   <Insets />
                                </HBox.margin></Button>

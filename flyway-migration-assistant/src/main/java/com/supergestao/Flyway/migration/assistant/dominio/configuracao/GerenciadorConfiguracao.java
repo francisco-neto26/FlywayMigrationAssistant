@@ -10,9 +10,9 @@ public class GerenciadorConfiguracao {
     // Caminho no Regedit: HKEY_CURRENT_USER\Software\JavaSoft\Prefs\com\supergestao\flywayassistant
     private static final Preferences prefs = Preferences.userRoot().node("com/supergestao/flywayassistant");
 
-    private static final String CHAVE_DIRETORIO_MODULO = "DIRETORIO_MODULO";
-    private static final String CHAVE_DIRETORIO_ARQUIVO = "DIRETORIO_ARQUIVO";
-    private static final String CHAVE_TEMA = "TEMA_SISTEMA";
+    private static final String CHAVE_DIRETORIO_MODULO = "diretorio_modulo";
+    private static final String CHAVE_DIRETORIO_ARQUIVO = "diretorio_arquivo";
+    private static final String CHAVE_TEMA = "tema_sistema";
     public static final List<Theme> CHAVE_TEMAS_DISPONIVEIS = List.of(
             new PrimerLight(), new PrimerDark(),
             new CupertinoLight(), new CupertinoDark(),

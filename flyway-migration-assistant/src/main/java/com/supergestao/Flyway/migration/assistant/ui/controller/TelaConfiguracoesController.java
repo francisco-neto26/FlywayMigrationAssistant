@@ -3,11 +3,13 @@ package com.supergestao.Flyway.migration.assistant.ui.controller;
 
 import atlantafx.base.theme.Theme;
 import com.supergestao.Flyway.migration.assistant.dominio.configuracao.GerenciadorConfiguracao;
-import com.supergestao.Flyway.migration.assistant.exception.TelaException;
+import com.supergestao.Flyway.migration.assistant.dominio.mensagem.MensagemErro;
+import com.supergestao.Flyway.migration.assistant.exception.PersistenciaException;
 import com.supergestao.Flyway.migration.assistant.persistencia.gerenciador.modulos.arquivos.GerenciadorModulosArquivos;
 import com.supergestao.Flyway.migration.assistant.ui.estado.ContextoAplicacao;
+import com.supergestao.Flyway.migration.assistant.ui.utilitario.GerenciadorEstiloBotao;
 import com.supergestao.Flyway.migration.assistant.ui.utilitario.Mensageiro;
-import com.supergestao.Flyway.migration.assistant.ui.utilitario.TipoMensagem;
+import com.supergestao.Flyway.migration.assistant.ui.utilitario.CoresPadrao;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
@@ -60,11 +62,41 @@ public class TelaConfiguracoesController {
     @FXML
     public void initialize() {
 
+        GerenciadorEstiloBotao.BotaoConfirmar(btnSalvar);
+        GerenciadorEstiloBotao.BotaoCancelar(btnCancelar);
+        GerenciadorEstiloBotao.BotaoPadrao(btnProcurarDiretorioModulos);
+        GerenciadorEstiloBotao.BotaoPadrao(btnProcurarDiretorioArquivos);
+
         btnProcurarDiretorioModulos.setOnAction(event -> {
+            FileChooser fileChooser = new FileChooser();
+            fileChooser.setTitle("Selecione o arquivo .java com os módulos");
+            fileChooser.getExtensionFilters().add(
+                    new FileChooser.ExtensionFilter("Arquivos .java", "*.java")
+            );
+
+            if (txtDiretorioModulos.getText() != null && !txtDiretorioModulos.getText().isEmpty()) {
+                File arquivoAtual = new File(txtDiretorioModulos.getText());
+                if (arquivoAtual.exists() && arquivoAtual.isFile()) {
+                    File parentDir = arquivoAtual.getParentFile();
+                    if (parentDir != null && parentDir.exists() && parentDir.isDirectory()) {
+                        fileChooser.setInitialDirectory(parentDir);
+                    }
+                }
+            }
+
+            Stage stage = (Stage) btnProcurarDiretorioModulos.getScene().getWindow();
+            File arquivoSelecionado = fileChooser.showOpenDialog(stage);
+
+            if (arquivoSelecionado != null) {
+                txtDiretorioModulos.setText(arquivoSelecionado.getAbsolutePath());
+            }
+        });
+
+        btnProcurarDiretorioArquivos.setOnAction(event -> {
             DirectoryChooser directoryChooser = new DirectoryChooser();
             directoryChooser.setTitle("Selecione a pasta raiz dos Módulos");
 
-            File pastaAtual = new File(txtDiretorioModulos.getText());
+            File pastaAtual = new File(txtDiretorioArquivos.getText());
             if (pastaAtual.exists() && pastaAtual.isDirectory()) {
                 directoryChooser.setInitialDirectory(pastaAtual);
             }
@@ -73,22 +105,7 @@ public class TelaConfiguracoesController {
             File pastaSelecionada = directoryChooser.showDialog(stage);
 
             if (pastaSelecionada != null) {
-                txtDiretorioModulos.setText(pastaSelecionada.getAbsolutePath());
-            }
-        });
-
-        btnProcurarDiretorioArquivos.setOnAction(event -> {
-            FileChooser fileChooser = new FileChooser();
-            fileChooser.setTitle("Selecione o arquivo .java com os módulos");
-            fileChooser.getExtensionFilters().add(
-                    new FileChooser.ExtensionFilter("Arquivos .java", "*.java")
-            );
-
-            Stage stage = (Stage) btnProcurarDiretorioArquivos.getScene().getWindow();
-            File arquivoSelecionado = fileChooser.showOpenDialog(stage);
-
-            if (arquivoSelecionado != null) {
-                txtDiretorioArquivos.setText(arquivoSelecionado.getAbsolutePath());
+                txtDiretorioArquivos.setText(pastaSelecionada.getAbsolutePath());
             }
         });
 
@@ -108,7 +125,7 @@ public class TelaConfiguracoesController {
             tema.getName();
             GerenciadorConfiguracao.getTema();
         }
-
+        comboTema.getSelectionModel().select(GerenciadorConfiguracao.getTema());
         comboTema.setOnAction(event -> {
             GerenciadorConfiguracao.aplicarTema(comboTema.getValue());
         });
@@ -117,18 +134,27 @@ public class TelaConfiguracoesController {
         btnSalvar.setOnAction(event -> {
 
             if (txtDiretorioModulos.getText().isEmpty()) {
-                this.mensageiro.exibirMensagem("Atenção", "O diretório dos módulos não pode estar vazio.", null, TipoMensagem.AVISO);
+                this.mensageiro.exibirDialogo("m",
+                        "Alerta",
+                        null,
+                        "O diretório dos módulos não pode estar vazio.",
+                        CoresPadrao.AVISO);
                 return;
             }
             if (txtDiretorioArquivos.getText().isEmpty()) {
-                this.mensageiro.exibirMensagem("Atenção", "O diretório dos arquivos não pode estar vazio.", null, TipoMensagem.AVISO);
+                this.mensageiro.exibirDialogo("m",
+                        "Alerta",
+                        null,
+                        "O diretório dos arquivos não pode estar vazio.",
+                        CoresPadrao.AVISO);
                 return;
             }
 
-            boolean confirmacao = this.mensageiro.pedidoConfirmacao(
+            boolean confirmacao = this.mensageiro.exibirDialogo("c",
                     "Configurações",
+                    null,
                     "Deseja salvar as configurações?",
-                    null
+                    CoresPadrao.BOTAO_CONFIRMAR
             );
 
             if (confirmacao) {
@@ -139,14 +165,26 @@ public class TelaConfiguracoesController {
 
                     fecharTela();
 
-                } catch (TelaException e) {
-                    this.mensageiro.exibirMensagem("Erro ao salvar configurações", "Não foi possível salvar as configurações", e.getMessage(), TipoMensagem.ERRO);
+                } catch (PersistenciaException e) {
+
+                    String detalhesDoErro = e.getCause() != null ? e.getCause().toString() : MensagemErro.ERRO_GENERICO.MensagemComParametro("Erro ao salvar configurações");
+
+                    this.mensageiro.exibirDialogo(
+                            "c",
+                            "Falha Crítica",
+                            "Não foi possível gravar no RegEdit do Windows",
+                            detalhesDoErro,
+                            CoresPadrao.ERRO
+                    );
                 }
             }
 
         });
 
-        btnCancelar.setOnAction(event -> fecharTela());
+        btnCancelar.setOnAction(event -> {
+            GerenciadorConfiguracao.aplicarTema(GerenciadorConfiguracao.getTema());
+            fecharTela();
+        });
     }
 
     private void fecharTela() {

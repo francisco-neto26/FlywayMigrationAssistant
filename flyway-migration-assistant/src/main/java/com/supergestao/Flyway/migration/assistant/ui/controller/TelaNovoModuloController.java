@@ -4,7 +4,7 @@ import com.supergestao.Flyway.migration.assistant.exception.TelaException;
 import com.supergestao.Flyway.migration.assistant.persistencia.gerenciador.modulos.arquivos.GerenciadorModulosArquivos;
 import com.supergestao.Flyway.migration.assistant.ui.estado.ContextoAplicacao;
 import com.supergestao.Flyway.migration.assistant.ui.utilitario.Mensageiro;
-import com.supergestao.Flyway.migration.assistant.ui.utilitario.TipoMensagem;
+import com.supergestao.Flyway.migration.assistant.ui.utilitario.CoresPadrao;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
@@ -41,10 +41,11 @@ public class TelaNovoModuloController {
             String nomeModulo = txtNomeModulo.getText().trim();
             if (!nomeModulo.isEmpty()) {
                 String caminho = Paths.get(this.diretorioModulos, nomeModulo).toAbsolutePath().toString();
-                boolean confirmacao = this.mensageiro.pedidoConfirmacao(
+                boolean confirmacao = this.mensageiro.exibirDialogo("c",
                         "Novo Módulo",
+                        null,
                         "Deseja criar o módulo '" + nomeModulo + "' no diretorio '" + caminho + "'?",
-                        null
+                        CoresPadrao.INFO
                 );
 
                 if (confirmacao) {
@@ -54,11 +55,20 @@ public class TelaNovoModuloController {
                         stage.close();
 
                     } catch (TelaException e) {
-                        this.mensageiro.exibirMensagem("Erro ao Salvar", "Não foi possível criar o módulo", e.getMessage(), TipoMensagem.ERRO);
+                        this.mensageiro.exibirDialogo("m",
+                                "Erro ao Salvar",
+                                "Não foi possível criar o módulo",
+                                e.getMessage(),
+                                CoresPadrao.ERRO
+                        );
                     }
                 }
             } else {
-                this.mensageiro.exibirMensagem("Atenção", "O nome do módulo não pode estar vazio.", null, TipoMensagem.AVISO);
+                this.mensageiro.exibirDialogo("m",
+                        "Atenção", null,
+                        "O nome do módulo não pode estar vazio.",
+                        CoresPadrao.AVISO
+                );
             }
         });
     }

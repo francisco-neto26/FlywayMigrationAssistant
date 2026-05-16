@@ -5,7 +5,7 @@ import com.supergestao.Flyway.migration.assistant.exception.TelaException;
 import com.supergestao.Flyway.migration.assistant.persistencia.gerenciador.modulos.arquivos.GerenciadorModulosArquivos;
 import com.supergestao.Flyway.migration.assistant.ui.estado.ContextoAplicacao;
 import com.supergestao.Flyway.migration.assistant.ui.utilitario.Mensageiro;
-import com.supergestao.Flyway.migration.assistant.ui.utilitario.TipoMensagem;
+import com.supergestao.Flyway.migration.assistant.ui.utilitario.CoresPadrao;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
@@ -48,10 +48,11 @@ public class TelaNovaFuncaoController {
             String nomeModulo = comboModulo.getValue().getNome();
             if (!nomeFuncao.isEmpty()) {
                 String caminho = Paths.get(this.diretorioModulos, nomeModulo, nomeFuncao).toAbsolutePath().toString();
-                boolean confirmacao = this.mensageiro.pedidoConfirmacao(
+                boolean confirmacao = this.mensageiro.exibirDialogo("c",
                         "Nova Função",
+                        null,
                         "Deseja criar a função '" + nomeFuncao + "' no diretorio '" + caminho + "'?",
-                        null
+                        CoresPadrao.AVISO
                 );
 
                 if (confirmacao) {
@@ -61,11 +62,20 @@ public class TelaNovaFuncaoController {
                         stage.close();
 
                     } catch (TelaException e) {
-                        this.mensageiro.exibirMensagem("Erro ao Salvar", "Não foi possível criar a Função", e.getMessage(), TipoMensagem.ERRO);
+                        this.mensageiro.exibirDialogo("m",
+                                "Erro ao Salvar",
+                                "Não foi possível criar a Função",
+                                e.getMessage(),
+                                CoresPadrao.ERRO);
                     }
                 }
             } else {
-                this.mensageiro.exibirMensagem("Atenção", "O nome do módulo não pode estar vazio.", null, TipoMensagem.AVISO);
+                this.mensageiro.exibirDialogo("m",
+                        "Atenção",
+                        null,
+                        "O nome do módulo não pode estar vazio.",
+                        CoresPadrao.AVISO
+                );
             }
         });
     }
