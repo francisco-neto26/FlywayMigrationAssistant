@@ -5,7 +5,7 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
 
-<VBox prefHeight="202.0" prefWidth="500.0" spacing="15.0" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.supergestao.Flyway.migration.assistant.ui.controller.TelaDialogoController">
+<VBox fx:id="painelRaiz" alignment="CENTER" prefHeight="202.0" prefWidth="500.0" spacing="15.0" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.supergestao.Flyway.migration.assistant.ui.controller.TelaDialogoController">
     <children>
         <VBox spacing="10.0" VBox.vgrow="ALWAYS">
             <VBox.margin>
@@ -29,8 +29,8 @@
                 <Insets bottom="15.0" left="15.0" right="15.0" top="5.0" />
             </VBox.margin>
             <children>
-                <Button fx:id="btnCancelar" minWidth="-Infinity" prefWidth="100.0" text="Cancelar" />
-                <Button fx:id="btnConfirmar" minWidth="-Infinity" prefWidth="100.0" text="Confirmar" />
+                <Button fx:id="btnCancelar" text="Cancelar" />
+                <Button fx:id="btnConfirmar" text="Confirmar" />
             </children>
         </HBox>
 

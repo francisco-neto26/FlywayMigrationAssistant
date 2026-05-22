@@ -1,7 +1,9 @@
 package com.supergestao.Flyway.migration.assistant.ui.controller;
 
+import com.supergestao.Flyway.migration.assistant.dominio.configuracao.GerenciadorConfiguracao;
 import com.supergestao.Flyway.migration.assistant.ui.utilitario.CoresPadrao;
 import com.supergestao.Flyway.migration.assistant.ui.utilitario.GerenciadorEstiloBotao;
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
@@ -33,10 +35,10 @@ public class JanelaBaseController {
 
     @FXML
     public void initialize() {
-
-        GerenciadorEstiloBotao.botaoControleTela(btnMinimizar);
-        GerenciadorEstiloBotao.botaoControleTela(btnMaximizar);
-        GerenciadorEstiloBotao.botaoControleTela(btnFechar);
+        setfonte();
+        Platform.runLater(() -> {
+            GerenciadorEstiloBotao.gerenciadorEstiloBotao(painelPrincipal);
+        });
 
         hboxTopo.setOnMousePressed(event -> {
             xOffset = event.getSceneX();
@@ -95,6 +97,11 @@ public class JanelaBaseController {
 
         BorderPane.setMargin(conteudoComMoldura, new Insets(5));
         painelPrincipal.setCenter(conteudoComMoldura);
+    }
+
+    public void setfonte(){
+        String fonteEscolhida = GerenciadorConfiguracao.getChaveFonte();
+        painelPrincipal.setStyle("-fx-font-family: '" + fonteEscolhida + "';");
     }
 
     public void defineVisibilidadeMaxMin() {

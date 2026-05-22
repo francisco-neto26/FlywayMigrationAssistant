@@ -1,7 +1,7 @@
 package com.supergestao.Flyway.migration.assistant.ui.controller;
 
-import com.supergestao.Flyway.migration.assistant.ui.utilitario.CoresPadrao;
 import com.supergestao.Flyway.migration.assistant.ui.utilitario.GerenciadorEstiloBotao;
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -9,7 +9,6 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.layout.VBox;
-import javafx.scene.text.TextAlignment;
 import javafx.stage.Stage;
 
 public class TelaDialogoController {
@@ -23,13 +22,17 @@ public class TelaDialogoController {
     @FXML
     private Button btnCancelar;
 
+    @FXML
+    private VBox painelRaiz;
+
     private boolean confirmado = false;
 
     @FXML
     public void initialize() {
 
-        GerenciadorEstiloBotao.BotaoConfirmar(btnConfirmar);
-        GerenciadorEstiloBotao.BotaoCancelar(btnCancelar);
+        Platform.runLater(() -> {
+            GerenciadorEstiloBotao.gerenciadorEstiloBotao(painelRaiz);
+        });
 
         btnConfirmar.setOnAction(event -> fechar(true));
         btnCancelar.setOnAction(event -> fechar(false));

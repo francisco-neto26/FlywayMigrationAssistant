@@ -5,7 +5,7 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
 
-<BorderPane prefHeight="800.0" prefWidth="1200.0" style="-fx-border-color: rgba(128, 128, 128, 0.3); -fx-border-style: solid; -fx-border-width: 1;" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.supergestao.Flyway.migration.assistant.ui.controller.TelaPrincipalController">
+<BorderPane fx:id="painelRaiz" prefHeight="800.0" prefWidth="1200.0" style="-fx-border-color: rgba(128, 128, 128, 0.3); -fx-border-style: solid; -fx-border-width: 1;" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.supergestao.Flyway.migration.assistant.ui.controller.TelaPrincipalController">
 
     <center>
         <SplitPane dividerPositions="0.35">
@@ -51,10 +51,10 @@
 
                                         <Region HBox.hgrow="ALWAYS" />
 
-                                        <Button fx:id="btnIndentar" style="-fx-cursor: hand;" text="Indentar" />
-                                        <Button fx:id="btnValidarSql" style="-fx-cursor: hand;" text="Validar SQL" />
-                                        <Button fx:id="btnCancelarEdicao" style="-fx-cursor: hand;" text="Cancelar" />
-                                        <Button fx:id="btnSalvarSql" style="-fx-cursor: hand;" text="Salvar" />
+                                        <Button fx:id="btnIndentar" onAction="#indentar" style="-fx-cursor: hand;" text="Indentar" />
+                                        <Button fx:id="btnValidarSql" onAction="#validarSql" style="-fx-cursor: hand;" text="Validar SQL" />
+                                        <Button fx:id="btnCancelarEdicao" onAction="#cancelarEdicao" style="-fx-cursor: hand;" text="Cancelar" />
+                                        <Button fx:id="btnSalvarSql" onAction="#salvarSql" style="-fx-cursor: hand;" text="Salvar" />
                                     </children>
                                 </HBox>
 
@@ -89,14 +89,14 @@
                 <Insets left="20.0" right="20.0" />
             </padding>
             <children>
-                <Button fx:id="btnAtualizar" prefWidth="120.0" style="-fx-cursor: hand;" text="Atualizar Módulos" />
+                <Button fx:id="btnAtualizar" onAction="#verifcaEcarregarModuloFuncao" prefWidth="120.0" style="-fx-cursor: hand;" text="Atualizar Módulos" />
 
                 <Region HBox.hgrow="ALWAYS" />
 
-                <Button fx:id="btnNovoModulo" style="-fx-cursor: hand;" text="Novo Módulo" />
-                <Button fx:id="btnNovaFuncao" style="-fx-cursor: hand;" text="Nova Função" />
-                <Button fx:id="btnNovoMigration" style="-fx-cursor: hand;" text="Novo Migration" />
-                <Button fx:id="btnConfiguracoes" style="-fx-cursor: hand;" text="Configurações" />
+                <Button fx:id="btnNovoModulo" onAction="#telaNovoModulo" style="-fx-cursor: hand;" text="Novo Módulo" />
+                <Button fx:id="btnNovaFuncao" onAction="#telaNovaFuncao" style="-fx-cursor: hand;" text="Nova Função" />
+                <Button fx:id="btnNovoMigration" onAction="#telaNovoMigration" style="-fx-cursor: hand;" text="Novo Migration" />
+                <Button fx:id="btnConfiguracoes" onAction="#telaConfiguracao" style="-fx-cursor: hand;" text="Configurações" />
             </children>
         </HBox>
     </bottom>

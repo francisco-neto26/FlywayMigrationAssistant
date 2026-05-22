@@ -2,7 +2,7 @@ package com.supergestao.Flyway.migration.assistant.ui.utilitario;
 
 public enum CoresPadrao {
     ERRO("#DC2626"),                    // Vermelho intenso
-    AVISO("#EA580C"),                   // Laranja profundo
+    AVISO("#F59E0B"),                   // Laranja profundo
     SUCESSO("#16A34A"),                 // Verde natural e vibrante
     INFO("#2563EB"),                    // Azul royal moderno
     PADRAO("#1E293B"),                  // tom de "cinza-azulado"

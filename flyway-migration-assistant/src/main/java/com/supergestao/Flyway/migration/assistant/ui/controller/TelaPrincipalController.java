@@ -10,11 +10,17 @@ import com.supergestao.Flyway.migration.assistant.ui.utilitario.*;
 import javafx.animation.PauseTransition;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
+import javafx.scene.Node;
+import javafx.scene.Parent;
 import javafx.scene.control.*;
+import javafx.scene.layout.BorderPane;
 import javafx.util.Duration;
 
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class TelaPrincipalController {
 
@@ -46,45 +52,27 @@ public class TelaPrincipalController {
     private Button btnNovoMigration;
     @FXML
     private Button btnConfiguracoes;
+    @FXML
+    private BorderPane painelRaiz;
 
     private ContextoAplicacao contexto;
 
     @FXML
     public void initialize() {
-
         atualizarContexto();
-        //melhorar a chamada dos botoes, ta ficando extensa aqui, criar metodo
-        GerenciadorEstiloBotao.BotaoPadrao(btnAtualizar);
-        btnAtualizar.setOnAction(event -> verifcaEcarregarModuloFuncao());
-
-        GerenciadorEstiloBotao.BotaoPadrao(btnNovoModulo);
-        btnNovoModulo.setOnAction(event -> telaNovoModulo());
-
-        GerenciadorEstiloBotao.BotaoPadrao(btnNovaFuncao);
-        btnNovaFuncao.setOnAction(event -> telaNovaFuncao());
-
-        GerenciadorEstiloBotao.BotaoPadrao(btnNovoMigration);
-        btnNovoMigration.setOnAction(event -> telaNovoMigration());
-
-        GerenciadorEstiloBotao.BotaoPadrao(btnConfiguracoes);
-        btnConfiguracoes.setOnAction(event -> telaConfiguracao());
         buscaTempoReal();
         AtivaDesativaBotoesPrincipais();
         Platform.runLater(() -> {
             verifcaEcarregarModuloFuncao();
+            GerenciadorEstiloBotao.gerenciadorEstiloBotao(painelRaiz);
         });
     }
 
     private void atualizarContexto() {
-        this.contexto = new ContextoAplicacao(
-                GerenciadorConfiguracao.getDiretorioModulo(),
-                GerenciadorConfiguracao.getDiretorioArquivo(),
-                GerenciadorConfiguracao.getTema().getName(),
-                GerenciadorConfiguracao.getListaTema(),
-                new GerenciadorModulosArquivosDisco(),
-                new GerenciadorJanelas());
+        this.contexto = new ContextoAplicacao();
     }
 
+    @FXML
     private void telaConfiguracao() {
         ConstrutorJanelas.abrirModal(
                 CaminhoTela.TELA_CONFIGURACOES,
@@ -93,11 +81,15 @@ public class TelaPrincipalController {
                 (TelaConfiguracoesController controller) -> {
                     controller.setGerenciador(this.contexto);
                 }
+
         );
+        GerenciadorVisual.aplicarTemaGlobal(GerenciadorConfiguracao.getTema());
+        GerenciadorVisual.aplicarFonteGlobal(GerenciadorConfiguracao.getChaveFonte());
         atualizarContexto();
         verifcaEcarregarModuloFuncao();
     }
 
+    @FXML
     private void telaNovoModulo() {
         ConstrutorJanelas.abrirModal(
                 CaminhoTela.TELA_NOVO_MODULO,
@@ -110,6 +102,7 @@ public class TelaPrincipalController {
         verifcaEcarregarModuloFuncao();
     }
 
+    @FXML
     private void telaNovaFuncao() {
         ConstrutorJanelas.abrirModal(
                 CaminhoTela.TELA_NOVA_FUNCAO,
@@ -122,6 +115,7 @@ public class TelaPrincipalController {
         verifcaEcarregarModuloFuncao();
     }
 
+    @FXML
     private void telaNovoMigration() {
         ConstrutorJanelas.abrirModal(
                 CaminhoTela.TELA_NOVO_MIGRATION,
@@ -134,8 +128,28 @@ public class TelaPrincipalController {
         verifcaEcarregarModuloFuncao();
     }
 
-    private void buscaTempoReal(){
-        GerenciadorEstiloBotao.BotaoPadrao(btnBuscar);
+    @FXML
+    private void indentar() {
+
+    }
+
+    @FXML
+    private void validarSql() {
+
+    }
+
+    @FXML
+    private void cancelarEdicao() {
+
+    }
+
+    @FXML
+    private void salvarSql() {
+
+    }
+
+    private void buscaTempoReal() {
+        GerenciadorEstiloBotao.botaoPadrao(btnBuscar);
         PauseTransition atrasoBusca = new PauseTransition(Duration.millis(500));
         atrasoBusca.setOnFinished(event -> {
             buscarArquivo(txtBuscarArquivo.getText());
@@ -151,7 +165,6 @@ public class TelaPrincipalController {
 
     }
 
-
     private boolean existeDiretorioConfigurado() {
         return this.contexto.getDiretorioModulos() != null && !this.contexto.getDiretorioModulos().isEmpty();
     }
@@ -166,8 +179,9 @@ public class TelaPrincipalController {
         txtBuscarArquivo.setDisable(existeDiretorioConfigurado);
     }
 
+    @FXML
     private void verifcaEcarregarModuloFuncao() {
-        if (!existeDiretorioConfigurado()) {
+        if (!this.contexto.getDiretoriosConfigurados()) {
 
             boolean querConfigurar = this.contexto.getMensageiro().exibirDialogo("c",
                     "Cadastrar configurações",
@@ -184,11 +198,10 @@ public class TelaPrincipalController {
         }
     }
 
+
     private void desenharArvore() {
         try {
-            if (!existeDiretorioConfigurado()) {
-                return;
-            }
+
             TreeItem<String> raizVisual = new TreeItem<>("Módulos (Raiz)");
             raizVisual.setExpanded(true);
 

@@ -12,6 +12,8 @@ public class GerenciadorConfiguracao {
 
     private static final String CHAVE_DIRETORIO_MODULO = "diretorio_modulo";
     private static final String CHAVE_DIRETORIO_ARQUIVO = "diretorio_arquivo";
+    private static final String CHAVE_FONTE = "fonte_sitema";
+    private static final String CHAVE_USA_MODULO = "fonte_usa_modulo";
     private static final String CHAVE_TEMA = "tema_sistema";
     public static final List<Theme> CHAVE_TEMAS_DISPONIVEIS = List.of(
             new PrimerLight(), new PrimerDark(),
@@ -54,11 +56,25 @@ public class GerenciadorConfiguracao {
         return CHAVE_TEMAS_DISPONIVEIS;
     }
 
-
-    public static void aplicarTema(Theme tema) {
-        if (tema != null) {
-            javafx.application.Application.setUserAgentStylesheet(tema.getUserAgentStylesheet());
-        }
+    public static String getChaveFonte() {
+        return prefs.get(CHAVE_FONTE, "Segoe UI");
     }
+
+    public static void salvarChaveFonte(String fonte) {
+        prefs.put(CHAVE_FONTE, fonte);
+    }
+
+    public static boolean getChaveUsaModulo() {
+        return prefs.get(CHAVE_USA_MODULO, "Sim").equalsIgnoreCase("Sim");
+    }
+
+    public static void salvarChaveUsaModulo(String usa_modulo) {
+        prefs.put(CHAVE_USA_MODULO, usa_modulo);
+    }
+
+    public static boolean diretoriosConfigurados(){
+        return (!getDiretorioModulo().isEmpty() || getChaveUsaModulo()) && !getDiretorioArquivo().isEmpty();
+    }
+
 }
 

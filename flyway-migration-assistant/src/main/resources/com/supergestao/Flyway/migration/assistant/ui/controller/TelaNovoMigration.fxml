@@ -1,101 +1,98 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.geometry.Insets?>
-<?import javafx.scene.control.Button?>
-<?import javafx.scene.control.ComboBox?>
-<?import javafx.scene.control.Label?>
-<?import javafx.scene.control.TextField?>
-<?import javafx.scene.effect.ColorAdjust?>
-<?import javafx.scene.layout.HBox?>
-<?import javafx.scene.layout.VBox?>
-<?import javafx.scene.text.Font?>
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.effect.*?>
+<?import javafx.scene.layout.*?>
 
-<VBox prefWidth="550.0" spacing="15.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.supergestao.Flyway.migration.assistant.ui.controller.TelaNovoMigrationController">
+<VBox fx:id="painelRaiz" prefHeight="466.0" prefWidth="740.0" spacing="15.0" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.supergestao.Flyway.migration.assistant.ui.controller.TelaNovoMigrationController">
     <children>
 
-        <VBox spacing="15.0">
-            <VBox.margin><Insets left="15.0" right="15.0" top="10.0" /></VBox.margin>
+        <VBox prefHeight="312.0" prefWidth="542.0" spacing="15.0">
+            <VBox.margin>
+                <Insets left="15.0" right="15.0" top="10.0" />
+            </VBox.margin>
             <children>
 
                 <HBox spacing="15.0">
                     <children>
                         <VBox spacing="5.0" HBox.hgrow="SOMETIMES">
                             <children>
-                                <Label text="Módulo:" />
-                                <ComboBox fx:id="comboModulo" maxWidth="1.7976931348623157E308" prefHeight="25.0" prefWidth="150.0" promptText="Selecione..." />
+                                <Label fx:id="lblModulo" text="Módulo:" />
+                                <ComboBox fx:id="comboModulo" maxWidth="1.7976931348623157E308" prefHeight="25.0" prefWidth="150.0" promptText="Selecione." />
                             </children>
                         </VBox>
                         <VBox spacing="5.0" HBox.hgrow="SOMETIMES">
                             <children>
-                                <Label fx:id="comboFuncao" text="Função:" />
-                        <ComboBox fx:id="comboTipoMigration" maxWidth="1.7976931348623157E308" prefHeight="25.0" prefWidth="150.0" promptText="Selecione..." />
+                                <Label fx:id="lblFuncao" text="Função:" />
+                                <ComboBox fx:id="comboFuncao" maxWidth="1.7976931348623157E308" prefHeight="25.0" prefWidth="150.0" promptText="Selecione." />
                             </children>
                         </VBox>
-                  <VBox spacing="5.0" HBox.hgrow="SOMETIMES">
-                     <children>
-                        <Label text="Tipo:" />
-                        <ComboBox fx:id="comboTipoMigration1" maxWidth="1.7976931348623157E308" prefHeight="25.0" prefWidth="150.0" promptText="Selecione..." />
-                     </children>
-                  </VBox>
+                        <VBox spacing="5.0" HBox.hgrow="SOMETIMES">
+                            <children>
+                                <Label fx:id="lblTipo" text="Tipo:" />
+                                <ComboBox fx:id="comboTipo" maxWidth="1.7976931348623157E308" prefHeight="25.0" prefWidth="150.0" promptText="Selecione." />
+                            </children>
+                        </VBox>
                     </children>
                 </HBox>
 
-                <!-- Template Dinâmico -->
                 <HBox spacing="15.0">
                     <children>
                         <VBox spacing="5.0" HBox.hgrow="ALWAYS">
-                            <Label text="Ação:" />
-                            <ComboBox fx:id="comboAcao" maxWidth="1.7976931348623157E308" prefHeight="25.0" prefWidth="150.0" promptText="Selecione..." />
+                            <Label fx:id="lblAcao" text="Ação:" />
+                            <ComboBox fx:id="comboAcao" maxWidth="1.7976931348623157E308" prefHeight="25.0" prefWidth="150.0" promptText="Selecione." />
                         </VBox>
                         <VBox spacing="5.0" HBox.hgrow="ALWAYS">
-                            <Label text="Objeto:" />
-                            <ComboBox fx:id="comboObjeto" maxWidth="1.7976931348623157E308" prefHeight="25.0" prefWidth="150.0" promptText="Selecione..." VBox.vgrow="ALWAYS" />
+                            <Label fx:id="lblObjeto" text="Objeto:" />
+                            <ComboBox fx:id="comboObjeto" maxWidth="1.7976931348623157E308" prefHeight="25.0" prefWidth="150.0" promptText="Selecione." VBox.vgrow="ALWAYS" />
                         </VBox>
                         <VBox prefHeight="25.0" prefWidth="150.0" spacing="5.0" HBox.hgrow="ALWAYS">
-                            <Label prefHeight="25.0" prefWidth="150.0" text="Sub-Ação:" />
-                            <ComboBox fx:id="comboSubAcao" maxWidth="1.7976931348623157E308" promptText="Automático..." />
+                            <Label fx:id="lblSubAcao" prefHeight="25.0" prefWidth="150.0" text="Sub-Ação:" />
+                            <ComboBox fx:id="comboSubAcao" maxWidth="1.7976931348623157E308" promptText="Selecione." />
                         </VBox>
                     </children>
                 </HBox>
-                <!-- Busca para UNDO -->
-                <VBox spacing="5.0" VBox.vgrow="ALWAYS">
+
+                <VBox prefHeight="61.0" prefWidth="520.0" spacing="5.0">
                     <children>
-                        <Label prefHeight="0.0" prefWidth="216.0" text="Buscar Mirgation (UNDO):" textFill="#7f8c8d" VBox.vgrow="ALWAYS" />
+                        <Label fx:id="lblBuscarMigration" prefHeight="0.0" prefWidth="216.0" text="Buscar Mirgation (UNDO):" textFill="#7f8c8d" VBox.vgrow="ALWAYS" />
                         <HBox spacing="5.0">
-                     <children>
-                                <TextField fx:id="txtBuscaUndo" editable="false" prefHeight="25.0" prefWidth="436.0" promptText="Nome do script para reverter..." HBox.hgrow="ALWAYS" />
+                            <children>
+                                <TextField fx:id="txtBuscaUndo" disable="true" editable="false" prefHeight="25.0" prefWidth="436.0" promptText="Nome do script para reverter." HBox.hgrow="ALWAYS" />
                                 <Button fx:id="btnBuscarUndo" disable="true" prefHeight="25.0" prefWidth="74.0" text="🔍 Buscar" />
-                     </children>
+                            </children>
                         </HBox>
                     </children>
                 </VBox>
 
                 <VBox prefHeight="61.0" prefWidth="520.0" spacing="5.0">
                     <children>
-                        <Label prefHeight="23.0" prefWidth="139.0" text="Nome Descritivo do Script:" />
+                        <Label fx:id="lblNomeScript" prefHeight="0.0" prefWidth="216.0" text="Nome Descritivo do Script:" textFill="#7f8c8d" VBox.vgrow="ALWAYS" />
                         <TextField fx:id="txtNomeScript" promptText="Ex: cria_tabela_usuarios" />
                     </children>
                 </VBox>
 
-                <VBox spacing="5.0" style="-fx-background-color: #f1f2f6; -fx-padding: 10;">
+                <VBox prefHeight="61.0" prefWidth="520.0" spacing="5.0">
                     <children>
-                        <Label text="Nome Completo do Migration:" textFill="#7f8c8d">
-                            <font><Font name="System Italic" size="12.0" /></font>
-                        </Label>
-                        <TextField fx:id="txtPreviewArquivo" disable="true" editable="false" prefHeight="22.0" prefWidth="507.0" promptText="Nome Final do arquivo a ser criado" style="-fx-background-color: transparent; -fx-font-family: Consolas; -fx-font-weight: bold;" />
+                        <Label fx:id="lblNomeCompleto" prefHeight="0.0" prefWidth="216.0" text="Nome Completo do Migration:" textFill="#7f8c8d" VBox.vgrow="ALWAYS" />
+                        <TextField fx:id="txtPreviewArquivo" disable="true" editable="false" promptText="Nome Final do arquivo a ser criado" />
                     </children>
                 </VBox>
 
             </children>
         </VBox>
-        <HBox alignment="CENTER_RIGHT" spacing="10.0">
-            <VBox.margin><Insets bottom="15.0" left="15.0" right="15.0" top="10.0" /></VBox.margin>
+        <HBox alignment="CENTER_RIGHT" prefHeight="89.0" prefWidth="646.0" spacing="10.0">
+            <VBox.margin>
+                <Insets bottom="15.0" left="15.0" right="15.0" top="10.0" />
+            </VBox.margin>
             <children>
-                <Button fx:id="btnCancelar" text="Cancelar" />
-                <Button fx:id="btnCriarMigration" style="-fx-background-color: #27ae60; -fx-text-fill: white;" text="Criar Migration">
-               <effect>
-                  <ColorAdjust />
-               </effect></Button>
+                <Button fx:id="btnCancelar" onAction="#fechar" text="Cancelar" />
+                <Button fx:id="btnSalvarMigration" onAction="#salvarMigration" text="Criar Migration">
+                    <effect>
+                        <ColorAdjust />
+                    </effect>
+                </Button>
             </children>
         </HBox>
     </children>
