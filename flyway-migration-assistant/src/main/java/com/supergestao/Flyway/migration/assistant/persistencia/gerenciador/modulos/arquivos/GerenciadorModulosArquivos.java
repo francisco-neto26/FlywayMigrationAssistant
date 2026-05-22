@@ -3,12 +3,11 @@ package com.supergestao.Flyway.migration.assistant.persistencia.gerenciador.modu
 import com.supergestao.Flyway.migration.assistant.dominio.modelo.Arquivo;
 import com.supergestao.Flyway.migration.assistant.dominio.modelo.Modulo;
 
-import java.io.File;
 import java.util.HashSet;
 import java.util.Map;
 
 public interface GerenciadorModulosArquivos {
-    void salvarModulo(String caminhoDoModulo);
+    void salvarModuloFuncao(String caminhoDoModulo);
 
     void salvarArquivo(String caminhoDoArquivo, String conteudoSQL);
 

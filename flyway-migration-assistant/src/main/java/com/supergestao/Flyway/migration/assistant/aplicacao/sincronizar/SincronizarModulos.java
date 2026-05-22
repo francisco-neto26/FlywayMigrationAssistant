@@ -36,13 +36,13 @@ public class SincronizarModulos {
         for (Modulo modulo : modulosNovos.values()) {
             String nome = modulo.getNome();
             String caminhoCompleto = Paths.get(caminhoExistentes, nome).toString();
-            repositorioModulo.salvarModulo(caminhoCompleto);
+            repositorioModulo.salvarModuloFuncao(caminhoCompleto);
         }
     }
 
     public void criarNovaFuncao(String modulo, String funcao, String caminhoExistentes) {
         String caminhoCompleto = Paths.get(caminhoExistentes, modulo, funcao).toString();
-        repositorioModulo.salvarModulo(caminhoCompleto);
+        repositorioModulo.salvarModuloFuncao(caminhoCompleto);
 
     }
 

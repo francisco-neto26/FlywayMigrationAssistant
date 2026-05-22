@@ -1,6 +1,6 @@
 package com.supergestao.Flyway.migration.assistant.exception;
 
-public class SqlException extends MigrationException {
+public class SqlException extends ExceptionPadrao {
 
     public SqlException(String mensagem) {
         super(mensagem);

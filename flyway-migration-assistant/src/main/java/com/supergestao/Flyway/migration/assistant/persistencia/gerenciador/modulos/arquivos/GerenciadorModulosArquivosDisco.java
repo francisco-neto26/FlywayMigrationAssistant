@@ -5,6 +5,7 @@ import com.supergestao.Flyway.migration.assistant.dominio.modelo.Arquivo;
 import com.supergestao.Flyway.migration.assistant.dominio.modelo.Funcao;
 import com.supergestao.Flyway.migration.assistant.dominio.modelo.Modulo;
 import com.supergestao.Flyway.migration.assistant.dominio.tipo.TipoMigration;
+import com.supergestao.Flyway.migration.assistant.exception.PersistenciaException;
 import com.supergestao.Flyway.migration.assistant.exception.ValidacaoException;
 
 import java.io.File;
@@ -22,11 +23,11 @@ import java.util.stream.Collectors;
 
 public class GerenciadorModulosArquivosDisco implements GerenciadorModulosArquivos {
     @Override
-    public void salvarModulo(String caminhoDoModulo) {
+    public void salvarModuloFuncao(String caminhoDoModulo) {
         try {
             Files.createDirectories(Paths.get(caminhoDoModulo));
         } catch (IOException e) {
-            throw new ValidacaoException(MensagemErro.ERRO_SALVAR_MODULO.MensagemComParametro(caminhoDoModulo), e);
+            throw new PersistenciaException(MensagemErro.ERRO_SALVAR_MODULO.MensagemComParametro(caminhoDoModulo), e);
         }
     }
 
@@ -35,7 +36,7 @@ public class GerenciadorModulosArquivosDisco implements GerenciadorModulosArquiv
         try {
             return Files.readString(Paths.get(caminhoDoArquivo));
         } catch (IOException e) {
-            throw new ValidacaoException(MensagemErro.ERRO_SALVAR_ARQUIVO.MensagemComParametro(Paths.get(caminhoDoArquivo).getFileName().toString()), e);
+            throw new PersistenciaException(MensagemErro.ERRO_SALVAR_ARQUIVO.MensagemComParametro(Paths.get(caminhoDoArquivo).getFileName().toString()), e);
         }
     }
 
@@ -44,7 +45,7 @@ public class GerenciadorModulosArquivosDisco implements GerenciadorModulosArquiv
         try {
             Files.writeString(Paths.get(caminhoDoArquivo), conteudoSQL);
         } catch (IOException e) {
-            throw new ValidacaoException(MensagemErro.ERRO_SALVAR_ARQUIVO.MensagemComParametro(Paths.get(caminhoDoArquivo).getFileName().toString()), e);
+            throw new PersistenciaException(MensagemErro.ERRO_SALVAR_ARQUIVO.MensagemComParametro(Paths.get(caminhoDoArquivo).getFileName().toString()), e);
         }
     }
 
@@ -129,7 +130,7 @@ public class GerenciadorModulosArquivosDisco implements GerenciadorModulosArquiv
                             (e1, e2) -> e1, LinkedHashMap::new));
 
         } catch (IOException e) {
-            throw new ValidacaoException(MensagemErro.ERRO_PROCESSAR_ARQ_MODULO.getMensagem(), e);
+            throw new PersistenciaException(MensagemErro.ERRO_PROCESSAR_ARQ_MODULO.getMensagem(), e);
         }
     }
 

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<BorderPane fx:id="painelPrincipal" style="-fx-border-color: #2c3e50; -fx-border-width: 1;" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.supergestao.Flyway.migration.assistant.ui.controller.JanelaBaseController">
+
+    <top>
+        <HBox fx:id="hboxTopo" alignment="CENTER_LEFT" prefHeight="40.0">
+            <children>
+                <Label fx:id="lblTitulo" text="Título Padrão" textFill="WHITE">
+                    <font>
+                        <Font name="System Bold" size="14.0" />
+                    </font>
+               <HBox.margin>
+                  <Insets left="15.0" />
+               </HBox.margin>
+                </Label>
+                <Region HBox.hgrow="ALWAYS" />
+                <Button fx:id="btnMinimizar" prefHeight="40.0" prefWidth="45.0" style="-fx-background-color: transparent; -fx-text-fill: white; -fx-font-weight: bold; -fx-cursor: hand; -fx-background-radius: 0;" text="—" />
+                <Button fx:id="btnMaximizar" prefHeight="40.0" prefWidth="45.0" style="-fx-background-color: transparent; -fx-text-fill: white; -fx-font-weight: bold; -fx-cursor: hand; -fx-background-radius: 0;" text="⬜" />
+                <Button fx:id="btnFechar" prefHeight="40.0" prefWidth="45.0" style="-fx-background-color: transparent; -fx-text-fill: white; -fx-font-weight: bold; -fx-cursor: hand; -fx-background-radius: 0;" text="✕" />
+            </children>
+        </HBox>
+
+    </top>
+
+    <center>
+    </center>
+
+</BorderPane>

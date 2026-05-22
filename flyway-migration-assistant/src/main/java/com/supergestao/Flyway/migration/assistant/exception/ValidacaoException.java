@@ -1,6 +1,6 @@
 package com.supergestao.Flyway.migration.assistant.exception;
 
-public class ValidacaoException extends MigrationException {
+public class ValidacaoException extends ExceptionPadrao {
 
     public ValidacaoException(String mensagem) {
         super(mensagem);
