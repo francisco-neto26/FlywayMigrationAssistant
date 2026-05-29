@@ -1,10 +1,10 @@
 package com.supergestao.Flyway.migration.assistant.ui.controller;
 
 import com.supergestao.Flyway.migration.assistant.exception.TelaException;
-import com.supergestao.Flyway.migration.assistant.persistencia.gerenciador.modulos.arquivos.GerenciadorModulosArquivos;
+import com.supergestao.Flyway.migration.assistant.persistencia.gerenciador.modulos.arquivos.IGerenciadorModulosArquivosDisco;
 import com.supergestao.Flyway.migration.assistant.ui.estado.ContextoAplicacao;
 import com.supergestao.Flyway.migration.assistant.ui.utilitario.GerenciadorEstiloBotao;
-import com.supergestao.Flyway.migration.assistant.ui.utilitario.Mensageiro;
+import com.supergestao.Flyway.migration.assistant.ui.utilitario.IGerenciadorJanelas;
 import com.supergestao.Flyway.migration.assistant.ui.utilitario.CoresPadrao;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
@@ -15,7 +15,7 @@ import javafx.stage.Stage;
 
 import java.nio.file.Paths;
 
-public class TelaNovoModuloController {
+public class TelaNovoModuloController implements ITelasModal{
     @FXML
     private TextField txtNomeModulo;
     @FXML
@@ -25,15 +25,10 @@ public class TelaNovoModuloController {
     @FXML
     private VBox painelRaiz;
 
-    private GerenciadorModulosArquivos gerenciadorModulosArquivos;
-    private Mensageiro mensageiro;
-    private String diretorioArquivos;
+    private ContextoAplicacao contexto;
 
-
-    public void setGerenciador(ContextoAplicacao contextoAplicacao) {
-        this.gerenciadorModulosArquivos = contextoAplicacao.getGerenciadorModulosArquivos();
-        this.mensageiro = contextoAplicacao.getMensageiro();
-        this.diretorioArquivos = contextoAplicacao.getDiretorioArquivos();
+    public void setContextoAplicacao(ContextoAplicacao contextoAplicacao) {
+        this.contexto = contextoAplicacao;
     }
 
     @FXML
@@ -54,8 +49,8 @@ public class TelaNovoModuloController {
     private void salvarModulo(){
         String nomeModulo = txtNomeModulo.getText().trim();
         if (!nomeModulo.isEmpty()) {
-            String caminho = Paths.get(this.diretorioArquivos, nomeModulo).toAbsolutePath().toString();
-            boolean confirmacao = this.mensageiro.exibirDialogo("c",
+            String caminho = Paths.get(this.contexto.getIGerenciadorConfiguracao().getDiretorioModulo(), nomeModulo).toAbsolutePath().toString();
+            boolean confirmacao = this.contexto.getIGerenciadorJanelas().exibirDialogo("c",
                     "Novo Módulo",
                     null,
                     "Deseja criar o módulo '" + nomeModulo + "' no diretorio '" + caminho + "'?",
@@ -64,12 +59,12 @@ public class TelaNovoModuloController {
 
             if (confirmacao) {
                 try {
-                    this.gerenciadorModulosArquivos.salvarModuloFuncao(caminho);
+                    this.contexto.getIGerenciadorModulosArquivosDisco().salvarModuloFuncao(caminho);
                     Stage stage = (Stage) btnSalvarModulo.getScene().getWindow();
                     stage.close();
 
                 } catch (TelaException e) {
-                    this.mensageiro.exibirDialogo("m",
+                    this.contexto.getIGerenciadorJanelas().exibirDialogo("m",
                             "Erro ao Salvar",
                             "Não foi possível criar o módulo",
                             e.getMessage(),
@@ -78,7 +73,7 @@ public class TelaNovoModuloController {
                 }
             }
         } else {
-            this.mensageiro.exibirDialogo("m",
+            this.contexto.getIGerenciadorJanelas().exibirDialogo("m",
                     "Atenção", null,
                     "O nome do módulo não pode estar vazio.",
                     CoresPadrao.AVISO

@@ -1,6 +1,7 @@
 package com.supergestao.Flyway.migration.assistant.ui.controller;
 
 import com.supergestao.Flyway.migration.assistant.dominio.configuracao.GerenciadorConfiguracao;
+import com.supergestao.Flyway.migration.assistant.ui.estado.ContextoAplicacao;
 import com.supergestao.Flyway.migration.assistant.ui.utilitario.CoresPadrao;
 import com.supergestao.Flyway.migration.assistant.ui.utilitario.GerenciadorEstiloBotao;
 import javafx.application.Platform;
@@ -13,7 +14,7 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
 
-public class JanelaBaseController {
+public class JanelaBaseController implements ITelasModal {
 
     @FXML
     private BorderPane painelPrincipal;
@@ -33,10 +34,17 @@ public class JanelaBaseController {
     private boolean isMaximized = true;
     private double lastX, lastY, lastWidth, lastHeight;
 
+    private ContextoAplicacao contexto;
+
+    public void setContextoAplicacao(ContextoAplicacao contextoAplicacao){
+        this.contexto = contextoAplicacao;
+    }
+
     @FXML
     public void initialize() {
-        setfonte();
+
         Platform.runLater(() -> {
+            setfonte();
             GerenciadorEstiloBotao.gerenciadorEstiloBotao(painelPrincipal);
         });
 
@@ -100,7 +108,7 @@ public class JanelaBaseController {
     }
 
     public void setfonte(){
-        String fonteEscolhida = GerenciadorConfiguracao.getChaveFonte();
+        String fonteEscolhida = this.contexto.getIGerenciadorConfiguracao().getChaveFonte();
         painelPrincipal.setStyle("-fx-font-family: '" + fonteEscolhida + "';");
     }
 

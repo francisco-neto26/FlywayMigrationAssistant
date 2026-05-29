@@ -1,7 +1,7 @@
 package com.supergestao.Flyway.migration.assistant.aplicacao.sincronizar;
 
 import com.supergestao.Flyway.migration.assistant.dominio.modelo.Modulo;
-import com.supergestao.Flyway.migration.assistant.persistencia.gerenciador.modulos.arquivos.GerenciadorModulosArquivos;
+import com.supergestao.Flyway.migration.assistant.persistencia.gerenciador.modulos.arquivos.IGerenciadorModulosArquivosDisco;
 
 import java.nio.file.Paths;
 import java.util.Map;
@@ -10,24 +10,24 @@ import java.util.stream.Collectors;
 
 public class SincronizarModulos {
 
-    private final GerenciadorModulosArquivos repositorioModulo;
+    private final IGerenciadorModulosArquivosDisco iGerenciadorModulosArquivosDisco;
 
-    public SincronizarModulos(GerenciadorModulosArquivos repositorioModulo) {
-        this.repositorioModulo = repositorioModulo;
+    public SincronizarModulos(IGerenciadorModulosArquivosDisco IGerenciadorModulosArquivosDisco) {
+        this.iGerenciadorModulosArquivosDisco = IGerenciadorModulosArquivosDisco;
     }
 
     public boolean existeModuloParaSincronizar(String caminhoOrigem, String caminhoExistentes) {
         Map<String, Modulo> novosModulos = obterModulosNovos(
-                repositorioModulo.obterModuloOrigem(caminhoOrigem),
-                repositorioModulo.obterModulosFuncoes(caminhoExistentes)
+                iGerenciadorModulosArquivosDisco.obterModuloOrigem(caminhoOrigem),
+                iGerenciadorModulosArquivosDisco.obterModulosFuncoes(caminhoExistentes)
         );
         return !novosModulos.isEmpty();
     }
 
     public void executarSincronizacao(String caminhoOrigem, String caminhoExistentes) {
         Map<String, Modulo> novosModulos = obterModulosNovos(
-                repositorioModulo.obterModuloOrigem(caminhoOrigem),
-                repositorioModulo.obterModulosFuncoes(caminhoExistentes)
+                iGerenciadorModulosArquivosDisco.obterModuloOrigem(caminhoOrigem),
+                iGerenciadorModulosArquivosDisco.obterModulosFuncoes(caminhoExistentes)
         );
         criarNovoModulo(novosModulos, caminhoExistentes);
     }
@@ -36,18 +36,18 @@ public class SincronizarModulos {
         for (Modulo modulo : modulosNovos.values()) {
             String nome = modulo.getNome();
             String caminhoCompleto = Paths.get(caminhoExistentes, nome).toString();
-            repositorioModulo.salvarModuloFuncao(caminhoCompleto);
+            iGerenciadorModulosArquivosDisco.salvarModuloFuncao(caminhoCompleto);
         }
     }
 
     public void criarNovaFuncao(String modulo, String funcao, String caminhoExistentes) {
         String caminhoCompleto = Paths.get(caminhoExistentes, modulo, funcao).toString();
-        repositorioModulo.salvarModuloFuncao(caminhoCompleto);
+        iGerenciadorModulosArquivosDisco.salvarModuloFuncao(caminhoCompleto);
 
     }
 
     public Map<String, Modulo> obterModulosExistentes(String caminhoExistentes) {
-        return repositorioModulo.obterModulosFuncoes(caminhoExistentes);
+        return iGerenciadorModulosArquivosDisco.obterModulosFuncoes(caminhoExistentes);
     }
 
     public Map<String, Modulo> obterModulosNovos(Map<String, Modulo> moduloOrigem, Map<String, Modulo> modulosExistentes) {

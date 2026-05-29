@@ -3,15 +3,15 @@ package com.supergestao.Flyway.migration.assistant.aplicacao.buscar;
 import com.supergestao.Flyway.migration.assistant.dominio.mensagem.MensagemErro;
 import com.supergestao.Flyway.migration.assistant.dominio.modelo.Arquivo;
 import com.supergestao.Flyway.migration.assistant.exception.ValidacaoException;
-import com.supergestao.Flyway.migration.assistant.persistencia.gerenciador.modulos.arquivos.GerenciadorModulosArquivos;
+import com.supergestao.Flyway.migration.assistant.persistencia.gerenciador.modulos.arquivos.IGerenciadorModulosArquivosDisco;
 
 import java.nio.file.Paths;
 import java.util.HashSet;
 
 public class BuscarArquivos {
-    private final GerenciadorModulosArquivos repositorioModulo;
+    private final IGerenciadorModulosArquivosDisco repositorioModulo;
 
-    public BuscarArquivos(GerenciadorModulosArquivos repositorioModulo) {
+    public BuscarArquivos(IGerenciadorModulosArquivosDisco repositorioModulo) {
         this.repositorioModulo = repositorioModulo;
     }
 

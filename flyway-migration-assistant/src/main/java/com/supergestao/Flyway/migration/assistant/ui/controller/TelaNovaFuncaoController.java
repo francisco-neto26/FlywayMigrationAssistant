@@ -3,10 +3,10 @@ package com.supergestao.Flyway.migration.assistant.ui.controller;
 import com.supergestao.Flyway.migration.assistant.aplicacao.sincronizar.SincronizarModulos;
 import com.supergestao.Flyway.migration.assistant.dominio.modelo.Modulo;
 import com.supergestao.Flyway.migration.assistant.exception.TelaException;
-import com.supergestao.Flyway.migration.assistant.persistencia.gerenciador.modulos.arquivos.GerenciadorModulosArquivos;
+import com.supergestao.Flyway.migration.assistant.persistencia.gerenciador.modulos.arquivos.IGerenciadorModulosArquivosDisco;
 import com.supergestao.Flyway.migration.assistant.ui.estado.ContextoAplicacao;
 import com.supergestao.Flyway.migration.assistant.ui.utilitario.GerenciadorEstiloBotao;
-import com.supergestao.Flyway.migration.assistant.ui.utilitario.Mensageiro;
+import com.supergestao.Flyway.migration.assistant.ui.utilitario.IGerenciadorJanelas;
 import com.supergestao.Flyway.migration.assistant.ui.utilitario.CoresPadrao;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
@@ -18,7 +18,7 @@ import javafx.stage.Stage;
 
 import java.nio.file.Paths;
 
-public class TelaNovaFuncaoController {
+public class TelaNovaFuncaoController implements ITelasModal{
 
     @FXML
     private ComboBox<Modulo> comboModulo;
@@ -31,22 +31,16 @@ public class TelaNovaFuncaoController {
     @FXML
     private VBox painelRaiz;
 
-    private String diretorioModulos;
-    private GerenciadorModulosArquivos gerenciadorModulosArquivos;
-    private Mensageiro mensageiro;
-    private SincronizarModulos sincronizarModulos;
+    private ContextoAplicacao contexto;
 
-    public void setGerenciador(ContextoAplicacao contextoAplicacao) {
-        this.diretorioModulos = contextoAplicacao.getDiretorioModulos();
-        this.gerenciadorModulosArquivos = contextoAplicacao.getGerenciadorModulosArquivos();
-        this.mensageiro = contextoAplicacao.getMensageiro();
-        this.sincronizarModulos = contextoAplicacao.getSincronizarModulos();
-        comboModulo.getItems().addAll(this.gerenciadorModulosArquivos.obterModuloOrigem(this.diretorioModulos).values());
+    public void setContextoAplicacao(ContextoAplicacao contextoAplicacao) {
+        this.contexto = contextoAplicacao;
     }
 
     @FXML
     public void initialize() {
         Platform.runLater(() -> {
+            comboModulo.getItems().addAll(this.contexto.getIGerenciadorModulosArquivosDisco().obterModuloOrigem(this.contexto.getIGerenciadorConfiguracao().getDiretorioModulo()).values());
             GerenciadorEstiloBotao.gerenciadorEstiloBotao(painelRaiz);
         });
     }
@@ -62,8 +56,8 @@ public class TelaNovaFuncaoController {
         String nomeFuncao = txtNomeFuncao.getText().trim();
         String nomeModulo = comboModulo.getValue().getNome();
         if (!nomeFuncao.isEmpty()) {
-            String caminho = Paths.get(this.diretorioModulos, nomeModulo, nomeFuncao).toAbsolutePath().toString();
-            boolean confirmacao = this.mensageiro.exibirDialogo("c",
+            String caminho = Paths.get(this.contexto.getIGerenciadorConfiguracao().getDiretorioArquivo(), nomeModulo, nomeFuncao).toAbsolutePath().toString();
+            boolean confirmacao = this.contexto.getIGerenciadorJanelas().exibirDialogo("c",
                     "Nova Função",
                     null,
                     "Deseja criar a função '" + nomeFuncao + "' no diretorio '" + caminho + "'?",
@@ -72,13 +66,12 @@ public class TelaNovaFuncaoController {
 
             if (confirmacao) {
                 try {
-                    //this.gerenciadorModulosArquivos.salvarModuloFuncao(caminho);
-                    this.sincronizarModulos.criarNovaFuncao(nomeModulo, nomeFuncao, this.diretorioModulos);
+                    this.contexto.getIGerenciadorModulosArquivosDisco().salvarModuloFuncao(caminho);
                     Stage stage = (Stage) btnSalvarFuncao.getScene().getWindow();
                     stage.close();
 
                 } catch (TelaException e) {
-                    this.mensageiro.exibirDialogo("m",
+                    this.contexto.getIGerenciadorJanelas().exibirDialogo("m",
                             "Erro ao Salvar",
                             "Não foi possível criar a Função",
                             e.getMessage(),
@@ -86,7 +79,7 @@ public class TelaNovaFuncaoController {
                 }
             }
         } else {
-            this.mensageiro.exibirDialogo("m",
+            this.contexto.getIGerenciadorJanelas().exibirDialogo("m",
                     "Atenção",
                     null,
                     "O nome do módulo não pode estar vazio.",

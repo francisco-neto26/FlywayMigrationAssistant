@@ -6,7 +6,7 @@ import com.supergestao.Flyway.migration.assistant.dominio.modelo.Modulo;
 import java.util.HashSet;
 import java.util.Map;
 
-public interface GerenciadorModulosArquivos {
+public interface IGerenciadorModulosArquivosDisco {
     void salvarModuloFuncao(String caminhoDoModulo);
 
     void salvarArquivo(String caminhoDoArquivo, String conteudoSQL);

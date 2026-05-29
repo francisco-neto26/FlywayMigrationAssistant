@@ -2,14 +2,14 @@ package com.supergestao.Flyway.migration.assistant.aplicacao.salvar;
 
 import com.supergestao.Flyway.migration.assistant.dominio.mensagem.MensagemErro;
 import com.supergestao.Flyway.migration.assistant.exception.ValidacaoException;
-import com.supergestao.Flyway.migration.assistant.persistencia.gerenciador.modulos.arquivos.GerenciadorModulosArquivos;
+import com.supergestao.Flyway.migration.assistant.persistencia.gerenciador.modulos.arquivos.IGerenciadorModulosArquivosDisco;
 
 import java.nio.file.Paths;
 
 public class SalvarArquivo {
-    private final GerenciadorModulosArquivos repositorioModulo;
+    private final IGerenciadorModulosArquivosDisco repositorioModulo;
 
-    public SalvarArquivo(GerenciadorModulosArquivos repositorioModulo) {
+    public SalvarArquivo(IGerenciadorModulosArquivosDisco repositorioModulo) {
         this.repositorioModulo = repositorioModulo;
     }
 

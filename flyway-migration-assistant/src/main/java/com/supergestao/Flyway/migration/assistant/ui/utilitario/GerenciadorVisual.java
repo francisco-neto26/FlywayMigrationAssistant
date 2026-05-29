@@ -1,4 +1,4 @@
-package com.supergestao.Flyway.migration.assistant.ui.controller;
+package com.supergestao.Flyway.migration.assistant.ui.utilitario;
 
 import atlantafx.base.theme.Theme;
 

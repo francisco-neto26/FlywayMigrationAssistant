@@ -5,15 +5,14 @@ import atlantafx.base.theme.Theme;
 import com.supergestao.Flyway.migration.assistant.dominio.configuracao.GerenciadorConfiguracao;
 import com.supergestao.Flyway.migration.assistant.dominio.mensagem.MensagemErro;
 import com.supergestao.Flyway.migration.assistant.exception.PersistenciaException;
-import com.supergestao.Flyway.migration.assistant.persistencia.gerenciador.modulos.arquivos.GerenciadorModulosArquivos;
 import com.supergestao.Flyway.migration.assistant.ui.estado.ContextoAplicacao;
 import com.supergestao.Flyway.migration.assistant.ui.utilitario.GerenciadorEstiloBotao;
-import com.supergestao.Flyway.migration.assistant.ui.utilitario.Mensageiro;
+import com.supergestao.Flyway.migration.assistant.ui.utilitario.GerenciadorVisual;
+import com.supergestao.Flyway.migration.assistant.ui.utilitario.IGerenciadorJanelas;
 import com.supergestao.Flyway.migration.assistant.ui.utilitario.CoresPadrao;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
-import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
@@ -25,12 +24,12 @@ import javafx.util.StringConverter;
 import java.io.File;
 import java.util.List;
 
-public class TelaConfiguracoesController {
+public class TelaConfiguracoesController implements ITelasModal {
 
     @FXML
-    public ComboBox<String> comboFonte;
+    private ComboBox<String> comboFonte;
     @FXML
-    public ComboBox<String> comboDirModulo;
+    private ComboBox<String> comboDirModulo;
     @FXML
     private TextField txtDiretorioModulos;
     @FXML
@@ -48,22 +47,12 @@ public class TelaConfiguracoesController {
     @FXML
     private VBox painelRaiz;
 
-    private Mensageiro mensageiro;
-    private boolean usaModulo;
+    private ContextoAplicacao contexto;
     String txtDiretorioModuloAntigo;
-// terminar de implementar as alterações de usamodulo, fonte
-    public void setGerenciador(ContextoAplicacao contextoAplicacao) {
 
-        List<Theme> temasDisponiveis = contextoAplicacao.getTemasDisponiveis();
-        List<String> fontesDisponiveis = javafx.scene.text.Font.getFamilies();
-        this.mensageiro = contextoAplicacao.getMensageiro();
-        this.usaModulo = contextoAplicacao.getUsaModulo();
-        txtDiretorioModulos.setText(contextoAplicacao.getDiretorioModulos());
-        txtDiretorioArquivos.setText(contextoAplicacao.getDiretorioArquivos());
-        comboTema.getItems().addAll(temasDisponiveis);
-        comboFonte.getItems().addAll(fontesDisponiveis);
-        comboDirModulo.getItems().addAll(List.of("Sim", "Não"));
-
+    // terminar de implementar as alterações de usamodulo, fonte
+    public void setContextoAplicacao(ContextoAplicacao contextoAplicacao) {
+        this.contexto = contextoAplicacao;
     }
 
     @FXML
@@ -71,12 +60,13 @@ public class TelaConfiguracoesController {
 
         Platform.runLater(() -> {
             GerenciadorEstiloBotao.gerenciadorEstiloBotao(painelRaiz);
+            iniciarCombo();
             verficaConfigUsaModulo();
         });
-        iniciarCombo();
+
     }
 
-    private void iniciarCombo(){
+    private void iniciarCombo() {
         comboTema.setConverter(new StringConverter<Theme>() {
             @Override
             public String toString(Theme tema) {
@@ -89,19 +79,25 @@ public class TelaConfiguracoesController {
             }
         });
 
-        comboTema.getSelectionModel().select(GerenciadorConfiguracao.getTema());
-        comboFonte.getSelectionModel().select(GerenciadorConfiguracao.getChaveFonte());
-        comboDirModulo.getSelectionModel().select(GerenciadorConfiguracao.getChaveUsaModulo() ? "Sim": "Não");
+        txtDiretorioModulos.setText(this.contexto.getIGerenciadorConfiguracao().getDiretorioModulo());
+        txtDiretorioArquivos.setText(this.contexto.getIGerenciadorConfiguracao().getDiretorioArquivo());
+        comboTema.getItems().addAll(this.contexto.getIGerenciadorConfiguracao().getListaTema());
+        comboFonte.getItems().addAll(javafx.scene.text.Font.getFamilies());
+        comboDirModulo.getItems().addAll(List.of("Sim", "Não"));
+
+        comboTema.getSelectionModel().select(this.contexto.getIGerenciadorConfiguracao().getTema());
+        comboFonte.getSelectionModel().select(this.contexto.getIGerenciadorConfiguracao().getChaveFonte());
+        comboDirModulo.getSelectionModel().select(this.contexto.getIGerenciadorConfiguracao().getChaveUsaModulo() ? "Sim" : "Não");
     }
 
-    private void verficaConfigUsaModulo(){
-        if (comboDirModulo.getValue().equalsIgnoreCase("Sim")){
+    private void verficaConfigUsaModulo() {
+        if (comboDirModulo.getValue().equalsIgnoreCase("Sim")) {
             txtDiretorioModulos.setEditable(true);
             btnProcurarDiretorioModulos.setDisable(false);
-            if(txtDiretorioModulos.getText().isEmpty()){
+            if (txtDiretorioModulos.getText() == null || txtDiretorioModulos.getText().isEmpty()) {
                 txtDiretorioModulos.setText(this.txtDiretorioModuloAntigo);
             }
-        }else{
+        } else {
             txtDiretorioModulos.setEditable(false);
             txtDiretorioModuloAntigo = txtDiretorioModulos.getText();
             txtDiretorioModulos.setText("");
@@ -112,6 +108,7 @@ public class TelaConfiguracoesController {
     @FXML
     private void fechar() {
         GerenciadorVisual.aplicarTemaGlobal(comboTema.getValue());
+        GerenciadorVisual.aplicarFonteGlobal(comboFonte.getValue());
         Stage stage = (Stage) btnCancelar.getScene().getWindow();
         stage.close();
     }
@@ -119,7 +116,7 @@ public class TelaConfiguracoesController {
     @FXML
     private void salvar() {
         if (txtDiretorioModulos.getText().isEmpty()) {
-            this.mensageiro.exibirDialogo("m",
+            this.contexto.getIGerenciadorJanelas().exibirDialogo("m",
                     "Alerta",
                     null,
                     "O diretório dos módulos não pode estar vazio.",
@@ -127,7 +124,7 @@ public class TelaConfiguracoesController {
             return;
         }
         if (txtDiretorioArquivos.getText().isEmpty()) {
-            this.mensageiro.exibirDialogo("m",
+            this.contexto.getIGerenciadorJanelas().exibirDialogo("m",
                     "Alerta",
                     null,
                     "O diretório dos arquivos não pode estar vazio.",
@@ -135,7 +132,7 @@ public class TelaConfiguracoesController {
             return;
         }
 
-        boolean confirmacao = this.mensageiro.exibirDialogo("c",
+        boolean confirmacao = this.contexto.getIGerenciadorJanelas().exibirDialogo("c",
                 "Configurações",
                 null,
                 "Deseja salvar as configurações?",
@@ -144,11 +141,11 @@ public class TelaConfiguracoesController {
 
         if (confirmacao) {
             try {
-                GerenciadorConfiguracao.salvarDiretorioModulo(txtDiretorioModulos.getText());
-                GerenciadorConfiguracao.salvarDiretorioArquivo(txtDiretorioArquivos.getText());
-                GerenciadorConfiguracao.salvarTema(comboTema.getValue().getName());
-                GerenciadorConfiguracao.salvarChaveFonte(comboFonte.getValue());
-                GerenciadorConfiguracao.salvarChaveUsaModulo(comboDirModulo.getValue());
+                this.contexto.getIGerenciadorConfiguracao().salvarDiretorioModulo(txtDiretorioModulos.getText());
+                this.contexto.getIGerenciadorConfiguracao().salvarDiretorioArquivo(txtDiretorioArquivos.getText());
+                this.contexto.getIGerenciadorConfiguracao().salvarTema(comboTema.getValue().getName());
+                this.contexto.getIGerenciadorConfiguracao().salvarChaveFonte(comboFonte.getValue());
+                this.contexto.getIGerenciadorConfiguracao().salvarChaveUsaModulo(comboDirModulo.getValue());
 
                 fechar();
 
@@ -156,7 +153,7 @@ public class TelaConfiguracoesController {
 
                 String detalhesDoErro = e.getCause() != null ? e.getCause().toString() : MensagemErro.ERRO_GENERICO.MensagemComParametro("Erro ao salvar configurações");
 
-                this.mensageiro.exibirDialogo(
+                this.contexto.getIGerenciadorJanelas().exibirDialogo(
                         "c",
                         "Falha Crítica",
                         "Não foi possível gravar no RegEdit do Windows",
@@ -166,8 +163,9 @@ public class TelaConfiguracoesController {
             }
         }
     }
+
     @FXML
-    private void obterDiretorioModulos(){
+    private void obterDiretorioModulos() {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Selecione o arquivo .java com os módulos");
         fileChooser.getExtensionFilters().add(
@@ -193,7 +191,7 @@ public class TelaConfiguracoesController {
     }
 
     @FXML
-    private void obterDiretorioArquivos(){
+    private void obterDiretorioArquivos() {
         DirectoryChooser directoryChooser = new DirectoryChooser();
         directoryChooser.setTitle("Selecione a pasta raiz dos Módulos");
 
@@ -211,20 +209,19 @@ public class TelaConfiguracoesController {
     }
 
     @FXML
-    private void aplicarfonte(){
+    private void aplicarfonte() {
         GerenciadorVisual.aplicarFonteGlobal(comboFonte.getValue());
     }
 
     @FXML
-    private void aplicarTema(){
+    private void aplicarTema() {
         GerenciadorVisual.aplicarTemaGlobal(comboTema.getValue());
     }
 
     @FXML
-    private void usaDiretorioModulo(){
+    private void usaDiretorioModulo() {
         verficaConfigUsaModulo();
     }
-
 
 
 }
