@@ -2,8 +2,16 @@ package com.supergestao.Flyway.migration.assistant.ui.utilitario;
 
 import com.supergestao.Flyway.migration.assistant.dominio.mensagem.MensagemErro;
 import com.supergestao.Flyway.migration.assistant.ui.controller.TelaDialogoController;
+import com.supergestao.Flyway.migration.assistant.ui.estado.ContextoAplicacao;
 
-public class GerenciadorJanelas implements Mensageiro {
+public class GerenciadorJanelas implements IGerenciadorJanelas {
+
+    private ContextoAplicacao contextoAplicacao;
+
+    public GerenciadorJanelas(ContextoAplicacao contextoAplicacao) {
+        this.contextoAplicacao = contextoAplicacao;
+    }
+
     @Override
     public boolean exibirDialogo(String TipoMensagem, String titulo, String mensagem, String detalhes, CoresPadrao coresPadrao) {
         try {
@@ -13,7 +21,8 @@ public class GerenciadorJanelas implements Mensageiro {
                         CaminhoTela.TELA_DIALOGO,
                         titulo,
                         coresPadrao,
-                        (TelaDialogoController controller) -> controller.telaConfirmacao(detalhes)
+                        //(TelaDialogoController controller) -> controller.telaConfirmacao(detalhes),
+                        this.contextoAplicacao
                 );
 
             } else {
@@ -21,7 +30,8 @@ public class GerenciadorJanelas implements Mensageiro {
                         CaminhoTela.TELA_DIALOGO,
                         titulo,
                         coresPadrao,
-                        (TelaDialogoController controller) -> controller.telaMensagem(mensagem, detalhes)
+                        //(TelaDialogoController controller) -> controller.telaMensagem(mensagem, detalhes)
+                        this.contextoAplicacao
                 );
             }
 

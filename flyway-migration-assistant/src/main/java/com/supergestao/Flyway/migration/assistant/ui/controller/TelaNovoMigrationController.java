@@ -1,9 +1,9 @@
 package com.supergestao.Flyway.migration.assistant.ui.controller;
 
-import com.supergestao.Flyway.migration.assistant.persistencia.gerenciador.modulos.arquivos.GerenciadorModulosArquivos;
+import com.supergestao.Flyway.migration.assistant.persistencia.gerenciador.modulos.arquivos.IGerenciadorModulosArquivosDisco;
 import com.supergestao.Flyway.migration.assistant.ui.estado.ContextoAplicacao;
 import com.supergestao.Flyway.migration.assistant.ui.utilitario.GerenciadorEstiloBotao;
-import com.supergestao.Flyway.migration.assistant.ui.utilitario.Mensageiro;
+import com.supergestao.Flyway.migration.assistant.ui.utilitario.IGerenciadorJanelas;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -60,15 +60,10 @@ public class TelaNovoMigrationController {
     @FXML
     private Button btnSalvarMigration;
 
+    private ContextoAplicacao contexto;
 
-    private String diretorioModulos;
-    private GerenciadorModulosArquivos gerenciadorModulosArquivos;
-    private Mensageiro mensageiro;
-
-    public void setGerenciador(ContextoAplicacao contextoAplicacao) {
-        this.diretorioModulos = contextoAplicacao.getDiretorioModulos();
-        this.gerenciadorModulosArquivos = contextoAplicacao.getGerenciadorModulosArquivos();
-        this.mensageiro = contextoAplicacao.getMensageiro();
+    public void setContextoAplicacao(ContextoAplicacao contextoAplicacao) {
+        this.contexto = contextoAplicacao;
     }
 
     @FXML

@@ -21,7 +21,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-public class GerenciadorModulosArquivosDisco implements GerenciadorModulosArquivos {
+public class GerenciadorModulosArquivosDisco implements IGerenciadorModulosArquivosDisco {
     @Override
     public void salvarModuloFuncao(String caminhoDoModulo) {
         try {
