@@ -6,6 +6,7 @@ import com.supergestao.Flyway.migration.assistant.ui.estado.ContextoAplicacao;
 import com.supergestao.Flyway.migration.assistant.ui.utilitario.GerenciadorEstiloBotao;
 import com.supergestao.Flyway.migration.assistant.ui.utilitario.IGerenciadorJanelas;
 import com.supergestao.Flyway.migration.assistant.ui.utilitario.CoresPadrao;
+import com.supergestao.Flyway.migration.assistant.ui.utilitario.TipoDialogo;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -50,11 +51,10 @@ public class TelaNovoModuloController implements ITelasModal{
         String nomeModulo = txtNomeModulo.getText().trim();
         if (!nomeModulo.isEmpty()) {
             String caminho = Paths.get(this.contexto.getIGerenciadorConfiguracao().getDiretorioModulo(), nomeModulo).toAbsolutePath().toString();
-            boolean confirmacao = this.contexto.getIGerenciadorJanelas().exibirDialogo("c",
+            boolean confirmacao = this.contexto.getIGerenciadorJanelas().exibirDialogo(TipoDialogo.CONFIRMACAO,
                     "Novo Módulo",
                     null,
-                    "Deseja criar o módulo '" + nomeModulo + "' no diretorio '" + caminho + "'?",
-                    CoresPadrao.INFO
+                    "Deseja criar o módulo '" + nomeModulo + "' no diretorio '" + caminho + "'?"
             );
 
             if (confirmacao) {
@@ -64,19 +64,17 @@ public class TelaNovoModuloController implements ITelasModal{
                     stage.close();
 
                 } catch (TelaException e) {
-                    this.contexto.getIGerenciadorJanelas().exibirDialogo("m",
+                    this.contexto.getIGerenciadorJanelas().exibirDialogo(TipoDialogo.ERRO,
                             "Erro ao Salvar",
                             "Não foi possível criar o módulo",
-                            e.getMessage(),
-                            CoresPadrao.ERRO
+                            e.getMessage()
                     );
                 }
             }
         } else {
-            this.contexto.getIGerenciadorJanelas().exibirDialogo("m",
+            this.contexto.getIGerenciadorJanelas().exibirDialogo(TipoDialogo.ALERTA,
                     "Atenção", null,
-                    "O nome do módulo não pode estar vazio.",
-                    CoresPadrao.AVISO
+                    "O nome do módulo não pode estar vazio."
             );
         }
     }

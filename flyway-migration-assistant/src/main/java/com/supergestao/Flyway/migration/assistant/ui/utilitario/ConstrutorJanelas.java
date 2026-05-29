@@ -4,6 +4,7 @@ import atlantafx.base.theme.Theme;
 import com.supergestao.Flyway.migration.assistant.dominio.mensagem.MensagemErro;
 import com.supergestao.Flyway.migration.assistant.ui.controller.ITelasModal;
 import com.supergestao.Flyway.migration.assistant.ui.controller.JanelaBaseController;
+import com.supergestao.Flyway.migration.assistant.ui.controller.TelaDialogoController;
 import com.supergestao.Flyway.migration.assistant.ui.estado.ContextoAplicacao;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
@@ -11,6 +12,7 @@ import javafx.scene.Scene;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
+
 import java.util.function.Consumer;
 
 public class ConstrutorJanelas {
@@ -60,39 +62,21 @@ public class ConstrutorJanelas {
         }
     }
 
-    public static void abrirJanelaPrincipal(Stage primaryStage, CaminhoTela caminhoTela, String tituloTela, ContextoAplicacao contextoAplicacao) {
+    public static void abrirJanelaPrincipal(Stage primaryStage, CaminhoTela caminhoTela, ContextoAplicacao contextoAplicacao) {
         try {
-            //Carrega tema salvo
+
             Theme temaSalvo = contextoAplicacao.getIGerenciadorConfiguracao().getTema();
             Application.setUserAgentStylesheet(temaSalvo.getUserAgentStylesheet());
 
-            // Carrega as telas
-            FXMLLoader janelaBaseLoader = carregarFxml(CaminhoTela.JANELA_BASE);
-            FXMLLoader conteudoTelaLoader = carregarFxml(caminhoTela);
+            CoresPadrao corBarra = defineCor(0);
+            String tituloTela = caminhoTela.getNome();
 
-            //Extrai os controllers (Corrigido o tipo do controller)
-            JanelaBaseController janelaBaseController = janelaBaseLoader.getController();
-            Object controller = conteudoTelaLoader.getController();
+            // Monta a base visual e injeta dependências
+            montarJanela(primaryStage, caminhoTela, tituloTela, corBarra, contextoAplicacao, true);
 
-            // INJEÇÃO 1: Injeta na Tela do Miolo (A TelaPrincipalController)
-            if (controller instanceof ITelasModal) {
-                ((ITelasModal) controller).setContextoAplicacao(contextoAplicacao);
-            }
-
-            // INJEÇÃO 2: Injeta na Janela Base (A casca)
-            if (janelaBaseController instanceof ITelasModal) {
-                ((ITelasModal) janelaBaseController).setContextoAplicacao(contextoAplicacao);
-            }
-
-            //Monta as telas
-            janelaBaseController.setConteudo(conteudoTelaLoader.getRoot(), tituloTela);
-
-            //define cor janela
-            janelaBaseController.defineCorBarra(CoresPadrao.BARRA_PRINCIPAL);
-
+            // Ajustes específicos da Janela Principal (Tamanho e posição)
             primaryStage.initStyle(StageStyle.UNDECORATED);
             primaryStage.setTitle(tituloTela);
-            primaryStage.setScene(new Scene(janelaBaseLoader.getRoot(), 1000, 700));
 
             // Ajuste do bounds (Aquele ajuste para o Windows não engolir a barra de tarefas)
             javafx.geometry.Rectangle2D limites = javafx.stage.Screen.getPrimary().getVisualBounds();
@@ -101,8 +85,47 @@ public class ConstrutorJanelas {
             primaryStage.setWidth(limites.getWidth());
             primaryStage.setHeight(limites.getHeight());
 
+
         } catch (Exception e) {
-            throw new RuntimeException(MensagemErro.ERRO_ABERTURA_TELA.MensagemComParametro("Tela Principal") + tituloTela, e);
+            throw new RuntimeException(MensagemErro.ERRO_ABERTURA_TELA.MensagemComParametro("Tela Principal") + caminhoTela.getNome(), e);
+        }
+    }
+
+    public static <T> T abrirJanelaAuxiliar(CaminhoTela caminhoTela, ContextoAplicacao contextoAplicacao) {
+        try {
+            Stage stage = new Stage();
+
+            CoresPadrao corBarra = defineCor(0);
+            String tituloTela = caminhoTela.getNome();
+
+            T controller = montarJanela(stage, caminhoTela, tituloTela, corBarra, contextoAplicacao, false);
+            stage.show();
+
+            return controller;
+        } catch (Exception e) {
+            throw new RuntimeException(MensagemErro.ERRO_ABERTURA_TELA.MensagemComParametro("Tela Auxiliar") + caminhoTela.getNome(), e);
+        }
+    }
+
+    public static <T> T abrirJanelaDialogo(TipoDialogo tipoDialogo, CaminhoTela caminhoTela, String tituloTela, String mensagem, String detalhes, ContextoAplicacao contextoAplicacao) {
+        try {
+            Stage stage = new Stage();
+            stage.initModality(Modality.APPLICATION_MODAL);
+
+            CoresPadrao corBarra = defineCor(tipoDialogo.getTipoDialogo());
+
+            T controller = montarJanela(stage, caminhoTela, tituloTela, corBarra, contextoAplicacao, false);
+
+            if (controller instanceof TelaDialogoController) {
+                ((TelaDialogoController) controller).telaMensagem(tipoDialogo, mensagem, detalhes);
+            }
+
+            stage.showAndWait();
+
+            return controller;
+
+        } catch (Exception e) {
+            throw new RuntimeException(MensagemErro.ERRO_ABERTURA_TELA.MensagemComParametro("Tela Diálogo ") + tipoDialogo.getNome(), e);
         }
     }
 
@@ -145,6 +168,16 @@ public class ConstrutorJanelas {
         FXMLLoader loader = new FXMLLoader(ConstrutorJanelas.class.getResource(tela.getCaminho()));
         loader.load();
         return loader;
+    }
+
+    public static CoresPadrao defineCor(int origem) {
+        return switch (origem) {
+            case 1 -> CoresPadrao.SUCESSO;
+            case 2 -> CoresPadrao.AVISO;
+            case 3 -> CoresPadrao.INFO;
+            case 4 -> CoresPadrao.ERRO;
+            default -> CoresPadrao.BARRA_PRINCIPAL;
+        };
     }
 
 }

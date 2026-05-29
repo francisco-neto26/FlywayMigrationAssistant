@@ -6,10 +6,7 @@ import com.supergestao.Flyway.migration.assistant.dominio.configuracao.Gerenciad
 import com.supergestao.Flyway.migration.assistant.dominio.mensagem.MensagemErro;
 import com.supergestao.Flyway.migration.assistant.exception.PersistenciaException;
 import com.supergestao.Flyway.migration.assistant.ui.estado.ContextoAplicacao;
-import com.supergestao.Flyway.migration.assistant.ui.utilitario.GerenciadorEstiloBotao;
-import com.supergestao.Flyway.migration.assistant.ui.utilitario.GerenciadorVisual;
-import com.supergestao.Flyway.migration.assistant.ui.utilitario.IGerenciadorJanelas;
-import com.supergestao.Flyway.migration.assistant.ui.utilitario.CoresPadrao;
+import com.supergestao.Flyway.migration.assistant.ui.utilitario.*;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -115,28 +112,25 @@ public class TelaConfiguracoesController implements ITelasModal {
 
     @FXML
     private void salvar() {
-        if (txtDiretorioModulos.getText().isEmpty()) {
-            this.contexto.getIGerenciadorJanelas().exibirDialogo("m",
+        if (txtDiretorioModulos.getText().isEmpty() && comboDirModulo.getValue().equalsIgnoreCase("Sim")) {
+            this.contexto.getIGerenciadorJanelas().exibirDialogo(TipoDialogo.ALERTA,
                     "Alerta",
                     null,
-                    "O diretório dos módulos não pode estar vazio.",
-                    CoresPadrao.AVISO);
+                    "O diretório dos módulos não pode estar vazio.");
             return;
         }
         if (txtDiretorioArquivos.getText().isEmpty()) {
-            this.contexto.getIGerenciadorJanelas().exibirDialogo("m",
+            this.contexto.getIGerenciadorJanelas().exibirDialogo(TipoDialogo.ALERTA,
                     "Alerta",
                     null,
-                    "O diretório dos arquivos não pode estar vazio.",
-                    CoresPadrao.AVISO);
+                    "O diretório dos arquivos não pode estar vazio.");
             return;
         }
 
-        boolean confirmacao = this.contexto.getIGerenciadorJanelas().exibirDialogo("c",
+        boolean confirmacao = this.contexto.getIGerenciadorJanelas().exibirDialogo(TipoDialogo.CONFIRMACAO,
                 "Configurações",
                 null,
-                "Deseja salvar as configurações?",
-                CoresPadrao.BOTAO_CONFIRMAR
+                "Deseja salvar as configurações?"
         );
 
         if (confirmacao) {
@@ -153,12 +147,10 @@ public class TelaConfiguracoesController implements ITelasModal {
 
                 String detalhesDoErro = e.getCause() != null ? e.getCause().toString() : MensagemErro.ERRO_GENERICO.MensagemComParametro("Erro ao salvar configurações");
 
-                this.contexto.getIGerenciadorJanelas().exibirDialogo(
-                        "c",
+                this.contexto.getIGerenciadorJanelas().exibirDialogo(TipoDialogo.ERRO,
                         "Falha Crítica",
                         "Não foi possível gravar no RegEdit do Windows",
-                        detalhesDoErro,
-                        CoresPadrao.ERRO
+                        detalhesDoErro
                 );
             }
         }

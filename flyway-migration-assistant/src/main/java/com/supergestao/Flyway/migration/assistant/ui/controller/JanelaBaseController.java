@@ -70,19 +70,22 @@ public class JanelaBaseController implements ITelasModal {
         });
 
         btnMaximizar.setOnAction(event -> {
+
             Stage stage = (Stage) btnMaximizar.getScene().getWindow();
-            javafx.geometry.Rectangle2D bounds = javafx.stage.Screen.getPrimary().getVisualBounds();
+            javafx.collections.ObservableList<javafx.stage.Screen> monitores = javafx.stage.Screen.getScreensForRectangle(stage.getX(), stage.getY(), stage.getWidth(), stage.getHeight());
+            javafx.stage.Screen monitorAtual = monitores.isEmpty() ? javafx.stage.Screen.getPrimary() : monitores.getFirst();
+            javafx.geometry.Rectangle2D bounds = monitorAtual.getVisualBounds();
 
             if (!isMaximized) {
                 lastX = stage.getX();
                 lastY = stage.getY();
                 lastWidth = stage.getWidth();
                 lastHeight = stage.getHeight();
+
                 stage.setX(bounds.getMinX());
                 stage.setY(bounds.getMinY());
                 stage.setWidth(bounds.getWidth());
                 stage.setHeight(bounds.getHeight());
-
                 isMaximized = true;
             } else {
                 stage.setX(lastWidth > 0 ? lastX : bounds.getMinX() + (bounds.getWidth() - 1000) / 2);

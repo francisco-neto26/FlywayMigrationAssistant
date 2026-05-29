@@ -163,11 +163,10 @@ public class TelaPrincipalController implements ITelasModal{
     private void verifcaEcarregarModuloFuncao() {
         if (!this.contexto.getIGerenciadorConfiguracao().diretoriosConfigurados()) {
 
-            boolean querConfigurar = this.contexto.getIGerenciadorJanelas().exibirDialogo("c",
+            boolean querConfigurar = this.contexto.getIGerenciadorJanelas().exibirDialogo(TipoDialogo.CONFIRMACAO,
                     "Cadastrar configurações",
                     null,
-                    "O diretório raiz dos Módulos não está configurado. Deseja configurar agora?",
-                    CoresPadrao.INFO);
+                    "O diretório raiz dos Módulos não está configurado. Deseja configurar agora?");
 
             if (querConfigurar) {
                 telaConfiguracao();
@@ -207,11 +206,10 @@ public class TelaPrincipalController implements ITelasModal{
             treeArquivos.setRoot(raizVisual);
 
         } catch (Exception e) {
-            this.contexto.getIGerenciadorJanelas().exibirDialogo("mensagem",
+            this.contexto.getIGerenciadorJanelas().exibirDialogo(TipoDialogo.ERRO,
                     "Erro de Leitura",
                     "Falha ao ler os módulos",
-                    e.getMessage(),
-                    CoresPadrao.ERRO);
+                    e.getMessage());
         }
     }
 }
