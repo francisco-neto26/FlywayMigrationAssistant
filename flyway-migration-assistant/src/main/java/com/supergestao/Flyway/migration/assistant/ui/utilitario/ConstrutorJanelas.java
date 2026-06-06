@@ -13,95 +13,38 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 
-import java.util.function.Consumer;
 
 public class ConstrutorJanelas {
 
-    public static <T> T abrirModal(CaminhoTela caminhoTela, String tituloTela, CoresPadrao corBarra, ContextoAplicacao contextoAplicacao) {
-        try {
-            // Carrega as telas
-            FXMLLoader janelaBaseLoader = carregarFxml(CaminhoTela.JANELA_BASE);
-            FXMLLoader conteudoTelaLoader = carregarFxml(caminhoTela);
-
-            //Extrai os controllers
-            JanelaBaseController janelaBaseController = janelaBaseLoader.getController();
-            T controller = conteudoTelaLoader.getController();
-
-            // INJEÇÃO 1: Injeta na Tela do Miolo (Ex: TelaConfiguracoes)
-            if (controller instanceof ITelasModal) {
-                ((ITelasModal) controller).setContextoAplicacao(contextoAplicacao);
-            }
-
-            // INJEÇÃO 2: Injeta na Janela Base (A casca)
-            if (janelaBaseController != null) {
-                ((ITelasModal) janelaBaseController).setContextoAplicacao(contextoAplicacao);
-            }
-
-            //Monta as telas
-            janelaBaseController.setConteudo(conteudoTelaLoader.getRoot(), tituloTela);
-            janelaBaseController.defineVisibilidadeMaxMin();
-
-            if (corBarra != null) {
-                janelaBaseController.defineCorBarra(corBarra);
-            }
-
-            //Exibe
-            Stage stage = new Stage();
-            stage.initStyle(StageStyle.UNDECORATED);
-            stage.setTitle(tituloTela);
-            stage.setScene(new Scene(janelaBaseLoader.getRoot()));
-            stage.initModality(Modality.APPLICATION_MODAL);
-
-            stage.showAndWait();
-
-            // Retorna o controller
-            return controller;
-
-        } catch (Exception e) {
-            throw new RuntimeException(MensagemErro.ERRO_ABERTURA_TELA.MensagemComParametro("Tela modal") + tituloTela, e);
-        }
-    }
+    private static Stage stageJanelaPrincipal;
 
     public static void abrirJanelaPrincipal(Stage primaryStage, CaminhoTela caminhoTela, ContextoAplicacao contextoAplicacao) {
         try {
-
+            stageJanelaPrincipal = primaryStage;
+            Stage stage = ajustarMonitor(primaryStage, "principal");
             Theme temaSalvo = contextoAplicacao.getIGerenciadorConfiguracao().getTema();
             Application.setUserAgentStylesheet(temaSalvo.getUserAgentStylesheet());
 
             CoresPadrao corBarra = defineCor(0);
             String tituloTela = caminhoTela.getNome();
-
             // Monta a base visual e injeta dependências
-            montarJanela(primaryStage, caminhoTela, tituloTela, corBarra, contextoAplicacao, true);
-
-            // Ajustes específicos da Janela Principal (Tamanho e posição)
-            primaryStage.initStyle(StageStyle.UNDECORATED);
-            primaryStage.setTitle(tituloTela);
-
-            // Ajuste do bounds (Aquele ajuste para o Windows não engolir a barra de tarefas)
-            javafx.geometry.Rectangle2D limites = javafx.stage.Screen.getPrimary().getVisualBounds();
-            primaryStage.setX(limites.getMinX());
-            primaryStage.setY(limites.getMinY());
-            primaryStage.setWidth(limites.getWidth());
-            primaryStage.setHeight(limites.getHeight());
-
+            montarJanela(stage, caminhoTela, tituloTela, corBarra, contextoAplicacao, true);
 
         } catch (Exception e) {
             throw new RuntimeException(MensagemErro.ERRO_ABERTURA_TELA.MensagemComParametro("Tela Principal") + caminhoTela.getNome(), e);
         }
     }
 
-    public static <T> T abrirJanelaAuxiliar(CaminhoTela caminhoTela, ContextoAplicacao contextoAplicacao) {
+    public static <T> void abrirJanelaSecundaria(CaminhoTela caminhoTela, ContextoAplicacao contextoAplicacao) {
         try {
-            Stage stage = new Stage();
+            Stage stage = ajustarMonitor(null, "auxiliar");
 
             CoresPadrao corBarra = defineCor(0);
             String tituloTela = caminhoTela.getNome();
 
             T controller = montarJanela(stage, caminhoTela, tituloTela, corBarra, contextoAplicacao, false);
-            stage.show();
+            stage.showAndWait();
 
-            return controller;
         } catch (Exception e) {
             throw new RuntimeException(MensagemErro.ERRO_ABERTURA_TELA.MensagemComParametro("Tela Auxiliar") + caminhoTela.getNome(), e);
         }
@@ -109,8 +52,7 @@ public class ConstrutorJanelas {
 
     public static <T> T abrirJanelaDialogo(TipoDialogo tipoDialogo, CaminhoTela caminhoTela, String tituloTela, String mensagem, String detalhes, ContextoAplicacao contextoAplicacao) {
         try {
-            Stage stage = new Stage();
-            stage.initModality(Modality.APPLICATION_MODAL);
+            Stage stage = ajustarMonitor(null, "dialogo");
 
             CoresPadrao corBarra = defineCor(tipoDialogo.getTipoDialogo());
 
@@ -156,8 +98,7 @@ public class ConstrutorJanelas {
         if (!exibirBotoesMaxMin) {
             janelaBaseController.defineVisibilidadeMaxMin();
         }
-        // 5. Configura o Stage
-        stage.initStyle(StageStyle.UNDECORATED);
+
         if (stage.getScene() == null) {
             stage.setScene(new Scene(janelaBaseLoader.getRoot()));
         }
@@ -180,5 +121,41 @@ public class ConstrutorJanelas {
         };
     }
 
+    public static Stage ajustarMonitor(Stage stage, String tipoJanela) {
+
+        if (stage == null) {
+            stage = new Stage();
+        }
+
+        stage.initStyle(StageStyle.UNDECORATED);
+
+
+        if (tipoJanela.equalsIgnoreCase("principal")) {
+
+            javafx.geometry.Rectangle2D limites = javafx.stage.Screen.getPrimary().getVisualBounds();
+            stage.setX(limites.getMinX());
+            stage.setY(limites.getMinY());
+            stage.setWidth(limites.getWidth());
+            stage.setHeight(limites.getHeight());
+
+        } else {
+
+            if (stageJanelaPrincipal != null) {
+                stage.initOwner(stageJanelaPrincipal);
+                if (tipoJanela.equalsIgnoreCase("dialogo")) {
+                    stage.initModality(Modality.APPLICATION_MODAL);
+                }
+                Stage finalStage = stage;
+                stage.setOnShown(event -> {
+                    finalStage.setX(stageJanelaPrincipal.getX() + (stageJanelaPrincipal.getWidth() - finalStage.getWidth()) / 2);
+                    finalStage.setY(stageJanelaPrincipal.getY() + (stageJanelaPrincipal.getHeight() - finalStage.getHeight()) / 2);
+                });
+            }
+        }
+        return stage;
+    }
+
 }
+
+
 

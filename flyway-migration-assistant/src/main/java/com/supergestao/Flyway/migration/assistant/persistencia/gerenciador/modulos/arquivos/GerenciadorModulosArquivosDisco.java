@@ -23,9 +23,10 @@ import java.util.stream.Collectors;
 
 public class GerenciadorModulosArquivosDisco implements IGerenciadorModulosArquivosDisco {
     @Override
-    public void salvarModuloFuncao(String caminhoDoModulo) {
+    public boolean salvarModuloFuncao(String caminhoDoModulo) {
         try {
             Files.createDirectories(Paths.get(caminhoDoModulo));
+            return true;
         } catch (IOException e) {
             throw new PersistenciaException(MensagemErro.ERRO_SALVAR_MODULO.MensagemComParametro(caminhoDoModulo), e);
         }
@@ -60,21 +61,18 @@ public class GerenciadorModulosArquivosDisco implements IGerenciadorModulosArqui
             HashMap<String, Modulo> modulosExistentes = new HashMap<>();
             File[] pastas = new File(diretorioRaiz).listFiles(File::isDirectory);
             if (pastas != null) {
-                Long id = 0L;
-                for (File dirModulo : pastas) {
-
-                    if (dirModulo.getName().startsWith(".")) {
+                long id = 0L;
+                for (File moduloLocalizado : pastas) {
+                    if (moduloLocalizado.getName().startsWith(".")) {
                         continue;
                     }
-
-                    Modulo modulo = new Modulo(id++, dirModulo.getName(), dirModulo.getName().substring(0, 3).toUpperCase());
-
-                    carregarFuncoesNoModulo(dirModulo, modulo);
-
+                    Modulo modulo = new Modulo(id++, moduloLocalizado.getName());
+                    carregarFuncoesNoModulo(moduloLocalizado, modulo);
                     modulosExistentes.put(modulo.getPrefixo(), modulo);
 
                 }
             }
+
             return modulosExistentes.entrySet()
                     .stream()
                     .sorted(Comparator.comparing(entry -> entry.getValue().getNome()))
@@ -84,13 +82,12 @@ public class GerenciadorModulosArquivosDisco implements IGerenciadorModulosArqui
                             (e1, e2) -> e1, LinkedHashMap::new));
 
         } catch (Exception e) {
-            throw new ValidacaoException(MensagemErro.ERRO_PROCESSAR_MOD_EXISTENTE.getMensagem(), e);
+            throw new ValidacaoException(MensagemErro.ERRO_PROCESSAR_MOD_EXISTENTE.getMensagem() + e);
         }
     }
 
     @Override
     public HashMap<String, Modulo> obterModuloOrigem(String diretorioRaiz) {
-
         if (!diretorioRaiz.toLowerCase().endsWith(".java")) {
             throw new ValidacaoException(MensagemErro.ARQUIVO_NAO_JAVA.MensagemComParametro(diretorioRaiz));
         }

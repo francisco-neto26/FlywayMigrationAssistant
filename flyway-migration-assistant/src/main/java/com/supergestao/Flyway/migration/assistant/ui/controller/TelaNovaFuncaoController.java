@@ -1,13 +1,9 @@
 package com.supergestao.Flyway.migration.assistant.ui.controller;
 
-import com.supergestao.Flyway.migration.assistant.aplicacao.sincronizar.SincronizarModulos;
 import com.supergestao.Flyway.migration.assistant.dominio.modelo.Modulo;
 import com.supergestao.Flyway.migration.assistant.exception.TelaException;
-import com.supergestao.Flyway.migration.assistant.persistencia.gerenciador.modulos.arquivos.IGerenciadorModulosArquivosDisco;
 import com.supergestao.Flyway.migration.assistant.ui.estado.ContextoAplicacao;
 import com.supergestao.Flyway.migration.assistant.ui.utilitario.GerenciadorEstiloBotao;
-import com.supergestao.Flyway.migration.assistant.ui.utilitario.IGerenciadorJanelas;
-import com.supergestao.Flyway.migration.assistant.ui.utilitario.CoresPadrao;
 import com.supergestao.Flyway.migration.assistant.ui.utilitario.TipoDialogo;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
@@ -86,5 +82,4 @@ public class TelaNovaFuncaoController implements ITelasModal{
             );
         }
     }
-
 }

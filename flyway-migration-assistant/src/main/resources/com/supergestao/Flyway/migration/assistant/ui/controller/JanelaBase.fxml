@@ -11,9 +11,7 @@
         <HBox fx:id="hboxTopo" alignment="CENTER_LEFT" prefHeight="40.0">
             <children>
                 <Label fx:id="lblTitulo" text="Título Padrão" textFill="WHITE">
-                    <font>
-                        <Font name="System Bold" size="14.0" />
-                    </font>
+
                <HBox.margin>
                   <Insets left="15.0" />
                </HBox.margin>

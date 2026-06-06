@@ -52,15 +52,16 @@ public class TelaDialogoController implements ITelasModal {
         lblMensagem.setText(mensagem);
         btnCancelar.setVisible(false);
         btnCancelar.setManaged(false);
-        btnConfirmar.setText("Sair");
 
         if (detalhes.isBlank()) {
             throw new TelaException("O campo detalhes não pode ser vazio para o tipo de diálogo: " + tipoDialogo);
         }
 
         if (tipoDialogo == TipoDialogo.CONFIRMACAO) {
+            btnConfirmar.setText("Confirmar");
             telaConfirmacao(detalhes);
         } else {
+            btnConfirmar.setText("Sair");
             telaMensagem(detalhes);
         }
 
@@ -92,8 +93,8 @@ public class TelaDialogoController implements ITelasModal {
 
     public void telaConfirmacao(String detalhes) {
 
-        lblMensagem.setVisible(false);
-        lblMensagem.setManaged(false);
+       /* lblMensagem.setVisible(false);
+        lblMensagem.setManaged(false);*/
 
         txtAreaDetalhes.setText(detalhes);
         txtAreaDetalhes.setVisible(true);

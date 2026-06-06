@@ -1,9 +1,12 @@
 package com.supergestao.Flyway.migration.assistant.aplicacao.sincronizar;
 
 import com.supergestao.Flyway.migration.assistant.dominio.modelo.Modulo;
+import com.supergestao.Flyway.migration.assistant.dominio.modelo.RetornoSalvarDiretorio;
 import com.supergestao.Flyway.migration.assistant.persistencia.gerenciador.modulos.arquivos.IGerenciadorModulosArquivosDisco;
 
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -16,28 +19,23 @@ public class SincronizarModulos {
         this.iGerenciadorModulosArquivosDisco = IGerenciadorModulosArquivosDisco;
     }
 
-    public boolean existeModuloParaSincronizar(String caminhoOrigem, String caminhoExistentes) {
-        Map<String, Modulo> novosModulos = obterModulosNovos(
+    public Map<String, Modulo> moduloParaSincronizar(String caminhoOrigem, String caminhoExistentes) {
+        return obterModulosNovos(
                 iGerenciadorModulosArquivosDisco.obterModuloOrigem(caminhoOrigem),
                 iGerenciadorModulosArquivosDisco.obterModulosFuncoes(caminhoExistentes)
         );
-        return !novosModulos.isEmpty();
     }
 
-    public void executarSincronizacao(String caminhoOrigem, String caminhoExistentes) {
-        Map<String, Modulo> novosModulos = obterModulosNovos(
-                iGerenciadorModulosArquivosDisco.obterModuloOrigem(caminhoOrigem),
-                iGerenciadorModulosArquivosDisco.obterModulosFuncoes(caminhoExistentes)
-        );
-        criarNovoModulo(novosModulos, caminhoExistentes);
-    }
+    public List<RetornoSalvarDiretorio> criarNovoModulo(Map<String, Modulo> modulosNovos, String caminhoExistentes) {
 
-    public void criarNovoModulo(Map<String, Modulo> modulosNovos, String caminhoExistentes) {
+        List<RetornoSalvarDiretorio> resultados = new ArrayList<>();
         for (Modulo modulo : modulosNovos.values()) {
             String nome = modulo.getNome();
             String caminhoCompleto = Paths.get(caminhoExistentes, nome).toString();
-            iGerenciadorModulosArquivosDisco.salvarModuloFuncao(caminhoCompleto);
+            boolean criado = iGerenciadorModulosArquivosDisco.salvarModuloFuncao(caminhoCompleto);
+            resultados.add(new RetornoSalvarDiretorio(criado, nome));
         }
+        return resultados;
     }
 
     public void criarNovaFuncao(String modulo, String funcao, String caminhoExistentes) {

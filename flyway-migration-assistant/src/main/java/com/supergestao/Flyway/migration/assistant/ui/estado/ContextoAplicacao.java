@@ -1,6 +1,5 @@
 package com.supergestao.Flyway.migration.assistant.ui.estado;
 
-import atlantafx.base.theme.Theme;
 import com.supergestao.Flyway.migration.assistant.aplicacao.sincronizar.SincronizarModulos;
 import com.supergestao.Flyway.migration.assistant.dominio.configuracao.GerenciadorConfiguracao;
 import com.supergestao.Flyway.migration.assistant.dominio.configuracao.IGerenciadorConfiguracao;
@@ -8,8 +7,6 @@ import com.supergestao.Flyway.migration.assistant.persistencia.gerenciador.modul
 import com.supergestao.Flyway.migration.assistant.persistencia.gerenciador.modulos.arquivos.GerenciadorModulosArquivosDisco;
 import com.supergestao.Flyway.migration.assistant.ui.utilitario.GerenciadorJanelas;
 import com.supergestao.Flyway.migration.assistant.ui.utilitario.IGerenciadorJanelas;
-
-import java.util.List;
 
 public class ContextoAplicacao {
     private final IGerenciadorModulosArquivosDisco iGerenciadorModulosArquivosDisco;
@@ -39,5 +36,10 @@ public class ContextoAplicacao {
     public IGerenciadorModulosArquivosDisco getIGerenciadorModulosArquivos() {
         return this.iGerenciadorModulosArquivosDisco;
     }
+
+    public SincronizarModulos getSincronizarModulos() {
+        return this.sincronizarModulos;
+    }
+
 }
 

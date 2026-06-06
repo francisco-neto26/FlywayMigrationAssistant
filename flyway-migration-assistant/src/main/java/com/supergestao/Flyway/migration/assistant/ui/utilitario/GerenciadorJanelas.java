@@ -15,8 +15,6 @@ public class GerenciadorJanelas implements IGerenciadorJanelas {
     @Override
     public boolean exibirDialogo(TipoDialogo tipoDialogo, String titulo, String mensagem, String detalhes) {
 
-
-
         try {
             TelaDialogoController confirmacao;
             confirmacao = ConstrutorJanelas.abrirJanelaDialogo(tipoDialogo,

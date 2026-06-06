@@ -3,6 +3,7 @@ package com.supergestao.Flyway.migration.assistant.ui.controller;
 import com.supergestao.Flyway.migration.assistant.dominio.modelo.Arquivo;
 import com.supergestao.Flyway.migration.assistant.dominio.modelo.Funcao;
 import com.supergestao.Flyway.migration.assistant.dominio.modelo.Modulo;
+import com.supergestao.Flyway.migration.assistant.dominio.modelo.RetornoSalvarDiretorio;
 import com.supergestao.Flyway.migration.assistant.ui.estado.ContextoAplicacao;
 import com.supergestao.Flyway.migration.assistant.ui.utilitario.*;
 import javafx.animation.PauseTransition;
@@ -13,9 +14,10 @@ import javafx.scene.layout.BorderPane;
 import javafx.util.Duration;
 
 
+import java.util.List;
 import java.util.Map;
 
-public class TelaPrincipalController implements ITelasModal{
+public class TelaPrincipalController implements ITelasModal {
 
     @FXML
     private TextField txtBuscarArquivo;
@@ -49,10 +51,7 @@ public class TelaPrincipalController implements ITelasModal{
     private BorderPane painelRaiz;
 
     private ContextoAplicacao contexto;
-/*tem que implementar o itelasmodel pelas demais classes do controller, melhora a chamada das telas do modal, sem ter que passar o titulo, ja que temos elas
-    caminho das telas, criar botão de cores para salvar as cores do sistema como um todo, vale lembrar que com as mudancas tem validar tudo do zero, ou seja, estamos
-    no inicio novamente. Ideal antes de evoluir na tela principal é fazer com que tudo o resto funcione bem
- */
+
     public void setContextoAplicacao(ContextoAplicacao contextoAplicacao) {
         this.contexto = contextoAplicacao;
     }
@@ -69,10 +68,8 @@ public class TelaPrincipalController implements ITelasModal{
 
     @FXML
     private void telaConfiguracao() {
-        ConstrutorJanelas.abrirModal(
+        ConstrutorJanelas.abrirJanelaSecundaria(
                 CaminhoTela.TELA_CONFIGURACOES,
-                CaminhoTela.TELA_CONFIGURACOES.getNome(),
-                CoresPadrao.BARRA_PRINCIPAL,
                 this.contexto
         );
         GerenciadorVisual.aplicarTemaGlobal(contexto.getIGerenciadorConfiguracao().getTema());
@@ -82,10 +79,8 @@ public class TelaPrincipalController implements ITelasModal{
 
     @FXML
     private void telaNovoModulo() {
-        ConstrutorJanelas.abrirModal(
+        ConstrutorJanelas.abrirJanelaSecundaria(
                 CaminhoTela.TELA_NOVO_MODULO,
-                CaminhoTela.TELA_NOVO_MODULO.getNome(),
-                CoresPadrao.BARRA_PRINCIPAL,
                 this.contexto
         );
         verifcaEcarregarModuloFuncao();
@@ -93,10 +88,8 @@ public class TelaPrincipalController implements ITelasModal{
 
     @FXML
     private void telaNovaFuncao() {
-        ConstrutorJanelas.abrirModal(
+        ConstrutorJanelas.abrirJanelaSecundaria(
                 CaminhoTela.TELA_NOVA_FUNCAO,
-                CaminhoTela.TELA_NOVA_FUNCAO.getNome(),
-                CoresPadrao.BARRA_PRINCIPAL,
                 this.contexto
         );
         verifcaEcarregarModuloFuncao();
@@ -104,10 +97,8 @@ public class TelaPrincipalController implements ITelasModal{
 
     @FXML
     private void telaNovoMigration() {
-        ConstrutorJanelas.abrirModal(
+        ConstrutorJanelas.abrirJanelaSecundaria(
                 CaminhoTela.TELA_NOVO_MIGRATION,
-                CaminhoTela.TELA_NOVO_MIGRATION.getNome(),
-                CoresPadrao.BARRA_PRINCIPAL,
                 this.contexto
         );
         verifcaEcarregarModuloFuncao();
@@ -162,7 +153,6 @@ public class TelaPrincipalController implements ITelasModal{
     @FXML
     private void verifcaEcarregarModuloFuncao() {
         if (!this.contexto.getIGerenciadorConfiguracao().diretoriosConfigurados()) {
-
             boolean querConfigurar = this.contexto.getIGerenciadorJanelas().exibirDialogo(TipoDialogo.CONFIRMACAO,
                     "Cadastrar configurações",
                     null,
@@ -172,44 +162,7 @@ public class TelaPrincipalController implements ITelasModal{
                 telaConfiguracao();
             }
         } else {
-            desenharArvore();
-        }
-    }
-
-
-    private void desenharArvore() {
-        try {
-
-            TreeItem<String> raizVisual = new TreeItem<>("Módulos (Raiz)");
-            raizVisual.setExpanded(true);
-
-            Map<String, Modulo> mapaModulos = this.contexto.getIGerenciadorModulosArquivos()
-                    .obterModuloOrigem(this.contexto.getIGerenciadorConfiguracao().getDiretorioModulo());
-
-            for (Modulo modulo : mapaModulos.values()) {
-                TreeItem<String> itemModulo = new TreeItem<>(modulo.getNome());
-
-                // NOTA: Troque getFuncoes() pelo nome exato do método da sua classe Modulo
-                for (Funcao funcao : modulo.getFuncoes()) {
-                    TreeItem<String> itemFuncao = new TreeItem<>("📂 " + funcao.getNome());
-
-                    // NOTA: Troque getArquivos() pelo nome exato do método da sua classe Funcao
-                    for (Arquivo arquivo : funcao.getArquivos()) {
-                        TreeItem<String> itemArquivo = new TreeItem<>("📄 " + arquivo.getNome());
-                        itemFuncao.getChildren().add(itemArquivo);
-                    }
-                    itemModulo.getChildren().add(itemFuncao);
-                }
-                raizVisual.getChildren().add(itemModulo);
-            }
-
-            treeArquivos.setRoot(raizVisual);
-
-        } catch (Exception e) {
-            this.contexto.getIGerenciadorJanelas().exibirDialogo(TipoDialogo.ERRO,
-                    "Erro de Leitura",
-                    "Falha ao ler os módulos",
-                    e.getMessage());
+            GerenciadorArvoreModulos.buscarModulosFuncoes(this.contexto, treeArquivos);
         }
     }
 }

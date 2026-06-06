@@ -3,33 +3,38 @@
 <?import javafx.geometry.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<?import javafx.scene.text.*?>
 
-<BorderPane fx:id="painelRaiz" prefHeight="800.0" prefWidth="1200.0" style="-fx-border-color: rgba(128, 128, 128, 0.3); -fx-border-style: solid; -fx-border-width: 1;" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.supergestao.Flyway.migration.assistant.ui.controller.TelaPrincipalController">
+<BorderPane fx:id="painelRaiz" prefHeight="800.0" prefWidth="1200.0"
+            style="-fx-border-color: rgba(128, 128, 128, 0.3); -fx-border-style: solid; -fx-border-width: 1;"
+            xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.supergestao.Flyway.migration.assistant.ui.controller.TelaPrincipalController">
 
     <center>
         <SplitPane dividerPositions="0.35">
             <items>
 
-                <VBox maxWidth="350.0" minWidth="150.0" prefWidth="300.0" spacing="10.0" style="-fx-border-color: rgba(128, 128, 128, 0.3); -fx-border-style: solid; -fx-border-width: 0 1 0 0;">
+                <VBox maxWidth="350.0" minWidth="150.0" prefWidth="300.0" spacing="10.0"
+                      style="-fx-border-color: rgba(128, 128, 128, 0.3); -fx-border-style: solid; -fx-border-width: 0 1 0 0;">
                     <padding>
-                        <Insets bottom="15.0" left="15.0" right="15.0" top="15.0" />
+                        <Insets bottom="15.0" left="15.0" right="15.0" top="15.0"/>
                     </padding>
                     <children>
                         <Label opacity="0.7" text="Explorador de Módulos E Fuções">
-                            <font>
-                                <Font name="System Bold" size="12.0" />
-                            </font>
+
                         </Label>
 
                         <HBox spacing="8.0">
                             <children>
-                                <TextField fx:id="txtBuscarArquivo" promptText="Buscar arquivo..." HBox.hgrow="ALWAYS" />
-                                <Button fx:id="btnBuscar" style="-fx-cursor: hand;" text="🔍" />
+                                <TextField fx:id="txtBuscarArquivo" promptText="Buscar arquivo..." HBox.hgrow="ALWAYS"/>
+                                <Button fx:id="btnBuscar" style="-fx-cursor: hand;" text="🔍"/>
                             </children>
                         </HBox>
 
-                        <TreeView fx:id="treeArquivos" style="-fx-border-width: 0;" VBox.vgrow="ALWAYS" />
+                        <TreeView fx:id="treeArquivos" style="-fx-border-width: 1;" VBox.vgrow="ALWAYS">
+                            <opaqueInsets>
+                                <Insets bottom="10.0"/>
+                            </opaqueInsets>
+                        </TreeView>
                     </children>
                 </VBox>
 
@@ -38,41 +43,46 @@
 
                         <VBox spacing="10.0">
                             <padding>
-                                <Insets bottom="10.0" left="20.0" right="20.0" top="15.0" />
+                                <Insets bottom="10.0" left="20.0" right="20.0" top="15.0"/>
                             </padding>
                             <children>
                                 <HBox alignment="CENTER_LEFT" spacing="10.0">
                                     <children>
                                         <Label opacity="0.7" text="EDITOR SQL">
-                                            <font>
-                                                <Font name="System Bold" size="12.0" />
-                                            </font>
                                         </Label>
 
-                                        <Region HBox.hgrow="ALWAYS" />
+                                        <Region HBox.hgrow="ALWAYS"/>
 
-                                        <Button fx:id="btnIndentar" onAction="#indentar" style="-fx-cursor: hand;" text="Indentar" />
-                                        <Button fx:id="btnValidarSql" onAction="#validarSql" style="-fx-cursor: hand;" text="Validar SQL" />
-                                        <Button fx:id="btnCancelarEdicao" onAction="#cancelarEdicao" style="-fx-cursor: hand;" text="Cancelar" />
-                                        <Button fx:id="btnSalvarSql" onAction="#salvarSql" style="-fx-cursor: hand;" text="Salvar" />
+                                        <Button fx:id="btnIndentar" onAction="#indentar" style="-fx-cursor: hand;"
+                                                text="Indentar"/>
+                                        <Button fx:id="btnValidarSql" onAction="#validarSql" style="-fx-cursor: hand;"
+                                                text="Validar SQL"/>
+                                        <Button fx:id="btnCancelarEdicao" onAction="#cancelarEdicao"
+                                                style="-fx-cursor: hand;" text="Cancelar"/>
+                                        <Button fx:id="btnSalvarSql" onAction="#salvarSql" style="-fx-cursor: hand;"
+                                                text="Salvar"/>
                                     </children>
                                 </HBox>
 
-                                <TextArea fx:id="txtAreaSql" promptText="Escreva ou carregue seu código SQL aqui..." style="-fx-font-family: 'Consolas'; -fx-font-size: 14px;" VBox.vgrow="ALWAYS" />
+                                <TextArea fx:id="txtAreaSql" promptText="Escreva ou carregue seu código SQL aqui..."
+                                          VBox.vgrow="ALWAYS">
+                                    <VBox.margin>
+                                        <Insets/>
+                                    </VBox.margin>
+                                </TextArea>
                             </children>
                         </VBox>
 
-                        <VBox maxHeight="250.0" minHeight="100.0" prefHeight="220.0" spacing="5.0" style="-fx-border-color: rgba(128, 128, 128, 0.3); -fx-border-style: solid; -fx-border-width: 1 0 0 0;">
+                        <VBox maxHeight="250.0" minHeight="100.0" prefHeight="220.0" spacing="5.0"
+                              style="-fx-border-color: rgba(128, 128, 128, 0.3); -fx-border-style: solid; -fx-border-width: 1 0 0 0;">
                             <padding>
-                                <Insets bottom="10.0" left="20.0" right="20.0" top="10.0" />
+                                <Insets bottom="10.0" left="20.0" right="20.0" top="10.0"/>
                             </padding>
                             <children>
-                                <Label opacity="0.7" text="SAÍDA / MENSAGENS">
-                                    <font>
-                                        <Font name="System Bold" size="11.0" />
-                                    </font>
+                                <Label opacity="0.7" prefHeight="17.0" prefWidth="134.0" text="Mensagens">
                                 </Label>
-                                <TextArea fx:id="txtAreaMensagens" editable="false" style="-fx-font-family: 'Consolas'; -fx-text-fill: #DC2626;" VBox.vgrow="ALWAYS" />
+                                <TextArea fx:id="txtAreaMensagens" editable="false" style=" -fx-text-fill: #DC2626;"
+                                          VBox.vgrow="ALWAYS"/>
                             </children>
                         </VBox>
 
@@ -84,24 +94,29 @@
     </center>
 
     <bottom>
-        <HBox alignment="CENTER_LEFT" prefHeight="55.0" spacing="15.0" style="-fx-border-color: rgba(128, 128, 128, 0.3); -fx-border-style: solid; -fx-border-width: 1 0 0 0;" BorderPane.alignment="CENTER">
+        <HBox alignment="CENTER_LEFT" prefHeight="55.0" spacing="15.0"
+              style="-fx-border-color: rgba(128, 128, 128, 0.3); -fx-border-style: solid; -fx-border-width: 1 0 0 0;"
+              BorderPane.alignment="CENTER">
             <padding>
-                <Insets left="20.0" right="20.0" />
+                <Insets left="20.0" right="20.0"/>
             </padding>
             <children>
-                <Button fx:id="btnAtualizar" onAction="#verifcaEcarregarModuloFuncao" prefWidth="120.0" style="-fx-cursor: hand;" text="Atualizar Módulos" />
+                <Button fx:id="btnAtualizar" onAction="#verifcaEcarregarModuloFuncao" prefWidth="120.0"
+                        style="-fx-cursor: hand;" text="Atualizar Módulos"/>
 
-                <Region HBox.hgrow="ALWAYS" />
+                <Region HBox.hgrow="ALWAYS"/>
 
-                <Button fx:id="btnNovoModulo" onAction="#telaNovoModulo" style="-fx-cursor: hand;" text="Novo Módulo" />
-                <Button fx:id="btnNovaFuncao" onAction="#telaNovaFuncao" style="-fx-cursor: hand;" text="Nova Função" />
-                <Button fx:id="btnNovoMigration" onAction="#telaNovoMigration" style="-fx-cursor: hand;" text="Novo Migration" />
-                <Button fx:id="btnConfiguracoes" onAction="#telaConfiguracao" style="-fx-cursor: hand;" text="Configurações" />
+                <Button fx:id="btnNovoModulo" onAction="#telaNovoModulo" style="-fx-cursor: hand;" text="Novo Módulo"/>
+                <Button fx:id="btnNovaFuncao" onAction="#telaNovaFuncao" style="-fx-cursor: hand;" text="Nova Função"/>
+                <Button fx:id="btnNovoMigration" onAction="#telaNovoMigration" style="-fx-cursor: hand;"
+                        text="Novo Migration"/>
+                <Button fx:id="btnConfiguracoes" onAction="#telaConfiguracao" style="-fx-cursor: hand;"
+                        text="Configurações"/>
             </children>
         </HBox>
     </bottom>
-   <opaqueInsets>
-      <Insets left="2.0" />
-   </opaqueInsets>
+    <opaqueInsets>
+        <Insets left="2.0"/>
+    </opaqueInsets>
 
 </BorderPane>

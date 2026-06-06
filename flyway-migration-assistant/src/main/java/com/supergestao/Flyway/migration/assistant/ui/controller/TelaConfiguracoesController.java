@@ -2,7 +2,6 @@ package com.supergestao.Flyway.migration.assistant.ui.controller;
 
 
 import atlantafx.base.theme.Theme;
-import com.supergestao.Flyway.migration.assistant.dominio.configuracao.GerenciadorConfiguracao;
 import com.supergestao.Flyway.migration.assistant.dominio.mensagem.MensagemErro;
 import com.supergestao.Flyway.migration.assistant.exception.PersistenciaException;
 import com.supergestao.Flyway.migration.assistant.ui.estado.ContextoAplicacao;
@@ -44,6 +43,10 @@ public class TelaConfiguracoesController implements ITelasModal {
     @FXML
     private VBox painelRaiz;
 
+    @FXML
+    private Button btnCoresPadrao;
+
+
     private ContextoAplicacao contexto;
     String txtDiretorioModuloAntigo;
 
@@ -84,7 +87,7 @@ public class TelaConfiguracoesController implements ITelasModal {
 
         comboTema.getSelectionModel().select(this.contexto.getIGerenciadorConfiguracao().getTema());
         comboFonte.getSelectionModel().select(this.contexto.getIGerenciadorConfiguracao().getChaveFonte());
-        comboDirModulo.getSelectionModel().select(this.contexto.getIGerenciadorConfiguracao().getChaveUsaModulo() ? "Sim" : "Não");
+        comboDirModulo.getSelectionModel().select(this.contexto.getIGerenciadorConfiguracao().getChaveUsaModulo() ? "Sim": "Não");
     }
 
     private void verficaConfigUsaModulo() {
@@ -215,5 +218,9 @@ public class TelaConfiguracoesController implements ITelasModal {
         verficaConfigUsaModulo();
     }
 
+    @FXML
+    private void coresPadrao() {
+
+    }
 
 }
