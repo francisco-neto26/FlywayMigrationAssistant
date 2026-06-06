@@ -5,10 +5,7 @@ import com.supergestao.Flyway.migration.assistant.dominio.modelo.RetornoSalvarDi
 import com.supergestao.Flyway.migration.assistant.persistencia.gerenciador.modulos.arquivos.IGerenciadorModulosArquivosDisco;
 
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class SincronizarModulos {
@@ -27,21 +24,24 @@ public class SincronizarModulos {
     }
 
     public List<RetornoSalvarDiretorio> criarNovoModulo(Map<String, Modulo> modulosNovos, String caminhoExistentes) {
-
         List<RetornoSalvarDiretorio> resultados = new ArrayList<>();
         for (Modulo modulo : modulosNovos.values()) {
             String nome = modulo.getNome();
             String caminhoCompleto = Paths.get(caminhoExistentes, nome).toString();
-            boolean criado = iGerenciadorModulosArquivosDisco.salvarModuloFuncao(caminhoCompleto);
-            resultados.add(new RetornoSalvarDiretorio(criado, nome));
+            resultados.addAll(salvarModuloFuncao(nome, caminhoCompleto));
         }
         return resultados;
     }
 
-    public void criarNovaFuncao(String modulo, String funcao, String caminhoExistentes) {
-        String caminhoCompleto = Paths.get(caminhoExistentes, modulo, funcao).toString();
-        iGerenciadorModulosArquivosDisco.salvarModuloFuncao(caminhoCompleto);
+    public List<RetornoSalvarDiretorio> criarNovaFuncao(String modulo, String funcao, String caminhoCompleto) {
+       return salvarModuloFuncao(funcao, caminhoCompleto);
+    }
 
+    private List<RetornoSalvarDiretorio> salvarModuloFuncao(String moduloFuncao, String caminhoCompleto){
+        List<RetornoSalvarDiretorio> resultados = new ArrayList<>();
+        boolean criado = iGerenciadorModulosArquivosDisco.salvarModuloFuncao(caminhoCompleto);
+        resultados.add(new RetornoSalvarDiretorio(criado, moduloFuncao));
+        return resultados;
     }
 
     public Map<String, Modulo> obterModulosExistentes(String caminhoExistentes) {
@@ -57,9 +57,11 @@ public class SincronizarModulos {
 
         return moduloOrigem.entrySet().stream()
                 .filter(entry -> !nomesExistentes.contains(entry.getValue().getNome().toLowerCase()))
-                .collect(Collectors.toMap(
-                        Map.Entry::getKey,
-                        Map.Entry::getValue
-                ));
+                .sorted(Comparator.comparing(entry -> entry.getValue().getNome().toLowerCase()))
+                .collect(
+                        LinkedHashMap::new,
+                        (mapa, entry) -> mapa.put(entry.getKey(), entry.getValue()),
+                        Map::putAll
+                );
     }
 }

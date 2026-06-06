@@ -1,6 +1,6 @@
 package com.supergestao.Flyway.migration.assistant.dominio.modelo;
 
-import com.supergestao.Flyway.migration.assistant.dominio.mensagem.MensagemErro;
+import com.supergestao.Flyway.migration.assistant.dominio.mensagem.MensagemSistema;
 import com.supergestao.Flyway.migration.assistant.exception.ValidacaoException;
 
 import java.util.ArrayList;
@@ -18,19 +18,19 @@ public class Modulo {
     public Modulo(Long id, String nome, String constante, String prefixo, String descricao) {
 
         if (id == null) {
-            throw new ValidacaoException(MensagemErro.CAMPO_OBRIGATORIO.MensagemComParametro("Id do módulo"));
+            throw new ValidacaoException(MensagemSistema.CAMPO_OBRIGATORIO.MensagemComParametro("Id do módulo"));
         }
 
         if (nome == null || nome.isBlank()) {
-            throw new ValidacaoException(MensagemErro.CAMPO_OBRIGATORIO.MensagemComParametro("Nome do módulo"));
+            throw new ValidacaoException(MensagemSistema.CAMPO_OBRIGATORIO.MensagemComParametro("Nome do módulo"));
         }
 
         if (constante == null || constante.isBlank()) {
-            throw new ValidacaoException(MensagemErro.CAMPO_OBRIGATORIO.MensagemComParametro("Constante do módulo"));
+            throw new ValidacaoException(MensagemSistema.CAMPO_OBRIGATORIO.MensagemComParametro("Constante do módulo"));
         }
 
         if (prefixo == null || prefixo.isBlank()) {
-            throw new ValidacaoException(MensagemErro.CAMPO_OBRIGATORIO.MensagemComParametro("Prefixo do módulo"));
+            throw new ValidacaoException(MensagemSistema.CAMPO_OBRIGATORIO.MensagemComParametro("Prefixo do módulo"));
         }
 
         this.id = id;
@@ -43,11 +43,11 @@ public class Modulo {
     public Modulo(Long id, String nome) {
 
         if (id == null) {
-            throw new ValidacaoException(MensagemErro.CAMPO_OBRIGATORIO.MensagemComParametro("Id do módulo"));
+            throw new ValidacaoException(MensagemSistema.CAMPO_OBRIGATORIO.MensagemComParametro("Id do módulo"));
         }
 
         if (nome == null || nome.isBlank()) {
-            throw new ValidacaoException(MensagemErro.CAMPO_OBRIGATORIO.MensagemComParametro("Nome do módulo"));
+            throw new ValidacaoException(MensagemSistema.CAMPO_OBRIGATORIO.MensagemComParametro("Nome do módulo"));
         }
 
         this.id = id;

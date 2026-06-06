@@ -11,13 +11,13 @@
             <children>
                 <VBox spacing="5.0">
                     <children>
-                        <Label text="Módulo:" />
+                        <Label fx:id="lblModulo" text="Módulo:" />
                         <ComboBox fx:id="comboModulo" maxWidth="1.7976931348623157E308" promptText="Selecione o Módulo..." />
                     </children>
                 </VBox>
                 <VBox spacing="5.0">
                     <children>
-                        <Label text="Nome da Função:" />
+                        <Label fx:id="lblNomeFuncao" text="Nome da Função:" />
                         <TextField fx:id="txtNomeFuncao" promptText="Ex: relatorios" />
                     </children>
                 </VBox>

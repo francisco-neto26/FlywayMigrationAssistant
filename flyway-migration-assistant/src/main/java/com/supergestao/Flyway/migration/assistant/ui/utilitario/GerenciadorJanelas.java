@@ -1,6 +1,6 @@
 package com.supergestao.Flyway.migration.assistant.ui.utilitario;
 
-import com.supergestao.Flyway.migration.assistant.dominio.mensagem.MensagemErro;
+import com.supergestao.Flyway.migration.assistant.dominio.mensagem.MensagemSistema;
 import com.supergestao.Flyway.migration.assistant.ui.controller.TelaDialogoController;
 import com.supergestao.Flyway.migration.assistant.ui.estado.ContextoAplicacao;
 
@@ -28,7 +28,7 @@ public class GerenciadorJanelas implements IGerenciadorJanelas {
             return confirmacao.isConfirmado();
 
         } catch (Exception e) {
-            throw new RuntimeException(MensagemErro.ERRO_ABERTURA_TELA.MensagemComParametro("Tela " + tipoDialogo.getNome()), e);
+            throw new RuntimeException(MensagemSistema.ERRO_ABERTURA_TELA.MensagemComParametro("Tela " + tipoDialogo.getNome()), e);
         }
     }
 }

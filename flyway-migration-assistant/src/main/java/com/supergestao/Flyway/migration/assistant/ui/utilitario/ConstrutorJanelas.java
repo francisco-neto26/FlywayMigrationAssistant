@@ -1,7 +1,7 @@
 package com.supergestao.Flyway.migration.assistant.ui.utilitario;
 
 import atlantafx.base.theme.Theme;
-import com.supergestao.Flyway.migration.assistant.dominio.mensagem.MensagemErro;
+import com.supergestao.Flyway.migration.assistant.dominio.mensagem.MensagemSistema;
 import com.supergestao.Flyway.migration.assistant.ui.controller.ITelasModal;
 import com.supergestao.Flyway.migration.assistant.ui.controller.JanelaBaseController;
 import com.supergestao.Flyway.migration.assistant.ui.controller.TelaDialogoController;
@@ -31,7 +31,7 @@ public class ConstrutorJanelas {
             montarJanela(stage, caminhoTela, tituloTela, corBarra, contextoAplicacao, true);
 
         } catch (Exception e) {
-            throw new RuntimeException(MensagemErro.ERRO_ABERTURA_TELA.MensagemComParametro("Tela Principal") + caminhoTela.getNome(), e);
+            throw new RuntimeException(MensagemSistema.ERRO_ABERTURA_TELA.MensagemComParametro("Tela Principal") + caminhoTela.getNome(), e);
         }
     }
 
@@ -46,7 +46,7 @@ public class ConstrutorJanelas {
             stage.showAndWait();
 
         } catch (Exception e) {
-            throw new RuntimeException(MensagemErro.ERRO_ABERTURA_TELA.MensagemComParametro("Tela Auxiliar") + caminhoTela.getNome(), e);
+            throw new RuntimeException(MensagemSistema.ERRO_ABERTURA_TELA.MensagemComParametro("Tela Auxiliar") + caminhoTela.getNome(), e);
         }
     }
 
@@ -67,7 +67,7 @@ public class ConstrutorJanelas {
             return controller;
 
         } catch (Exception e) {
-            throw new RuntimeException(MensagemErro.ERRO_ABERTURA_TELA.MensagemComParametro("Tela Diálogo ") + tipoDialogo.getNome(), e);
+            throw new RuntimeException(MensagemSistema.ERRO_ABERTURA_TELA.MensagemComParametro("Tela Diálogo ") + tipoDialogo.getNome(), e);
         }
     }
 

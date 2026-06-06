@@ -1,6 +1,6 @@
 package com.supergestao.Flyway.migration.assistant.dominio.regra.sql.validacao;
 
-import com.supergestao.Flyway.migration.assistant.dominio.mensagem.MensagemErro;
+import com.supergestao.Flyway.migration.assistant.dominio.mensagem.MensagemSistema;
 import com.supergestao.Flyway.migration.assistant.dominio.regra.sql.validacao.antlr.PostgreSQLParser;
 import com.supergestao.Flyway.migration.assistant.dominio.regra.sql.validacao.antlr.PostgreSQLParserBaseListener;
 import com.supergestao.Flyway.migration.assistant.exception.SqlException;
@@ -16,7 +16,7 @@ public class ValidadorAntlrSql extends PostgreSQLParserBaseListener {
 
     @Override
     public void enterDropdbstmt(PostgreSQLParser.DropdbstmtContext ctx) {
-        throw new SqlException(MensagemErro.SCRIPT_NAO_PERMITIDO.MensagemComParametro("DROP DATABASE"));
+        throw new SqlException(MensagemSistema.SCRIPT_NAO_PERMITIDO.MensagemComParametro("DROP DATABASE"));
     }
 
     @Override
@@ -24,109 +24,109 @@ public class ValidadorAntlrSql extends PostgreSQLParserBaseListener {
         String texto = ctx.getText().toUpperCase();
 
         if (texto.contains("CASCADE")) {
-            throw new SqlException(MensagemErro.SCRIPT_NAO_PERMITIDO.MensagemComParametro("DROP com CASCADE"));
+            throw new SqlException(MensagemSistema.SCRIPT_NAO_PERMITIDO.MensagemComParametro("DROP com CASCADE"));
         }
         if (texto.contains("SCHEMA")) {
-            throw new SqlException(MensagemErro.SCRIPT_NAO_PERMITIDO.MensagemComParametro("DROP SCHEMA"));
+            throw new SqlException(MensagemSistema.SCRIPT_NAO_PERMITIDO.MensagemComParametro("DROP SCHEMA"));
         }
     }
 
     @Override
     public void enterDroprolestmt(PostgreSQLParser.DroprolestmtContext ctx) {
-        throw new SqlException(MensagemErro.SCRIPT_NAO_PERMITIDO.MensagemComParametro("DROP ROLE / DROP USER"));
+        throw new SqlException(MensagemSistema.SCRIPT_NAO_PERMITIDO.MensagemComParametro("DROP ROLE / DROP USER"));
     }
 
     @Override
     public void enterDropownedstmt(PostgreSQLParser.DropownedstmtContext ctx) {
-        throw new SqlException(MensagemErro.SCRIPT_NAO_PERMITIDO.MensagemComParametro("DROP OWNED BY"));
+        throw new SqlException(MensagemSistema.SCRIPT_NAO_PERMITIDO.MensagemComParametro("DROP OWNED BY"));
     }
 
     @Override
     public void enterTruncatestmt(PostgreSQLParser.TruncatestmtContext ctx) {
-        throw new SqlException(MensagemErro.SCRIPT_NAO_PERMITIDO.MensagemComParametro("TRUNCATE TABLE"));
+        throw new SqlException(MensagemSistema.SCRIPT_NAO_PERMITIDO.MensagemComParametro("TRUNCATE TABLE"));
     }
 
     @Override
     public void enterAltersystemstmt(PostgreSQLParser.AltersystemstmtContext ctx) {
-        throw new SqlException(MensagemErro.SCRIPT_NAO_PERMITIDO.MensagemComParametro("ALTER SYSTEM"));
+        throw new SqlException(MensagemSistema.SCRIPT_NAO_PERMITIDO.MensagemComParametro("ALTER SYSTEM"));
     }
 
     @Override
     public void enterAlterrolestmt(PostgreSQLParser.AlterrolestmtContext ctx) {
-        throw new SqlException(MensagemErro.SCRIPT_NAO_PERMITIDO.MensagemComParametro("ALTER ROLE / ALTER USER"));
+        throw new SqlException(MensagemSistema.SCRIPT_NAO_PERMITIDO.MensagemComParametro("ALTER ROLE / ALTER USER"));
     }
 
     @Override
     public void enterCreateextensionstmt(PostgreSQLParser.CreateextensionstmtContext ctx) {
-        throw new SqlException(MensagemErro.SCRIPT_NAO_PERMITIDO.MensagemComParametro("CREATE EXTENSION"));
+        throw new SqlException(MensagemSistema.SCRIPT_NAO_PERMITIDO.MensagemComParametro("CREATE EXTENSION"));
     }
 
     @Override
     public void enterCopystmt(PostgreSQLParser.CopystmtContext ctx) {
-        throw new SqlException(MensagemErro.SCRIPT_NAO_PERMITIDO.MensagemComParametro("COPY"));
+        throw new SqlException(MensagemSistema.SCRIPT_NAO_PERMITIDO.MensagemComParametro("COPY"));
     }
 
     @Override
     public void enterDostmt(PostgreSQLParser.DostmtContext ctx) {
-        throw new SqlException(MensagemErro.SCRIPT_NAO_PERMITIDO.MensagemComParametro("DO $$"));
+        throw new SqlException(MensagemSistema.SCRIPT_NAO_PERMITIDO.MensagemComParametro("DO $$"));
     }
 
     @Override
     public void enterGrantstmt(PostgreSQLParser.GrantstmtContext ctx) {
         String texto = ctx.getText().toUpperCase();
         if (texto.startsWith("REVOKE")) {
-            throw new SqlException(MensagemErro.SCRIPT_NAO_PERMITIDO.MensagemComParametro("REVOKE"));
+            throw new SqlException(MensagemSistema.SCRIPT_NAO_PERMITIDO.MensagemComParametro("REVOKE"));
         }
         if (texto.startsWith("GRANT")) {
-            throw new SqlException(MensagemErro.SCRIPT_NAO_PERMITIDO.MensagemComParametro("GRANT"));
+            throw new SqlException(MensagemSistema.SCRIPT_NAO_PERMITIDO.MensagemComParametro("GRANT"));
         }
 
     }
 
     @Override
     public void enterCreaterolestmt(PostgreSQLParser.CreaterolestmtContext ctx) {
-        throw new SqlException(MensagemErro.SCRIPT_NAO_PERMITIDO.MensagemComParametro("CREATE ROLE / CREATE USER"));
+        throw new SqlException(MensagemSistema.SCRIPT_NAO_PERMITIDO.MensagemComParametro("CREATE ROLE / CREATE USER"));
     }
 
     @Override
     public void enterVariablesetstmt(PostgreSQLParser.VariablesetstmtContext ctx) {
-        throw new SqlException(MensagemErro.SCRIPT_NAO_PERMITIDO.MensagemComParametro(
+        throw new SqlException(MensagemSistema.SCRIPT_NAO_PERMITIDO.MensagemComParametro(
                 "SET de variável de sessão/configuração (SET search_path, SET role, etc.)"));
     }
 
     @Override
     public void enterVariableresetstmt(PostgreSQLParser.VariableresetstmtContext ctx) {
-        throw new SqlException(MensagemErro.SCRIPT_NAO_PERMITIDO.MensagemComParametro("RESET de variável de configuração"));
+        throw new SqlException(MensagemSistema.SCRIPT_NAO_PERMITIDO.MensagemComParametro("RESET de variável de configuração"));
     }
 
     @Override
     public void enterVacuumstmt(PostgreSQLParser.VacuumstmtContext ctx) {
-        throw new SqlException(MensagemErro.SCRIPT_NAO_PERMITIDO.MensagemComParametro("VACUUM / ANALYZE"));
+        throw new SqlException(MensagemSistema.SCRIPT_NAO_PERMITIDO.MensagemComParametro("VACUUM / ANALYZE"));
     }
 
     @Override
     public void enterClusterstmt(PostgreSQLParser.ClusterstmtContext ctx) {
-        throw new SqlException(MensagemErro.SCRIPT_NAO_PERMITIDO.MensagemComParametro("CLUSTER"));
+        throw new SqlException(MensagemSistema.SCRIPT_NAO_PERMITIDO.MensagemComParametro("CLUSTER"));
     }
 
     @Override
     public void enterReindexstmt(PostgreSQLParser.ReindexstmtContext ctx) {
-        throw new SqlException(MensagemErro.SCRIPT_NAO_PERMITIDO.MensagemComParametro("REINDEX"));
+        throw new SqlException(MensagemSistema.SCRIPT_NAO_PERMITIDO.MensagemComParametro("REINDEX"));
     }
 
     @Override
     public void enterLoadstmt(PostgreSQLParser.LoadstmtContext ctx) {
-        throw new SqlException(MensagemErro.SCRIPT_NAO_PERMITIDO.MensagemComParametro("LOAD"));
+        throw new SqlException(MensagemSistema.SCRIPT_NAO_PERMITIDO.MensagemComParametro("LOAD"));
     }
 
     @Override
     public void enterListenstmt(PostgreSQLParser.ListenstmtContext ctx) {
-        throw new SqlException(MensagemErro.SCRIPT_NAO_PERMITIDO.MensagemComParametro("LISTEN"));
+        throw new SqlException(MensagemSistema.SCRIPT_NAO_PERMITIDO.MensagemComParametro("LISTEN"));
     }
 
     @Override
     public void enterNotifystmt(PostgreSQLParser.NotifystmtContext ctx) {
-        throw new SqlException(MensagemErro.SCRIPT_NAO_PERMITIDO.MensagemComParametro("NOTIFY"));
+        throw new SqlException(MensagemSistema.SCRIPT_NAO_PERMITIDO.MensagemComParametro("NOTIFY"));
     }
 
     // =========================================================================
@@ -138,19 +138,19 @@ public class ValidadorAntlrSql extends PostgreSQLParserBaseListener {
         String texto = ctx.getText().toUpperCase();
 
         if (texto.startsWith("SAVEPOINT")) {
-            throw new SqlException(MensagemErro.SCRIPT_NAO_PERMITIDO.MensagemComParametro("SAVEPOINT"));
+            throw new SqlException(MensagemSistema.SCRIPT_NAO_PERMITIDO.MensagemComParametro("SAVEPOINT"));
         }
         if (texto.startsWith("RELEASE")) {
-            throw new SqlException(MensagemErro.SCRIPT_NAO_PERMITIDO.MensagemComParametro("RELEASE SAVEPOINT"));
+            throw new SqlException(MensagemSistema.SCRIPT_NAO_PERMITIDO.MensagemComParametro("RELEASE SAVEPOINT"));
         }
 
-        throw new SqlException(MensagemErro.SCRIPT_NAO_PERMITIDO.MensagemComParametro(
+        throw new SqlException(MensagemSistema.SCRIPT_NAO_PERMITIDO.MensagemComParametro(
                 "Comandos de transação (BEGIN/COMMIT/ROLLBACK)"));
     }
 
     @Override
     public void enterLockstmt(PostgreSQLParser.LockstmtContext ctx) {
-        throw new SqlException(MensagemErro.SCRIPT_NAO_PERMITIDO.MensagemComParametro("LOCK TABLE"));
+        throw new SqlException(MensagemSistema.SCRIPT_NAO_PERMITIDO.MensagemComParametro("LOCK TABLE"));
     }
 
     // =========================================================================
@@ -160,14 +160,14 @@ public class ValidadorAntlrSql extends PostgreSQLParserBaseListener {
     public void enterUpdatestmt(PostgreSQLParser.UpdatestmtContext ctx) {
         if (ctx.where_or_current_clause() == null) {
             throw new SqlException(
-                    MensagemErro.SCRIPT_NAO_PERMITIDO.MensagemComParametro("UPDATE sem WHERE detectado.")
+                    MensagemSistema.SCRIPT_NAO_PERMITIDO.MensagemComParametro("UPDATE sem WHERE detectado.")
             );
         }
 
         String texto = ctx.getText().toUpperCase();
         if (texto.contains("WHERE1=1") || texto.contains("WHERETRUE")) {
             throw new SqlException(
-                    MensagemErro.SCRIPT_NAO_PERMITIDO.MensagemComParametro("UPDATE com condição genérica (1=1) detectado.")
+                    MensagemSistema.SCRIPT_NAO_PERMITIDO.MensagemComParametro("UPDATE com condição genérica (1=1) detectado.")
             );
         }
     }
@@ -176,14 +176,14 @@ public class ValidadorAntlrSql extends PostgreSQLParserBaseListener {
     public void enterDeletestmt(PostgreSQLParser.DeletestmtContext ctx) {
         if (ctx.where_or_current_clause() == null) {
             throw new SqlException(
-                    MensagemErro.SCRIPT_NAO_PERMITIDO.MensagemComParametro("DELETE sem WHERE detectado.")
+                    MensagemSistema.SCRIPT_NAO_PERMITIDO.MensagemComParametro("DELETE sem WHERE detectado.")
             );
         }
 
         String texto = ctx.getText().toUpperCase();
         if (texto.contains("WHERE1=1") || texto.contains("WHERETRUE")) {
             throw new SqlException(
-                    MensagemErro.SCRIPT_NAO_PERMITIDO.MensagemComParametro("DELETE com condição genérica (1=1) detectado.")
+                    MensagemSistema.SCRIPT_NAO_PERMITIDO.MensagemComParametro("DELETE com condição genérica (1=1) detectado.")
             );
         }
     }
@@ -191,7 +191,7 @@ public class ValidadorAntlrSql extends PostgreSQLParserBaseListener {
     @Override
     public void enterInsertstmt(PostgreSQLParser.InsertstmtContext ctx) {
         if (ctx.insert_rest() != null && ctx.insert_rest().DEFAULT() != null) {
-            throw new SqlException(MensagemErro.SCRIPT_NAO_PERMITIDO.MensagemComParametro(
+            throw new SqlException(MensagemSistema.SCRIPT_NAO_PERMITIDO.MensagemComParametro(
                     "INSERT inválido ou incompleto"));
         }
 
@@ -199,7 +199,7 @@ public class ValidadorAntlrSql extends PostgreSQLParserBaseListener {
         if (ctx.insert_rest() != null
                 && ctx.insert_rest().insert_column_list() == null
                 && ctx.insert_rest().selectstmt() != null) {
-            throw new SqlException(MensagemErro.SCRIPT_NAO_PERMITIDO.MensagemComParametro(
+            throw new SqlException(MensagemSistema.SCRIPT_NAO_PERMITIDO.MensagemComParametro(
                     "INSERT sem lista de colunas explícita. Use: INSERT INTO tabela (col1, col2) VALUES (...)"));
         }
     }
@@ -208,7 +208,7 @@ public class ValidadorAntlrSql extends PostgreSQLParserBaseListener {
     public void enterSelectstmt(PostgreSQLParser.SelectstmtContext ctx) {
         for (int i = 0; i < ctx.getChildCount(); i++) {
             if (ctx.getChild(i) instanceof PostgreSQLParser.Into_clauseContext) {
-                throw new SqlException(MensagemErro.SCRIPT_NAO_PERMITIDO.MensagemComParametro(
+                throw new SqlException(MensagemSistema.SCRIPT_NAO_PERMITIDO.MensagemComParametro(
                         "SELECT INTO não é permitido. Use CREATE TABLE AS SELECT para criar tabelas explicitamente."));
             }
         }
@@ -261,7 +261,7 @@ public class ValidadorAntlrSql extends PostgreSQLParserBaseListener {
         }
 
         if (!temPk) {
-            throw new SqlException(MensagemErro.SCRIPT_SEM_DICIONARIO.MensagemComParametro(
+            throw new SqlException(MensagemSistema.SCRIPT_SEM_DICIONARIO.MensagemComParametro(
                     "Tabela criada sem PRIMARY KEY"));
         }
     }
@@ -352,7 +352,7 @@ public class ValidadorAntlrSql extends PostgreSQLParserBaseListener {
                 }
             }
             if (!temComentario) {
-                throw new SqlException(MensagemErro.SCRIPT_SEM_DICIONARIO.MensagemComParametro(
+                throw new SqlException(MensagemSistema.SCRIPT_SEM_DICIONARIO.MensagemComParametro(
                         "O elemento (" + objetoCriado + ") foi criado mas não possui comentário!"));
             }
         }
@@ -365,7 +365,7 @@ public class ValidadorAntlrSql extends PostgreSQLParserBaseListener {
     @Override
     public void enterIndexstmt(PostgreSQLParser.IndexstmtContext ctx) {
         if (ctx.name() == null || ctx.name().getText().isBlank()) {
-            throw new SqlException(MensagemErro.SCRIPT_SEM_DICIONARIO.MensagemComParametro(
+            throw new SqlException(MensagemSistema.SCRIPT_SEM_DICIONARIO.MensagemComParametro(
                     "Index sem nome definido"));
         }
         String nomeIndex = ctx.name().getText().toLowerCase();
@@ -376,7 +376,7 @@ public class ValidadorAntlrSql extends PostgreSQLParserBaseListener {
     @Override
     public void enterAltertablestmt(PostgreSQLParser.AltertablestmtContext ctx) {
         if (ctx.relation_expr() != null && ctx.relation_expr().getText().isBlank()) {
-            throw new SqlException(MensagemErro.SCRIPT_SEM_DICIONARIO.MensagemComParametro(
+            throw new SqlException(MensagemSistema.SCRIPT_SEM_DICIONARIO.MensagemComParametro(
                     "ALTER TABLE sem identificação da tabela"));
         }
     }
@@ -385,7 +385,7 @@ public class ValidadorAntlrSql extends PostgreSQLParserBaseListener {
     public void enterCreatefunctionstmt(PostgreSQLParser.CreatefunctionstmtContext ctx) {
         if (ctx.func_name() == null || ctx.func_name().getText().isBlank()) {
             throw new SqlException(
-                    MensagemErro.SCRIPT_SEM_DICIONARIO.MensagemComParametro("Function sem nome")
+                    MensagemSistema.SCRIPT_SEM_DICIONARIO.MensagemComParametro("Function sem nome")
             );
         }
 
@@ -393,7 +393,7 @@ public class ValidadorAntlrSql extends PostgreSQLParserBaseListener {
 
         if (texto.contains("SECURITYDEFINER")) {
             throw new SqlException(
-                    MensagemErro.SCRIPT_NAO_PERMITIDO.MensagemComParametro("SECURITY DEFINER não permitido")
+                    MensagemSistema.SCRIPT_NAO_PERMITIDO.MensagemComParametro("SECURITY DEFINER não permitido")
             );
         }
 
@@ -404,7 +404,7 @@ public class ValidadorAntlrSql extends PostgreSQLParserBaseListener {
 
     @Override
     public void enterCreateplangstmt(PostgreSQLParser.CreateplangstmtContext ctx) {
-        throw new SqlException(MensagemErro.SCRIPT_NAO_PERMITIDO.MensagemComParametro("CREATE LANGUAGE"));
+        throw new SqlException(MensagemSistema.SCRIPT_NAO_PERMITIDO.MensagemComParametro("CREATE LANGUAGE"));
     }
 
     // =========================================================================
@@ -415,7 +415,7 @@ public class ValidadorAntlrSql extends PostgreSQLParserBaseListener {
         // Remove schema prefix se houver (ex: public.minha_tabela → minha_tabela)
         String nomeSimples = nome.contains(".") ? nome.substring(nome.lastIndexOf('.') + 1) : nome;
         if (!nomeSimples.matches("^[a-z][a-z0-9_]*$")) {
-            throw new SqlException(MensagemErro.SCRIPT_SEM_PADRAO_SQL.MensagemComParametro(
+            throw new SqlException(MensagemSistema.SCRIPT_SEM_PADRAO_SQL.MensagemComParametro(
                     tipoObjeto + " \"" + nomeSimples + "\" não segue o padrão snake_case obrigatório. "
                             + "Use apenas letras minúsculas, números e underscore, começando com letra."));
         }
@@ -425,7 +425,7 @@ public class ValidadorAntlrSql extends PostgreSQLParserBaseListener {
         if (nome == null) return;
         String nomeSimples = nome.contains(".") ? nome.substring(nome.lastIndexOf('.') + 1) : nome;
         if (nomeSimples.length() > 63) {
-            throw new SqlException(MensagemErro.SCRIPT_SEM_PADRAO_SQL.MensagemComParametro(
+            throw new SqlException(MensagemSistema.SCRIPT_SEM_PADRAO_SQL.MensagemComParametro(
                     tipoObjeto + " \"" + nomeSimples + "\" ultrapassa 63 caracteres (limite do PostgreSQL). "
                             + "Nomes maiores são truncados silenciosamente pelo banco."));
         }

@@ -1,5 +1,6 @@
 package com.supergestao.Flyway.migration.assistant.ui.utilitario;
 
+import com.supergestao.Flyway.migration.assistant.dominio.mensagem.MensagemSistema;
 import com.supergestao.Flyway.migration.assistant.dominio.modelo.Arquivo;
 import com.supergestao.Flyway.migration.assistant.dominio.modelo.Funcao;
 import com.supergestao.Flyway.migration.assistant.dominio.modelo.Modulo;
@@ -24,17 +25,18 @@ public class GerenciadorArvoreModulos {
         if (!moduloFuncao.isEmpty()) {
 
             boolean querCriar = contexto.getIGerenciadorJanelas().exibirDialogo(TipoDialogo.CONFIRMACAO,
-                    "Novos Módulos",
+                    MensagemSistema.NOVO_MODULO.getMensagem(),
                     null,
-                    "Existe novos módulos a serem criados. Deseja criar agora?");
+                    MensagemSistema.EXISTE_MODULOS_CRIAR.getMensagem()
+            );
 
 
             if (querCriar) {
                 String modulosNovos = formatarLista(moduloFuncao.values(), Modulo::getNome);
 
                 querCriar = contexto.getIGerenciadorJanelas().exibirDialogo(TipoDialogo.CONFIRMACAO,
-                        "Novo Módulo",
-                        "Lista de módulos a ser criado",
+                        MensagemSistema.NOVO_MODULO.getMensagem(),
+                        MensagemSistema.LISTA_MODULO.getMensagem(),
                         modulosNovos);
 
                 if (querCriar) {
@@ -46,8 +48,8 @@ public class GerenciadorArvoreModulos {
                     );
 
                     contexto.getIGerenciadorJanelas().exibirDialogo(TipoDialogo.MENSAGEM,
-                            "Lista de criação de módulos",
-                            "Lista de módulos.",
+                            MensagemSistema.NOVO_MODULO.getMensagem(),
+                            MensagemSistema.LISTA_MODULO.getMensagem(),
                             listaResultado
                     );
                 }
@@ -83,8 +85,8 @@ public class GerenciadorArvoreModulos {
 
         } catch (Exception e) {
             contexto.getIGerenciadorJanelas().exibirDialogo(TipoDialogo.ERRO,
-                    "Erro ao criar Árvore de Módulos",
-                    "Erro ao criar Árvore de Módulos",
+                    MensagemSistema.ERRO_CRIAR_ARVORE_MODULOS.getMensagem(),
+                    MensagemSistema.ERRO_CRIAR_ARVORE_MODULOS.getMensagem(),
                     e.getMessage());
         }
     }

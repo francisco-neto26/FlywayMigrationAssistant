@@ -1,6 +1,6 @@
 package com.supergestao.Flyway.migration.assistant.dominio.tipo;
 
-import com.supergestao.Flyway.migration.assistant.dominio.mensagem.MensagemErro;
+import com.supergestao.Flyway.migration.assistant.dominio.mensagem.MensagemSistema;
 import com.supergestao.Flyway.migration.assistant.exception.ValidacaoException;
 
 public enum AcaoBanco {
@@ -41,7 +41,7 @@ public enum AcaoBanco {
             case "alter"  -> AcaoBanco.ALTER;
             case "update" -> AcaoBanco.UPDATE;
             default ->
-                    throw new ValidacaoException(MensagemErro.ERRO_OBTER_ACAO_BANCO.MensagemComParametro(nome));
+                    throw new ValidacaoException(MensagemSistema.ERRO_OBTER_ACAO_BANCO.MensagemComParametro(nome));
         };
     }
 

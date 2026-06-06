@@ -1,6 +1,6 @@
 package com.supergestao.Flyway.migration.assistant.dominio.tipo;
 
-import com.supergestao.Flyway.migration.assistant.dominio.mensagem.MensagemErro;
+import com.supergestao.Flyway.migration.assistant.dominio.mensagem.MensagemSistema;
 import com.supergestao.Flyway.migration.assistant.exception.ValidacaoException;
 
 public enum TipoMigration {
@@ -37,7 +37,7 @@ public enum TipoMigration {
             case 'U' -> TipoMigration.UNDO;
             case 'R' -> TipoMigration.REPEATABLE;
             default ->
-                    throw new ValidacaoException(MensagemErro.NAO_ARQUIVO_MIGRATION.getMensagem());
+                    throw new ValidacaoException(MensagemSistema.NAO_ARQUIVO_MIGRATION.getMensagem());
         };
     }
 

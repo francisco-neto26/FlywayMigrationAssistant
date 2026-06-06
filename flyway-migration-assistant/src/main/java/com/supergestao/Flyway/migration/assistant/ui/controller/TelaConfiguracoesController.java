@@ -2,7 +2,7 @@ package com.supergestao.Flyway.migration.assistant.ui.controller;
 
 
 import atlantafx.base.theme.Theme;
-import com.supergestao.Flyway.migration.assistant.dominio.mensagem.MensagemErro;
+import com.supergestao.Flyway.migration.assistant.dominio.mensagem.MensagemSistema;
 import com.supergestao.Flyway.migration.assistant.exception.PersistenciaException;
 import com.supergestao.Flyway.migration.assistant.ui.estado.ContextoAplicacao;
 import com.supergestao.Flyway.migration.assistant.ui.utilitario.*;
@@ -148,7 +148,7 @@ public class TelaConfiguracoesController implements ITelasModal {
 
             } catch (PersistenciaException e) {
 
-                String detalhesDoErro = e.getCause() != null ? e.getCause().toString() : MensagemErro.ERRO_GENERICO.MensagemComParametro("Erro ao salvar configurações");
+                String detalhesDoErro = e.getCause() != null ? e.getCause().toString() : MensagemSistema.ERRO_GENERICO.MensagemComParametro("Erro ao salvar configurações");
 
                 this.contexto.getIGerenciadorJanelas().exibirDialogo(TipoDialogo.ERRO,
                         "Falha Crítica",

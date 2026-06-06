@@ -1,6 +1,6 @@
 package com.supergestao.Flyway.migration.assistant.dominio.regra.migration;
 
-import com.supergestao.Flyway.migration.assistant.dominio.mensagem.MensagemErro;
+import com.supergestao.Flyway.migration.assistant.dominio.mensagem.MensagemSistema;
 import com.supergestao.Flyway.migration.assistant.dominio.tipo.AcaoBanco;
 import com.supergestao.Flyway.migration.assistant.dominio.tipo.ObjetoBanco;
 import com.supergestao.Flyway.migration.assistant.dominio.tipo.TipoMigration;
@@ -17,27 +17,27 @@ public class GerarNomeArquivoMigration {
                                             String nome) {
 
         if (tipoMigration == null) {
-            throw new ValidacaoException(MensagemErro.CAMPO_OBRIGATORIO.MensagemComParametro("Tipo de migration"));
+            throw new ValidacaoException(MensagemSistema.CAMPO_OBRIGATORIO.MensagemComParametro("Tipo de migration"));
         }
 
         if (acaoBanco == null) {
-            throw new ValidacaoException(MensagemErro.CAMPO_OBRIGATORIO.MensagemComParametro("Ação no banco"));
+            throw new ValidacaoException(MensagemSistema.CAMPO_OBRIGATORIO.MensagemComParametro("Ação no banco"));
         }
 
         if (objetoBanco == null) {
-            throw new ValidacaoException(MensagemErro.CAMPO_OBRIGATORIO.MensagemComParametro("Objeto no banco"));
+            throw new ValidacaoException(MensagemSistema.CAMPO_OBRIGATORIO.MensagemComParametro("Objeto no banco"));
         }
 
         if (dataHoraFlyway == null || dataHoraFlyway.isBlank()) {
-            throw new ValidacaoException(MensagemErro.CAMPO_OBRIGATORIO.MensagemComParametro("Data/Hora Flyway"));
+            throw new ValidacaoException(MensagemSistema.CAMPO_OBRIGATORIO.MensagemComParametro("Data/Hora Flyway"));
         }
 
         if (funcao == null || funcao.isBlank()) {
-            throw new ValidacaoException(MensagemErro.CAMPO_OBRIGATORIO.MensagemComParametro("Função"));
+            throw new ValidacaoException(MensagemSistema.CAMPO_OBRIGATORIO.MensagemComParametro("Função"));
         }
 
         if (nome == null || nome.isBlank()) {
-            throw new ValidacaoException(MensagemErro.CAMPO_OBRIGATORIO.MensagemComParametro("Nome"));
+            throw new ValidacaoException(MensagemSistema.CAMPO_OBRIGATORIO.MensagemComParametro("Nome"));
         }
 
 
@@ -84,10 +84,10 @@ public class GerarNomeArquivoMigration {
 
     public String gerarNomeArquivoMigrationUndo(String nomeArquivo) {
         if (nomeArquivo == null || !nomeArquivo.contains("__")) {
-            throw new ValidacaoException(MensagemErro.ERRO_CONVERTER_NOME_UNDO.MensagemComParametro(nomeArquivo));
+            throw new ValidacaoException(MensagemSistema.ERRO_CONVERTER_NOME_UNDO.MensagemComParametro(nomeArquivo));
         }
         if (!nomeArquivo.toUpperCase().startsWith("V")) {
-            throw new ValidacaoException(MensagemErro.ERRO_ARQUIVO_NAO_VERSIONED.getMensagem());
+            throw new ValidacaoException(MensagemSistema.ERRO_ARQUIVO_NAO_VERSIONED.getMensagem());
         }
         nomeArquivo = nomeArquivo.replace(".sql", "");
         String parteUmNome = nomeArquivo.split("__")[0];
@@ -111,6 +111,6 @@ public class GerarNomeArquivoMigration {
                     acaoBanco.getOposto(),
                     finalNomeConcatenado);
         }
-        throw new ValidacaoException(MensagemErro.ERRO_CONVERTER_NOME_UNDO.MensagemComParametro(nomeArquivo));
+        throw new ValidacaoException(MensagemSistema.ERRO_CONVERTER_NOME_UNDO.MensagemComParametro(nomeArquivo));
     }
 }

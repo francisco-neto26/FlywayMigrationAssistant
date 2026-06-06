@@ -1,6 +1,6 @@
 package com.supergestao.Flyway.migration.assistant.dominio.modelo;
 
-import com.supergestao.Flyway.migration.assistant.dominio.mensagem.MensagemErro;
+import com.supergestao.Flyway.migration.assistant.dominio.mensagem.MensagemSistema;
 import com.supergestao.Flyway.migration.assistant.exception.ValidacaoException;
 
 import java.util.ArrayList;
@@ -14,7 +14,7 @@ public class Funcao {
     public Funcao(String nome) {
 
         if (nome == null || nome.isBlank()) {
-            throw new ValidacaoException(MensagemErro.CAMPO_OBRIGATORIO.MensagemComParametro("Nome do Função"));
+            throw new ValidacaoException(MensagemSistema.CAMPO_OBRIGATORIO.MensagemComParametro("Nome do Função"));
         }
         this.nome = nome;
     }
