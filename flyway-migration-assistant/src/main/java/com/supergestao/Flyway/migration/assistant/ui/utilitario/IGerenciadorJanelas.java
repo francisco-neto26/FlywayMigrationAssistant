@@ -1,5 +1,5 @@
 package com.supergestao.Flyway.migration.assistant.ui.utilitario;
 
 public interface IGerenciadorJanelas {
-    boolean exibirDialogo(String TipoMensagem , String titulo, String mensagem, String detalhes, CoresPadrao coresPadrao);
+    boolean exibirDialogo(TipoDialogo tipoDialogo, String titulo, String mensagem, String detalhes);
 }

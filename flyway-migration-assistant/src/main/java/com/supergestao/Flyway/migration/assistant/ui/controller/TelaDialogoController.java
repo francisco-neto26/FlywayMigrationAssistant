@@ -1,6 +1,9 @@
 package com.supergestao.Flyway.migration.assistant.ui.controller;
 
+import com.supergestao.Flyway.migration.assistant.exception.TelaException;
+import com.supergestao.Flyway.migration.assistant.ui.estado.ContextoAplicacao;
 import com.supergestao.Flyway.migration.assistant.ui.utilitario.GerenciadorEstiloBotao;
+import com.supergestao.Flyway.migration.assistant.ui.utilitario.TipoDialogo;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
@@ -11,7 +14,7 @@ import javafx.scene.control.TextArea;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
-public class TelaDialogoController {
+public class TelaDialogoController implements ITelasModal {
 
     @FXML
     private Label lblMensagem;
@@ -27,6 +30,12 @@ public class TelaDialogoController {
 
     private boolean confirmado = false;
 
+    private ContextoAplicacao contexto;
+
+    public void setContextoAplicacao(ContextoAplicacao contextoAplicacao) {
+        this.contexto = contextoAplicacao;
+    }
+
     @FXML
     public void initialize() {
 
@@ -38,23 +47,38 @@ public class TelaDialogoController {
         btnCancelar.setOnAction(event -> fechar(false));
     }
 
-    public void telaMensagem(String mensagem, String detalhes) {
+    public void telaMensagem(TipoDialogo tipoDialogo, String mensagem, String detalhes) {
 
         lblMensagem.setText(mensagem);
         btnCancelar.setVisible(false);
         btnCancelar.setManaged(false);
-        btnConfirmar.setText("Sair");
+
+        if (detalhes.isBlank()) {
+            throw new TelaException("O campo detalhes não pode ser vazio para o tipo de diálogo: " + tipoDialogo);
+        }
+
+        if (tipoDialogo == TipoDialogo.CONFIRMACAO) {
+            btnConfirmar.setText("Confirmar");
+            telaConfirmacao(detalhes);
+        } else {
+            btnConfirmar.setText("Sair");
+            telaMensagem(detalhes);
+        }
+
+    }
+
+    public void telaMensagem(String detalhes) {
 
         if (detalhes != null && !detalhes.isBlank()) {
             txtAreaDetalhes.setText(detalhes);
 
-            if(txtAreaDetalhes.getText().length() < 80){
+            if (txtAreaDetalhes.getText().length() < 80) {
                 txtAreaDetalhes.setMaxHeight(60);
                 VBox.setMargin(txtAreaDetalhes, new Insets(20, 0, 0, 0));
             } else if (txtAreaDetalhes.getText().length() < 180) {
                 txtAreaDetalhes.setMaxHeight(100);
                 VBox.setMargin(txtAreaDetalhes, new Insets(10, 0, 0, 0));
-            }else {
+            } else {
                 VBox.setMargin(txtAreaDetalhes, new Insets(0, 0, 0, 0));
             }
 
@@ -66,16 +90,17 @@ public class TelaDialogoController {
         }
     }
 
+
     public void telaConfirmacao(String detalhes) {
 
-        lblMensagem.setVisible(false);
-        lblMensagem.setManaged(false);
+       /* lblMensagem.setVisible(false);
+        lblMensagem.setManaged(false);*/
 
         txtAreaDetalhes.setText(detalhes);
         txtAreaDetalhes.setVisible(true);
         txtAreaDetalhes.setManaged(true);
 
-        if(txtAreaDetalhes.getText().length() < 180){
+        if (txtAreaDetalhes.getText().length() < 180) {
             txtAreaDetalhes.setMaxHeight(80);
             VBox vboxSuperior = (VBox) txtAreaDetalhes.getParent();
             vboxSuperior.setAlignment(Pos.CENTER);

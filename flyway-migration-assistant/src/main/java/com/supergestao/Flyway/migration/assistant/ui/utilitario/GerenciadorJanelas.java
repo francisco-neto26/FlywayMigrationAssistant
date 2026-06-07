@@ -1,6 +1,6 @@
 package com.supergestao.Flyway.migration.assistant.ui.utilitario;
 
-import com.supergestao.Flyway.migration.assistant.dominio.mensagem.MensagemErro;
+import com.supergestao.Flyway.migration.assistant.dominio.mensagem.MensagemSistema;
 import com.supergestao.Flyway.migration.assistant.ui.controller.TelaDialogoController;
 import com.supergestao.Flyway.migration.assistant.ui.estado.ContextoAplicacao;
 
@@ -13,32 +13,22 @@ public class GerenciadorJanelas implements IGerenciadorJanelas {
     }
 
     @Override
-    public boolean exibirDialogo(String TipoMensagem, String titulo, String mensagem, String detalhes, CoresPadrao coresPadrao) {
+    public boolean exibirDialogo(TipoDialogo tipoDialogo, String titulo, String mensagem, String detalhes) {
+
         try {
             TelaDialogoController confirmacao;
-            if (TipoMensagem.equalsIgnoreCase("c")) {
-                confirmacao = ConstrutorJanelas.abrirModal(
-                        CaminhoTela.TELA_DIALOGO,
-                        titulo,
-                        coresPadrao,
-                        //(TelaDialogoController controller) -> controller.telaConfirmacao(detalhes),
-                        this.contextoAplicacao
-                );
-
-            } else {
-                confirmacao = ConstrutorJanelas.abrirModal(
-                        CaminhoTela.TELA_DIALOGO,
-                        titulo,
-                        coresPadrao,
-                        //(TelaDialogoController controller) -> controller.telaMensagem(mensagem, detalhes)
-                        this.contextoAplicacao
-                );
-            }
+            confirmacao = ConstrutorJanelas.abrirJanelaDialogo(tipoDialogo,
+                    CaminhoTela.TELA_DIALOGO,
+                    titulo,
+                    mensagem,
+                    detalhes,
+                    this.contextoAplicacao
+            );
 
             return confirmacao.isConfirmado();
 
         } catch (Exception e) {
-            throw new RuntimeException(MensagemErro.ERRO_ABERTURA_TELA.MensagemComParametro("Tela " + titulo), e);
+            throw new RuntimeException(MensagemSistema.ERRO_ABERTURA_TELA.MensagemComParametro("Tela " + tipoDialogo.getNome()), e);
         }
     }
 }

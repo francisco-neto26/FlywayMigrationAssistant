@@ -1,6 +1,6 @@
 package com.supergestao.Flyway.migration.assistant.dominio.regra.sql.validacao;
 
-import com.supergestao.Flyway.migration.assistant.dominio.mensagem.MensagemErro;
+import com.supergestao.Flyway.migration.assistant.dominio.mensagem.MensagemSistema;
 import com.supergestao.Flyway.migration.assistant.dominio.regra.sql.validacao.antlr.PostgreSQLLexer;
 import com.supergestao.Flyway.migration.assistant.dominio.regra.sql.validacao.antlr.PostgreSQLParser;
 import com.supergestao.Flyway.migration.assistant.exception.SqlException;
@@ -27,7 +27,7 @@ public class ValidarScriptSQL implements RegraValidacaoSql {
 
         PostgreSQLParser.RootContext arvore = parser.root();
         if (!capturarErros.getErros().isEmpty()) {
-            throw new SqlException(MensagemErro.SCRIPT_ERRO_SINTAXE.MensagemComParametro(String.join("\n", capturarErros.getErros())));
+            throw new SqlException(MensagemSistema.SCRIPT_ERRO_SINTAXE.MensagemComParametro(String.join("\n", capturarErros.getErros())));
         }
         org.antlr.v4.runtime.tree.ParseTreeWalker walker = new org.antlr.v4.runtime.tree.ParseTreeWalker();
         ValidadorAntlrSql fiscalizador = new ValidadorAntlrSql();

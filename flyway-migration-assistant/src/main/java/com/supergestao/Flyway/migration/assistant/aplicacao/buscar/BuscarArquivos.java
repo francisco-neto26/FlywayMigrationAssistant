@@ -1,6 +1,6 @@
 package com.supergestao.Flyway.migration.assistant.aplicacao.buscar;
 
-import com.supergestao.Flyway.migration.assistant.dominio.mensagem.MensagemErro;
+import com.supergestao.Flyway.migration.assistant.dominio.mensagem.MensagemSistema;
 import com.supergestao.Flyway.migration.assistant.dominio.modelo.Arquivo;
 import com.supergestao.Flyway.migration.assistant.exception.ValidacaoException;
 import com.supergestao.Flyway.migration.assistant.persistencia.gerenciador.modulos.arquivos.IGerenciadorModulosArquivosDisco;
@@ -20,7 +20,7 @@ public class BuscarArquivos {
         try {
             return repositorioModulo.carregarArquivos(caminho, nomeModulo, nomeFuncao);
         } catch (Exception e) {
-            throw new ValidacaoException(MensagemErro.ERRO_ACESSAR_ARQ_EXISTENTE.MensagemComParametro(nomeFuncao));
+            throw new ValidacaoException(MensagemSistema.ERRO_ACESSAR_ARQ_EXISTENTE.MensagemComParametro(nomeFuncao));
         }
     }
 
@@ -28,7 +28,7 @@ public class BuscarArquivos {
         try {
             return repositorioModulo.buscarConteudoArquivo(caminho);
         } catch (Exception e) {
-            throw new ValidacaoException(MensagemErro.ERRO_ACESSAR_ARQ_EXISTENTE.MensagemComParametro(Paths.get(caminho).getFileName().toString()));
+            throw new ValidacaoException(MensagemSistema.ERRO_ACESSAR_ARQ_EXISTENTE.MensagemComParametro(Paths.get(caminho).getFileName().toString()));
         }
     }
 

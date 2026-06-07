@@ -71,9 +71,14 @@
                 </HBox>
                 <VBox spacing="5.0">
                     <children>
-                        <HBox alignment="TOP_RIGHT" prefHeight="36.0" prefWidth="650.0" spacing="15.0">
-                            <Button fx:id="btnCancelar" onAction="#fechar" text="Cancelar" />
-                            <Button fx:id="btnSalvar" onAction="#salvar" text="Salvar" />
+                        <HBox prefHeight="36.0" prefWidth="650.0" spacing="15.0">
+                            <Button fx:id="btnCoresPadrao" onAction="#coresPadrao" text="Cores Padrão" />
+                     <HBox alignment="TOP_RIGHT" prefHeight="25.0" prefWidth="539.0" spacing="15.0">
+                        <children>
+                           <Button fx:id="btnCancelar" onAction="#fechar" text="Cancelar" />
+                           <Button fx:id="btnSalvar" onAction="#salvar" text="Salvar" />
+                        </children>
+                     </HBox>
                      <VBox.margin>
                         <Insets top="10.0" />
                      </VBox.margin>

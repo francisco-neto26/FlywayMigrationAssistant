@@ -7,7 +7,7 @@ import java.util.HashSet;
 import java.util.Map;
 
 public interface IGerenciadorModulosArquivosDisco {
-    void salvarModuloFuncao(String caminhoDoModulo);
+    boolean salvarModuloFuncao(String caminhoDoModulo);
 
     void salvarArquivo(String caminhoDoArquivo, String conteudoSQL);
 

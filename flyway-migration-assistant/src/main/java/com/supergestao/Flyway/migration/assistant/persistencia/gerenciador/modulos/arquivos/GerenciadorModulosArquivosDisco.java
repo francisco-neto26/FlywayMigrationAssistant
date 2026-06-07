@@ -1,6 +1,6 @@
 package com.supergestao.Flyway.migration.assistant.persistencia.gerenciador.modulos.arquivos;
 
-import com.supergestao.Flyway.migration.assistant.dominio.mensagem.MensagemErro;
+import com.supergestao.Flyway.migration.assistant.dominio.mensagem.MensagemSistema;
 import com.supergestao.Flyway.migration.assistant.dominio.modelo.Arquivo;
 import com.supergestao.Flyway.migration.assistant.dominio.modelo.Funcao;
 import com.supergestao.Flyway.migration.assistant.dominio.modelo.Modulo;
@@ -14,6 +14,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.text.Collator;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.*;
@@ -23,76 +24,80 @@ import java.util.stream.Collectors;
 
 public class GerenciadorModulosArquivosDisco implements IGerenciadorModulosArquivosDisco {
     @Override
-    public void salvarModuloFuncao(String caminhoDoModulo) {
+    public boolean salvarModuloFuncao(String caminhoDoModulo) {
         try {
             Files.createDirectories(Paths.get(caminhoDoModulo));
+            return true;
         } catch (IOException e) {
-            throw new PersistenciaException(MensagemErro.ERRO_SALVAR_MODULO.MensagemComParametro(caminhoDoModulo), e);
+            throw new PersistenciaException(MensagemSistema.ERRO_SALVAR_MODULO.MensagemComParametro(caminhoDoModulo), e);
         }
     }
 
     @Override
     public String buscarConteudoArquivo(String caminhoDoArquivo) {
+
+        Path pasta = Paths.get(caminhoDoArquivo);
+
         try {
-            return Files.readString(Paths.get(caminhoDoArquivo));
+            return Files.readString(pasta);
         } catch (IOException e) {
-            throw new PersistenciaException(MensagemErro.ERRO_SALVAR_ARQUIVO.MensagemComParametro(Paths.get(caminhoDoArquivo).getFileName().toString()), e);
+            throw new PersistenciaException(MensagemSistema.ERRO_SALVAR_ARQUIVO.MensagemComParametro(pasta.getFileName().toString()), e);
         }
     }
 
     @Override
     public void salvarArquivo(String caminhoDoArquivo, String conteudoSQL) {
+
+        Path pasta = Paths.get(caminhoDoArquivo);
+
         try {
-            Files.writeString(Paths.get(caminhoDoArquivo), conteudoSQL);
+            Files.writeString(pasta, conteudoSQL);
         } catch (IOException e) {
-            throw new PersistenciaException(MensagemErro.ERRO_SALVAR_ARQUIVO.MensagemComParametro(Paths.get(caminhoDoArquivo).getFileName().toString()), e);
+            throw new PersistenciaException(MensagemSistema.ERRO_SALVAR_ARQUIVO.MensagemComParametro(pasta.getFileName().toString()), e);
         }
     }
 
     @Override
     public HashMap<String, Modulo> obterModulosFuncoes(String diretorioRaiz) {
 
+        Collator collator = Collator.getInstance(Locale.of("pt", "BR"));
+        collator.setStrength(Collator.PRIMARY);
+
         try {
             if (diretorioRaiz == null || diretorioRaiz.isBlank()) {
-                throw new ValidacaoException(MensagemErro.CAMPO_OBRIGATORIO.MensagemComParametro("Diretório dos módulos de entrada não informado"));
+                throw new ValidacaoException(MensagemSistema.CAMPO_OBRIGATORIO.MensagemComParametro("Diretório dos módulos de entrada não informado"));
             }
 
             HashMap<String, Modulo> modulosExistentes = new HashMap<>();
             File[] pastas = new File(diretorioRaiz).listFiles(File::isDirectory);
             if (pastas != null) {
-                Long id = 0L;
-                for (File dirModulo : pastas) {
-
-                    if (dirModulo.getName().startsWith(".")) {
+                long id = 0L;
+                for (File moduloLocalizado : pastas) {
+                    if (moduloLocalizado.getName().startsWith(".")) {
                         continue;
                     }
-
-                    Modulo modulo = new Modulo(id++, dirModulo.getName(), dirModulo.getName().substring(0, 3).toUpperCase());
-
-                    carregarFuncoesNoModulo(dirModulo, modulo);
-
+                    Modulo modulo = new Modulo(id++, moduloLocalizado.getName());
+                    carregarFuncoesNoModulo(moduloLocalizado, modulo);
                     modulosExistentes.put(modulo.getPrefixo(), modulo);
 
                 }
             }
-            return modulosExistentes.entrySet()
-                    .stream()
-                    .sorted(Comparator.comparing(entry -> entry.getValue().getNome()))
-                    .collect(Collectors.toMap(
-                            Map.Entry::getKey,
-                            Map.Entry::getValue,
-                            (e1, e2) -> e1, LinkedHashMap::new));
+
+            return ordenarModulosPorNome(modulosExistentes);
 
         } catch (Exception e) {
-            throw new ValidacaoException(MensagemErro.ERRO_PROCESSAR_MOD_EXISTENTE.getMensagem(), e);
+            throw new ValidacaoException(MensagemSistema.ERRO_PROCESSAR_MOD_EXISTENTE.getMensagem() + e);
         }
     }
 
     @Override
     public HashMap<String, Modulo> obterModuloOrigem(String diretorioRaiz) {
 
+        Collator collator = Collator.getInstance(Locale.of("pt", "BR"));
+        collator.setStrength(Collator.PRIMARY);
+
         if (!diretorioRaiz.toLowerCase().endsWith(".java")) {
-            throw new ValidacaoException(MensagemErro.ARQUIVO_NAO_JAVA.MensagemComParametro(diretorioRaiz));
+            throw new ValidacaoException(MensagemSistema.ARQUIVO_NAO_JAVA.MensagemComParametro(diretorioRaiz));
         }
 
         try {
@@ -121,16 +126,10 @@ public class GerenciadorModulosArquivosDisco implements IGerenciadorModulosArqui
                 modulosEntrada.put(modulo.getPrefixo(), modulo);
             }
 
-            return modulosEntrada.entrySet()
-                    .stream()
-                    .sorted(Comparator.comparing(entry -> entry.getValue().getNome()))
-                    .collect(Collectors.toMap(
-                            Map.Entry::getKey,
-                            Map.Entry::getValue,
-                            (e1, e2) -> e1, LinkedHashMap::new));
+            return ordenarModulosPorNome(modulosEntrada);
 
         } catch (IOException e) {
-            throw new PersistenciaException(MensagemErro.ERRO_PROCESSAR_ARQ_MODULO.getMensagem(), e);
+            throw new PersistenciaException(MensagemSistema.ERRO_PROCESSAR_ARQ_MODULO.getMensagem(), e);
         }
     }
 
@@ -154,7 +153,7 @@ public class GerenciadorModulosArquivosDisco implements IGerenciadorModulosArqui
                     arquivoEncontrado.add(new Arquivo(arquivo.getName(), tipo, criacao, alteracao));
 
                 } catch (Exception e) {
-                    throw new ValidacaoException(MensagemErro.ERRO_PROCESSAR_ARQ_EXISTENTE.MensagemComParametro(arquivo.getName()));
+                    throw new ValidacaoException(MensagemSistema.ERRO_PROCESSAR_ARQ_EXISTENTE.MensagemComParametro(arquivo.getName()));
                 }
             }
         }
@@ -202,8 +201,26 @@ public class GerenciadorModulosArquivosDisco implements IGerenciadorModulosArqui
                 funcao.adicionarArquivo(new Arquivo(arquivo.getName(), tipo, criacao, alteracao));
 
             } catch (Exception e) {
-                throw new ValidacaoException(MensagemErro.ERRO_PROCESSAR_ARQ_EXISTENTE.MensagemComParametro(arquivo.getName()));
+                throw new ValidacaoException(MensagemSistema.ERRO_PROCESSAR_ARQ_EXISTENTE.MensagemComParametro(arquivo.getName()));
             }
         }
     }
+
+    private HashMap<String, Modulo> ordenarModulosPorNome(HashMap<String, Modulo> mapaDesordenado) {
+        Collator collator = Collator.getInstance(Locale.of("pt", "BR"));
+        collator.setStrength(Collator.PRIMARY);
+        return mapaDesordenado.entrySet()
+                .stream()
+                .sorted((entry1, entry2) -> collator.compare(
+                        entry1.getValue().getNome(),
+                        entry2.getValue().getNome()
+                ))
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        Map.Entry::getValue,
+                        (e1, e2) -> e1,
+                        LinkedHashMap::new
+                ));
+    }
+
 }

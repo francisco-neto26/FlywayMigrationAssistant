@@ -17,7 +17,7 @@ public class MainFX extends Application {
             System.exit(0);
         });
         ContextoAplicacao contextoGlobal = new ContextoAplicacao();
-        ConstrutorJanelas.abrirJanelaPrincipal(stage, CaminhoTela.TELA_PRINCIPAL, CaminhoTela.TELA_PRINCIPAL.getNome(), contextoGlobal);
+        ConstrutorJanelas.abrirJanelaPrincipal(stage, CaminhoTela.TELA_PRINCIPAL, contextoGlobal);
         stage.show();
     }
 

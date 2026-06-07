@@ -1,6 +1,6 @@
 package com.supergestao.Flyway.migration.assistant.dominio.regra.tempo;
 
-import com.supergestao.Flyway.migration.assistant.dominio.mensagem.MensagemErro;
+import com.supergestao.Flyway.migration.assistant.dominio.mensagem.MensagemSistema;
 import com.supergestao.Flyway.migration.assistant.exception.ValidacaoException;
 
 import java.time.LocalDateTime;
@@ -17,34 +17,34 @@ public class GeradorDataHora {
     public String gerarTimestampLocalidade(String formato, ZoneId zona) {
 
         if (formato == null || formato.isBlank()) {
-            throw new ValidacaoException(MensagemErro.FORMATO_DATA_NULL.getMensagem());
+            throw new ValidacaoException(MensagemSistema.FORMATO_DATA_NULL.getMensagem());
         }
 
         if (zona == null) {
-            throw new ValidacaoException(MensagemErro.LOCALIDADE_DATA_INVALIDA.getMensagem());
+            throw new ValidacaoException(MensagemSistema.LOCALIDADE_DATA_INVALIDA.getMensagem());
         }
         try {
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern(formato);
             return LocalDateTime.now(zona).format(formatter);
         } catch (IllegalArgumentException e) {
-            throw new ValidacaoException(MensagemErro.FORMATO_DATA_INVALIDO.MensagemComParametro(formato), e);
+            throw new ValidacaoException(MensagemSistema.FORMATO_DATA_INVALIDO.MensagemComParametro(formato), e);
         }
     }
 
     public static String formatarTimestampLocalidade(LocalDateTime datahora, String formato) {
 
         if (datahora == null) {
-            throw new ValidacaoException(MensagemErro.CAMPO_OBRIGATORIO.MensagemComParametro("Data/Hora para formatação"));
+            throw new ValidacaoException(MensagemSistema.CAMPO_OBRIGATORIO.MensagemComParametro("Data/Hora para formatação"));
         }
 
         if (formato == null || formato.isBlank()) {
-            throw new ValidacaoException(MensagemErro.FORMATO_DATA_NULL.getMensagem());
+            throw new ValidacaoException(MensagemSistema.FORMATO_DATA_NULL.getMensagem());
         }
         try {
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern(formato);
             return datahora.format(formatter);
         } catch (IllegalArgumentException e) {
-            throw new ValidacaoException(MensagemErro.FORMATO_DATA_INVALIDO.MensagemComParametro(formato), e);
+            throw new ValidacaoException(MensagemSistema.FORMATO_DATA_INVALIDO.MensagemComParametro(formato), e);
         }
     }
 

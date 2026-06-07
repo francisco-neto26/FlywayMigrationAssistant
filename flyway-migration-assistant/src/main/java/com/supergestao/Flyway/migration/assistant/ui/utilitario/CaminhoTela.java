@@ -22,7 +22,7 @@ public enum CaminhoTela {
     }
 
     public String getNome() {
-        return nome;
+        return (!nome.isEmpty()) ? nome : "Flyway Migration Assistant";
     }
 }
 

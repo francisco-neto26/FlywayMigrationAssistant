@@ -75,7 +75,7 @@ public class GerenciadorConfiguracao implements IGerenciadorConfiguracao {
 
     @Override
     public boolean getChaveUsaModulo() {
-        return prefs.get(CHAVE_USA_MODULO, "Sim").equalsIgnoreCase("Sim");
+        return prefs.get(CHAVE_USA_MODULO, "Não").equalsIgnoreCase("Sim");
     }
 
     @Override
@@ -85,7 +85,15 @@ public class GerenciadorConfiguracao implements IGerenciadorConfiguracao {
 
     @Override
     public boolean diretoriosConfigurados(){
-        return (!getDiretorioModulo().isEmpty() || getChaveUsaModulo()) && !getDiretorioArquivo().isEmpty();
+        //  O diretório de arquivos é obrigatório
+        if (getDiretorioArquivo().isEmpty()) {
+            return false;
+        }
+        //Se usa módulos, o diretório de módulos é obrigatório
+        if (getChaveUsaModulo() && getDiretorioModulo().isEmpty()) {
+            return false;
+        }
+        return true;
     }
 
 }
