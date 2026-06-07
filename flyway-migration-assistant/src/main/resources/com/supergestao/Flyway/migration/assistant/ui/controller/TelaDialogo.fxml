@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<VBox fx:id="painelRaiz" alignment="CENTER" prefHeight="202.0" prefWidth="500.0" spacing="15.0" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.supergestao.Flyway.migration.assistant.ui.controller.TelaDialogoController">
+    <children>
+        <VBox spacing="10.0" VBox.vgrow="ALWAYS">
+            <VBox.margin>
+                <Insets left="15.0" right="15.0" top="15.0" />
+            </VBox.margin>
+            <children>
+                <Label fx:id="lblMensagem" prefWidth="470.0" text="Mensagem principal do diálogo" textAlignment="CENTER" wrapText="true">
+                    <font>
+                        <Font size="14.0" />
+                    </font>
+               <VBox.margin>
+                  <Insets />
+               </VBox.margin>
+                </Label>
+                <TextArea fx:id="txtAreaDetalhes" editable="false" prefHeight="100.0" prefWidth="470.0" style="-fx-background-color: transparent; -fx-control-inner-background: transparent; -fx-border-width: 0; -fx-focus-color: transparent; -fx-faint-focus-color: transparent; -fx-padding: 0;" wrapText="true" VBox.vgrow="ALWAYS" />
+
+            </children>
+        </VBox>
+        <HBox alignment="CENTER_RIGHT" spacing="10.0">
+            <VBox.margin>
+                <Insets bottom="15.0" left="15.0" right="15.0" top="5.0" />
+            </VBox.margin>
+            <children>
+                <Button fx:id="btnCancelar" text="Cancelar" />
+                <Button fx:id="btnConfirmar" text="Confirmar" />
+            </children>
+        </HBox>
+
+    </children>
+</VBox>

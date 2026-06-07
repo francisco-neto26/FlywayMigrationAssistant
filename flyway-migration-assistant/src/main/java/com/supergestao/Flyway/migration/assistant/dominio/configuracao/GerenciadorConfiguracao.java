@@ -1,0 +1,100 @@
+package com.supergestao.Flyway.migration.assistant.dominio.configuracao;
+
+import atlantafx.base.theme.*;
+
+import java.util.List;
+import java.util.prefs.Preferences;
+
+public class GerenciadorConfiguracao implements IGerenciadorConfiguracao {
+
+    // Caminho no Regedit: HKEY_CURRENT_USER\Software\JavaSoft\Prefs\com\supergestao\flywayassistant
+    private static final Preferences prefs = Preferences.userRoot().node("com/supergestao/flywayassistant");
+
+    private static final String CHAVE_DIRETORIO_MODULO = "diretorio_modulo";
+    private static final String CHAVE_DIRETORIO_ARQUIVO = "diretorio_arquivo";
+    private static final String CHAVE_FONTE = "fonte_sitema";
+    private static final String CHAVE_USA_MODULO = "fonte_usa_modulo";
+    private static final String CHAVE_TEMA = "tema_sistema";
+    public static final List<Theme> CHAVE_TEMAS_DISPONIVEIS = List.of(
+            new PrimerLight(), new PrimerDark(),
+            new CupertinoLight(), new CupertinoDark(),
+            new NordLight(), new NordDark(), new Dracula()
+    );
+
+    @Override
+    public void salvarDiretorioModulo(String caminho) {
+        prefs.put(CHAVE_DIRETORIO_MODULO, caminho);
+    }
+
+    @Override
+    public String getDiretorioModulo() {
+        return prefs.get(CHAVE_DIRETORIO_MODULO, "");
+    }
+
+    @Override
+    public void salvarDiretorioArquivo(String caminho) {
+        prefs.put(CHAVE_DIRETORIO_ARQUIVO, caminho);
+    }
+
+    @Override
+    public String getDiretorioArquivo() {
+        return prefs.get(CHAVE_DIRETORIO_ARQUIVO, "");
+    }
+
+    @Override
+    public void salvarTema(String tema) {
+        prefs.put(CHAVE_TEMA, tema);
+    }
+
+    @Override
+    public Theme getTema() {
+        String temaSalvo = prefs.get(CHAVE_TEMA, "Primer Light");
+
+        for (Theme tema : CHAVE_TEMAS_DISPONIVEIS) {
+            if (tema.getName().equals(temaSalvo)) {
+                return tema;
+            }
+        }
+        return new PrimerLight();
+    }
+
+    @Override
+    public List<Theme> getListaTema() {
+        return CHAVE_TEMAS_DISPONIVEIS;
+    }
+
+    @Override
+    public String getChaveFonte() {
+        return prefs.get(CHAVE_FONTE, "Segoe UI");
+    }
+
+    @Override
+    public void salvarChaveFonte(String fonte) {
+        prefs.put(CHAVE_FONTE, fonte);
+    }
+
+    @Override
+    public boolean getChaveUsaModulo() {
+        return prefs.get(CHAVE_USA_MODULO, "Não").equalsIgnoreCase("Sim");
+    }
+
+    @Override
+    public void salvarChaveUsaModulo(String usa_modulo) {
+        prefs.put(CHAVE_USA_MODULO, usa_modulo);
+    }
+
+    @Override
+    public boolean diretoriosConfigurados(){
+        //  O diretório de arquivos é obrigatório
+        if (getDiretorioArquivo().isEmpty()) {
+            return false;
+        }
+        //Se usa módulos, o diretório de módulos é obrigatório
+        if (getChaveUsaModulo() && getDiretorioModulo().isEmpty()) {
+            return false;
+        }
+        return true;
+    }
+
+}
+
