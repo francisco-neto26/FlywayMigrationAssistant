@@ -60,34 +60,91 @@ public class GerenciadorArvoreModulos {
 
     private static void desenharArvore(ContextoAplicacao contexto, TreeView<String> treeArquivos) {
         try {
-
             TreeItem<String> modulos = new TreeItem<>("Módulos");
             modulos.setExpanded(true);
-
-            Map<String, Modulo> moduloFuncao = contexto.getSincronizarModulos()
+            Map<String, Modulo> modulosExistentes = contexto.getSincronizarModulos()
                     .obterModulosExistentes(contexto.getIGerenciadorConfiguracao().getDiretorioArquivo());
+            for (Modulo modulo : modulosExistentes.values()) {
 
-            for (Modulo modulo : moduloFuncao.values()) {
-                TreeItem<String> funcoes = new TreeItem<>(modulo.getNome());
+                TreeItem<String> itemModulo = new TreeItem<>(modulo.getNome());
+                final Modulo moduloFinal = modulo;
 
+                itemModulo.expandedProperty().addListener((obs, antigo, expandido) -> {
+                    if (expandido) {
+
+                        boolean arquivosCarregados = itemModulo.getChildren().stream()
+                                .anyMatch(child -> child.getValue().startsWith("• "));
+
+                        if (!arquivosCarregados) {
+                            try {
+                                // Carrega arquivos diretos da raiz do módulo (passando "" como função)
+                                java.util.Collection<Arquivo> arquivosDiretos = contexto.getIGerenciadorModulosArquivos()
+                                        .carregarArquivos(
+                                                contexto.getIGerenciadorConfiguracao().getDiretorioArquivo(),
+                                                moduloFinal.getNome(),
+                                                "" // Sem subpasta de função
+                                        );
+                                List<Arquivo> ordenados = arquivosDiretos.stream()
+                                        .sorted(java.util.Comparator.comparing(a -> a.getNome().toLowerCase()))
+                                        .toList();
+                                // Adiciona os arquivos diretamente sob o nó do módulo
+                                for (Arquivo arq : ordenados) {
+                                    itemModulo.getChildren().add(new TreeItem<>("• " + arq.getNome()));
+                                }
+                            } catch (Exception ex) {
+                                // Falha silenciosa ou log de depuração
+                            }
+                        }
+                    }
+                });
+                // 2. Adiciona as funções (pastas internas do módulo)
                 for (Funcao funcao : modulo.getFuncoes()) {
                     TreeItem<String> itemFuncao = new TreeItem<>(funcao.getNome());
-
-                    for (Arquivo arquivo : funcao.getArquivos()) {
-                        TreeItem<String> itemArquivo = new TreeItem<>("📄 " + arquivo.getNome());
-                        itemFuncao.getChildren().add(itemArquivo);
-                    }
-                    funcoes.getChildren().add(itemFuncao);
+                    final Funcao funcaoFinal = funcao;
+                    // Força a setinha de expansão na função
+                    TreeItem<String> dummyNode = new TreeItem<>("Carregando...");
+                    itemFuncao.getChildren().add(dummyNode);
+                    // Escuta expansão da função
+                    itemFuncao.expandedProperty().addListener((obs, valorAntigo, foiExpandido) -> {
+                        if (foiExpandido) {
+                            if (itemFuncao.getChildren().size() == 1 && itemFuncao.getChildren().get(0) == dummyNode) {
+                                itemFuncao.getChildren().clear();
+                                try {
+                                    java.util.Collection<Arquivo> arquivosFuncao = contexto.getIGerenciadorModulosArquivos()
+                                            .carregarArquivos(
+                                                    contexto.getIGerenciadorConfiguracao().getDiretorioArquivo(),
+                                                    moduloFinal.getNome(),
+                                                    funcaoFinal.getNome()
+                                            );
+                                    List<Arquivo> ordenados = arquivosFuncao.stream()
+                                            .sorted(java.util.Comparator.comparing(a -> a.getNome().toLowerCase()))
+                                            .toList();
+                                    for (Arquivo arq : ordenados) {
+                                        itemFuncao.getChildren().add(new TreeItem<>("📄 " + arq.getNome()));
+                                    }
+                                } catch (Exception ex) {
+                                    contexto.getIGerenciadorJanelas().exibirDialogo(
+                                            TipoDialogo.ERRO,
+                                            "Erro ao ler arquivos",
+                                            "Não foi possível carregar os arquivos da função: " + funcaoFinal.getNome(),
+                                            ex.getMessage()
+                                    );
+                                }
+                            }
+                        }
+                    });
+                    itemModulo.getChildren().add(itemFuncao);
                 }
-                modulos.getChildren().add(funcoes);
+                modulos.getChildren().add(itemModulo);
             }
             treeArquivos.setRoot(modulos);
-
         } catch (Exception e) {
-            contexto.getIGerenciadorJanelas().exibirDialogo(TipoDialogo.ERRO,
+            contexto.getIGerenciadorJanelas().exibirDialogo(
+                    TipoDialogo.ERRO,
                     MensagemSistema.ERRO_CRIAR_ARVORE_MODULOS.getMensagem(),
                     MensagemSistema.ERRO_CRIAR_ARVORE_MODULOS.getMensagem(),
-                    e.getMessage());
+                    e.getMessage()
+            );
         }
     }
 
