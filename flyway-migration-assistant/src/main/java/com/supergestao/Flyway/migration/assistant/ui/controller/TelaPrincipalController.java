@@ -1,9 +1,6 @@
 package com.supergestao.Flyway.migration.assistant.ui.controller;
 
-import com.supergestao.Flyway.migration.assistant.dominio.modelo.Arquivo;
-import com.supergestao.Flyway.migration.assistant.dominio.modelo.Funcao;
-import com.supergestao.Flyway.migration.assistant.dominio.modelo.Modulo;
-import com.supergestao.Flyway.migration.assistant.dominio.modelo.RetornoSalvarDiretorio;
+import com.supergestao.Flyway.migration.assistant.dominio.mensagem.MensagemSistema;
 import com.supergestao.Flyway.migration.assistant.ui.estado.ContextoAplicacao;
 import com.supergestao.Flyway.migration.assistant.ui.utilitario.*;
 import javafx.animation.PauseTransition;
@@ -13,9 +10,6 @@ import javafx.scene.control.*;
 import javafx.scene.layout.BorderPane;
 import javafx.util.Duration;
 
-
-import java.util.List;
-import java.util.Map;
 
 public class TelaPrincipalController implements ITelasModal {
 
@@ -72,8 +66,8 @@ public class TelaPrincipalController implements ITelasModal {
                 CaminhoTela.TELA_CONFIGURACOES,
                 this.contexto
         );
-        GerenciadorVisual.aplicarTemaGlobal(contexto.getIGerenciadorConfiguracao().getTema());
-        GerenciadorVisual.aplicarFonteGlobal(contexto.getIGerenciadorConfiguracao().getChaveFonte());
+        GerenciadorVisual.aplicarTemaGlobal(contexto.getTema());
+        GerenciadorVisual.aplicarFonteGlobal(contexto.getChaveFonte());
         verifcaEcarregarModuloFuncao();
     }
 
@@ -141,7 +135,7 @@ public class TelaPrincipalController implements ITelasModal {
     }
 
     private void AtivaDesativaBotoesPrincipais() {
-        boolean existeDiretorioConfigurado = !this.contexto.getIGerenciadorConfiguracao().diretoriosConfigurados();
+        boolean existeDiretorioConfigurado = !this.contexto.getDiretoriosConfigurados();
         btnAtualizar.setDisable(existeDiretorioConfigurado);
         btnNovoModulo.setDisable(existeDiretorioConfigurado);
         btnNovaFuncao.setDisable(existeDiretorioConfigurado);
@@ -152,11 +146,11 @@ public class TelaPrincipalController implements ITelasModal {
 
     @FXML
     private void verifcaEcarregarModuloFuncao() {
-        if (!this.contexto.getIGerenciadorConfiguracao().diretoriosConfigurados()) {
-            boolean querConfigurar = this.contexto.getIGerenciadorJanelas().exibirDialogo(TipoDialogo.CONFIRMACAO,
-                    "Cadastrar configurações",
+        if (!this.contexto.getDiretoriosConfigurados()) {
+            boolean querConfigurar = this.contexto.exibirDialogo(TipoDialogo.CONFIRMACAO,
+                    MensagemSistema.CADASTRAR_CONFIGURACAO.getMensagem(),
                     null,
-                    "O diretório raiz dos Módulos não está configurado. Deseja configurar agora?");
+                    MensagemSistema.IR_CONFIGURACAO.getMensagem());
 
             if (querConfigurar) {
                 telaConfiguracao();

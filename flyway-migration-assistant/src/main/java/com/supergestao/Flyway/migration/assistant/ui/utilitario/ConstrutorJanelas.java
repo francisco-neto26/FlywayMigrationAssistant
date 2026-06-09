@@ -22,7 +22,7 @@ public class ConstrutorJanelas {
         try {
             stageJanelaPrincipal = primaryStage;
             Stage stage = ajustarMonitor(primaryStage, "principal");
-            Theme temaSalvo = contextoAplicacao.getIGerenciadorConfiguracao().getTema();
+            Theme temaSalvo = contextoAplicacao.getTema();
             Application.setUserAgentStylesheet(temaSalvo.getUserAgentStylesheet());
 
             CoresPadrao corBarra = defineCor(0);

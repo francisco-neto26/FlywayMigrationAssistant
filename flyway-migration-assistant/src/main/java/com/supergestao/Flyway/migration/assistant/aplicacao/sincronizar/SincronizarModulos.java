@@ -35,11 +35,11 @@ public class SincronizarModulos {
         return resultados;
     }
 
-    public List<RetornoSalvarDiretorio> criarNovaFuncao(String modulo, String funcao, String caminhoCompleto) {
-       return salvarModuloFuncao(funcao, caminhoCompleto);
+    public List<RetornoSalvarDiretorio> criarModuloFuncao(String moduloFuncao, String caminhoCompleto) {
+        return salvarModuloFuncao(moduloFuncao, caminhoCompleto);
     }
 
-    private List<RetornoSalvarDiretorio> salvarModuloFuncao(String moduloFuncao, String caminhoCompleto){
+    private List<RetornoSalvarDiretorio> salvarModuloFuncao(String moduloFuncao, String caminhoCompleto) {
         List<RetornoSalvarDiretorio> resultados = new ArrayList<>();
         boolean criado = iGerenciadorModulosArquivosDisco.salvarModuloFuncao(caminhoCompleto);
         resultados.add(new RetornoSalvarDiretorio(criado, moduloFuncao));
@@ -67,7 +67,7 @@ public class SincronizarModulos {
                 );
     }
 
-    public HashSet<Arquivo> carregarArquivos(String caminhoFuncao, String nomeModulo, String nomeFuncao){
+    public HashSet<Arquivo> carregarArquivos(String caminhoFuncao, String nomeModulo, String nomeFuncao) {
         return iGerenciadorModulosArquivosDisco.carregarArquivos(caminhoFuncao, nomeModulo, nomeFuncao);
     }
 

@@ -13,7 +13,7 @@
         <VBox spacing="5.0">
             <VBox.margin><Insets left="15.0" right="15.0" top="10.0" /></VBox.margin>
             <children>
-                <Label text="Nome do Módulo:" />
+                <Label fx:id="lblNomeModulo"  text="Nome do Módulo:" />
                 <TextField fx:id="txtNomeModulo" promptText="Ex: financeiro" />
             </children>
         </VBox>

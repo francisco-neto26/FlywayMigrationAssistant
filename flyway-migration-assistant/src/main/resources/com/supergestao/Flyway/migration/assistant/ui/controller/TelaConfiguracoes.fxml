@@ -14,7 +14,7 @@
 
                 <VBox spacing="5.0">
                     <children>
-                        <Label text="Diretório Arquivos Migration" />
+                        <Label fx:id="lblDiretorioArquivos" text="Diretório Arquivos Migration" />
                         <HBox spacing="5.0">
                             <children>
                                 <TextField fx:id="txtDiretorioArquivos" editable="false" HBox.hgrow="ALWAYS" />
@@ -26,7 +26,7 @@
 
                 <VBox spacing="5.0">
                     <children>
-                        <Label text="Diretório dos Módulos (.JAVA):" />
+                        <Label fx:id="lblDiretorioModulos" text="Diretório dos Módulos (.JAVA):" />
                         <HBox spacing="5.0">
                             <children>
                                 <TextField fx:id="txtDiretorioModulos" editable="false" HBox.hgrow="ALWAYS" />

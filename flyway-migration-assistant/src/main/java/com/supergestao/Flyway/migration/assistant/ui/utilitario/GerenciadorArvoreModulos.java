@@ -16,13 +16,11 @@ import java.util.stream.Collectors;
 public class GerenciadorArvoreModulos {
 
     public static void buscarModulosFuncoes(ContextoAplicacao contexto, TreeView<String> treeArquivos) {
-        Map<String, Modulo> moduloFuncao = contexto.getSincronizarModulos().
-                moduloParaSincronizar(contexto.getIGerenciadorConfiguracao().getDiretorioModulo(),
-                        contexto.getIGerenciadorConfiguracao().getDiretorioArquivo());
+        Map<String, Modulo> moduloFuncao = contexto.moduloParaSincronizar(contexto.getDiretorioModulo(), contexto.getDiretorioArquivo());
 
         if (!moduloFuncao.isEmpty()) {
 
-            boolean querCriar = contexto.getIGerenciadorJanelas().exibirDialogo(TipoDialogo.CONFIRMACAO,
+            boolean querCriar = contexto.exibirDialogo(TipoDialogo.CONFIRMACAO,
                     MensagemSistema.NOVO_MODULO.getMensagem(),
                     null,
                     MensagemSistema.EXISTE_MODULOS_CRIAR.getMensagem()
@@ -32,20 +30,19 @@ public class GerenciadorArvoreModulos {
             if (querCriar) {
                 String modulosNovos = formatarLista(moduloFuncao.values(), Modulo::getNome);
 
-                querCriar = contexto.getIGerenciadorJanelas().exibirDialogo(TipoDialogo.CONFIRMACAO,
+                querCriar = contexto.exibirDialogo(TipoDialogo.CONFIRMACAO,
                         MensagemSistema.NOVO_MODULO.getMensagem(),
                         MensagemSistema.LISTA_MODULO.getMensagem(),
                         modulosNovos);
 
                 if (querCriar) {
 
-                    List<RetornoSalvarDiretorio> resultado = contexto.getSincronizarModulos().
-                            criarNovoModulo(moduloFuncao, contexto.getIGerenciadorConfiguracao().getDiretorioArquivo());
+                    List<RetornoSalvarDiretorio> resultado = contexto.criarNovoModulo(moduloFuncao, contexto.getDiretorioArquivo());
                     String listaResultado = formatarLista(resultado, retorno ->
                             "Módulo: " + retorno.nome() + " - " + (retorno.criado() ? "Criado com sucesso." : "Erro ao criar")
                     );
 
-                    contexto.getIGerenciadorJanelas().exibirDialogo(TipoDialogo.MENSAGEM,
+                    contexto.exibirDialogo(TipoDialogo.MENSAGEM,
                             MensagemSistema.NOVO_MODULO.getMensagem(),
                             MensagemSistema.LISTA_MODULO.getMensagem(),
                             listaResultado
@@ -61,8 +58,7 @@ public class GerenciadorArvoreModulos {
             TreeItem<String> modulos = new TreeItem<>("Módulos");
             modulos.setExpanded(true);
             String diretorioArquivo = contexto.getDiretorioArquivo();
-            Map<String, Modulo> modulosExistentes = contexto.getSincronizarModulos()
-                    .obterModulosExistentes(diretorioArquivo);
+            Map<String, Modulo> modulosExistentes = contexto.obterModulosExistentes(diretorioArquivo);
 
             Set<TreeItem<String>> ItemsCarregados = new HashSet<>();
 
@@ -72,7 +68,7 @@ public class GerenciadorArvoreModulos {
                 for (Funcao funcao : modulo.getFuncoes()) {
                     TreeItem<String> itemFuncao = new TreeItem<>(funcao.getNome());
 
-                    boolean temfuncaoArquivo = contexto.getSincronizarModulos().temFuncaoArquivo(diretorioArquivo, modulo.getNome(), funcao.getNome());
+                    boolean temfuncaoArquivo = contexto.temFuncaoArquivo(diretorioArquivo, modulo.getNome(), funcao.getNome());
 
                     if (temfuncaoArquivo) {
                         TreeItem<String> dummyNode = new TreeItem<>("Carregando...");
@@ -84,7 +80,7 @@ public class GerenciadorArvoreModulos {
                 }
 
                 boolean temFuncoes = !modulo.getFuncoes().isEmpty();
-                boolean temfuncaoArquivo = contexto.getSincronizarModulos().temFuncaoArquivo(diretorioArquivo, modulo.getNome(), "");
+                boolean temfuncaoArquivo = contexto.temFuncaoArquivo(diretorioArquivo, modulo.getNome(), "");
 
                 if (temFuncoes || temfuncaoArquivo) {
                     if (temFuncoes) {
@@ -101,8 +97,7 @@ public class GerenciadorArvoreModulos {
             treeArquivos.setRoot(modulos);
             treeArquivos.setShowRoot(false);
         } catch (Exception e) {
-            contexto.getIGerenciadorJanelas().exibirDialogo(
-                    TipoDialogo.ERRO,
+            contexto.exibirDialogo(TipoDialogo.ERRO,
                     MensagemSistema.ERRO_CRIAR_ARVORE_MODULOS.getMensagem(),
                     MensagemSistema.ERRO_CRIAR_ARVORE_MODULOS.getMensagem(),
                     e.getMessage()
@@ -143,9 +138,7 @@ public class GerenciadorArvoreModulos {
     private static void carregarArquivos(ContextoAplicacao contexto, TreeItem<String> treeItem, String nomeModulo, String nomeFuncao) {
         try {
 
-            java.util.Collection<Arquivo> arquivos = contexto.getSincronizarModulos()
-                    .carregarArquivos(
-                            contexto.getIGerenciadorConfiguracao().getDiretorioArquivo(),
+            java.util.Collection<Arquivo> arquivos = contexto.carregarArquivos(contexto.getDiretorioArquivo(),
                             nomeModulo,
                             nomeFuncao
                     );
@@ -159,7 +152,7 @@ public class GerenciadorArvoreModulos {
             }
 
         } catch (Exception e) {
-            contexto.getIGerenciadorJanelas().exibirDialogo(TipoDialogo.ERRO,
+            contexto.exibirDialogo(TipoDialogo.ERRO,
                     MensagemSistema.ERRO_CRIAR_ARVORE_MODULOS_ARQUIVOS.getMensagem(),
                     MensagemSistema.ERRO_CRIAR_ARVORE_ARQUIVOS.MensagemComParametro(nomeModulo),
                     e.getMessage()
