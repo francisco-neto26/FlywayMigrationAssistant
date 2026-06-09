@@ -48,8 +48,7 @@ public class TelaNovaFuncaoController implements ITelasModal {
     @FXML
     public void initialize() {
         Platform.runLater(() -> {
-            comboModulo.getItems().addAll(this.contexto.getSincronizarModulos()
-                    .obterModulosExistentes(this.contexto.getIGerenciadorConfiguracao().getDiretorioArquivo()).values());
+            comboModulo.getItems().addAll(this.contexto.obterModulosExistentes(this.contexto.getDiretorioArquivo()).values());
             GerenciadorEstiloBotao.gerenciadorEstiloBotao(painelRaiz);
         });
     }
@@ -66,7 +65,7 @@ public class TelaNovaFuncaoController implements ITelasModal {
         String nomeModulo = comboModulo.getValue().getNome();
 
         if (nomeFuncao.isBlank()) {
-            this.contexto.getIGerenciadorJanelas().exibirDialogo(TipoDialogo.ALERTA,
+            this.contexto.exibirDialogo(TipoDialogo.ALERTA,
                     MensagemSistema.ATENCAO.getMensagem(),
                     null,
                     MensagemSistema.CAMPO_OBRIGATORIO.MensagemComParametro(lblModulo.getText())
@@ -75,7 +74,7 @@ public class TelaNovaFuncaoController implements ITelasModal {
         }
 
         if (nomeModulo.isBlank()) {
-            this.contexto.getIGerenciadorJanelas().exibirDialogo(TipoDialogo.ALERTA,
+            this.contexto.exibirDialogo(TipoDialogo.ALERTA,
                     MensagemSistema.ATENCAO.getMensagem(),
                     null,
                     MensagemSistema.CAMPO_OBRIGATORIO.MensagemComParametro(lblNomeFuncao.getText())
@@ -83,10 +82,9 @@ public class TelaNovaFuncaoController implements ITelasModal {
             return;
         }
 
-        String caminhoCompleto = Paths.get(this.contexto.getIGerenciadorConfiguracao()
-                .getDiretorioArquivo(), nomeModulo, nomeFuncao).toAbsolutePath().toString();
+        String caminhoCompleto = Paths.get(this.contexto.getDiretorioArquivo(), nomeModulo, nomeFuncao).toAbsolutePath().toString();
 
-        boolean confirmacao = this.contexto.getIGerenciadorJanelas().exibirDialogo(TipoDialogo.CONFIRMACAO,
+        boolean confirmacao = this.contexto.exibirDialogo(TipoDialogo.CONFIRMACAO,
                 MensagemSistema.NOVA_FUNCAO.getMensagem(),
                 null,
                 MensagemSistema.SALVAR_FUNCAO.MensagemComParametro(nomeFuncao, caminhoCompleto)
@@ -94,13 +92,13 @@ public class TelaNovaFuncaoController implements ITelasModal {
 
         if (confirmacao) {
             try {
-                List<RetornoSalvarDiretorio> resultado = this.contexto.getSincronizarModulos().criarNovaFuncao(nomeModulo, nomeFuncao, caminhoCompleto);
+                List<RetornoSalvarDiretorio> resultado = this.contexto.criarModuloFuncao(nomeModulo, nomeFuncao, caminhoCompleto);
 
                 String listaResultado = formatarLista(resultado, retorno ->
                         "Função: " + retorno.nome() + " - " + (retorno.criado() ? "Criada com sucesso." : "Erro ao criar")
                 );
 
-                this.contexto.getIGerenciadorJanelas().exibirDialogo(TipoDialogo.MENSAGEM,
+                this.contexto.exibirDialogo(TipoDialogo.MENSAGEM,
                         MensagemSistema.NOVA_FUNCAO.getMensagem(),
                         MensagemSistema.LISTA_FUNCAO.getMensagem(),
                         listaResultado
@@ -110,7 +108,7 @@ public class TelaNovaFuncaoController implements ITelasModal {
                 stage.close();
 
             } catch (TelaException e) {
-                this.contexto.getIGerenciadorJanelas().exibirDialogo(TipoDialogo.ERRO,
+                this.contexto.exibirDialogo(TipoDialogo.ERRO,
                         MensagemSistema.ERRO_SALVAR_REGISTRO.getMensagem(),
                         MensagemSistema.ERRO_SALVAR_FUNCAO.MensagemComParametro(nomeFuncao),
                         e.getMessage()

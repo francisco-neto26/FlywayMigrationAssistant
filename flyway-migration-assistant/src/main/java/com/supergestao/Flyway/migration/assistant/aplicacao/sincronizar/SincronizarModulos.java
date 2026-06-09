@@ -1,9 +1,11 @@
 package com.supergestao.Flyway.migration.assistant.aplicacao.sincronizar;
 
+import com.supergestao.Flyway.migration.assistant.dominio.modelo.Arquivo;
 import com.supergestao.Flyway.migration.assistant.dominio.modelo.Modulo;
 import com.supergestao.Flyway.migration.assistant.dominio.modelo.RetornoSalvarDiretorio;
 import com.supergestao.Flyway.migration.assistant.persistencia.gerenciador.modulos.arquivos.IGerenciadorModulosArquivosDisco;
 
+import java.io.File;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -33,11 +35,11 @@ public class SincronizarModulos {
         return resultados;
     }
 
-    public List<RetornoSalvarDiretorio> criarNovaFuncao(String modulo, String funcao, String caminhoCompleto) {
-       return salvarModuloFuncao(funcao, caminhoCompleto);
+    public List<RetornoSalvarDiretorio> criarModuloFuncao(String moduloFuncao, String caminhoCompleto) {
+        return salvarModuloFuncao(moduloFuncao, caminhoCompleto);
     }
 
-    private List<RetornoSalvarDiretorio> salvarModuloFuncao(String moduloFuncao, String caminhoCompleto){
+    private List<RetornoSalvarDiretorio> salvarModuloFuncao(String moduloFuncao, String caminhoCompleto) {
         List<RetornoSalvarDiretorio> resultados = new ArrayList<>();
         boolean criado = iGerenciadorModulosArquivosDisco.salvarModuloFuncao(caminhoCompleto);
         resultados.add(new RetornoSalvarDiretorio(criado, moduloFuncao));
@@ -64,4 +66,14 @@ public class SincronizarModulos {
                         Map::putAll
                 );
     }
+
+    public HashSet<Arquivo> carregarArquivos(String caminhoFuncao, String nomeModulo, String nomeFuncao) {
+        return iGerenciadorModulosArquivosDisco.carregarArquivos(caminhoFuncao, nomeModulo, nomeFuncao);
+    }
+
+    public boolean temFuncaoArquivo(String diretorioRaiz, String nomeModulo, String nomeFuncao) {
+        File pasta = Paths.get(diretorioRaiz, nomeModulo, nomeFuncao).toFile();
+        return Objects.requireNonNull(pasta.list()).length > 0;
+    }
+
 }
