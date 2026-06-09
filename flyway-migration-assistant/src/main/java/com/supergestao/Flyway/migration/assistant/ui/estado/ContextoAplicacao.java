@@ -41,5 +41,13 @@ public class ContextoAplicacao {
         return this.sincronizarModulos;
     }
 
+    public String getDiretorioArquivo(){
+        return this.iGerenciadorConfiguracao.getDiretorioArquivo();
+    }
+
+    public String getDiretorioModulo(){
+        return this.iGerenciadorConfiguracao.getDiretorioModulo();
+    }
+
 }
 

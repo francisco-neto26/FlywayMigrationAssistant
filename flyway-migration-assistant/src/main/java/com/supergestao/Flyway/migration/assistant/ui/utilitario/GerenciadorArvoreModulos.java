@@ -9,9 +9,7 @@ import com.supergestao.Flyway.migration.assistant.ui.estado.ContextoAplicacao;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -62,82 +60,46 @@ public class GerenciadorArvoreModulos {
         try {
             TreeItem<String> modulos = new TreeItem<>("Módulos");
             modulos.setExpanded(true);
+            String diretorioArquivo = contexto.getDiretorioArquivo();
             Map<String, Modulo> modulosExistentes = contexto.getSincronizarModulos()
-                    .obterModulosExistentes(contexto.getIGerenciadorConfiguracao().getDiretorioArquivo());
+                    .obterModulosExistentes(diretorioArquivo);
+
+            Set<TreeItem<String>> ItemsCarregados = new HashSet<>();
+
             for (Modulo modulo : modulosExistentes.values()) {
-
                 TreeItem<String> itemModulo = new TreeItem<>(modulo.getNome());
-                final Modulo moduloFinal = modulo;
 
-                itemModulo.expandedProperty().addListener((obs, antigo, expandido) -> {
-                    if (expandido) {
-
-                        boolean arquivosCarregados = itemModulo.getChildren().stream()
-                                .anyMatch(child -> child.getValue().startsWith("• "));
-
-                        if (!arquivosCarregados) {
-                            try {
-                                // Carrega arquivos diretos da raiz do módulo (passando "" como função)
-                                java.util.Collection<Arquivo> arquivosDiretos = contexto.getIGerenciadorModulosArquivos()
-                                        .carregarArquivos(
-                                                contexto.getIGerenciadorConfiguracao().getDiretorioArquivo(),
-                                                moduloFinal.getNome(),
-                                                "" // Sem subpasta de função
-                                        );
-                                List<Arquivo> ordenados = arquivosDiretos.stream()
-                                        .sorted(java.util.Comparator.comparing(a -> a.getNome().toLowerCase()))
-                                        .toList();
-                                // Adiciona os arquivos diretamente sob o nó do módulo
-                                for (Arquivo arq : ordenados) {
-                                    itemModulo.getChildren().add(new TreeItem<>("• " + arq.getNome()));
-                                }
-                            } catch (Exception ex) {
-                                // Falha silenciosa ou log de depuração
-                            }
-                        }
-                    }
-                });
-                // 2. Adiciona as funções (pastas internas do módulo)
                 for (Funcao funcao : modulo.getFuncoes()) {
                     TreeItem<String> itemFuncao = new TreeItem<>(funcao.getNome());
-                    final Funcao funcaoFinal = funcao;
-                    // Força a setinha de expansão na função
-                    TreeItem<String> dummyNode = new TreeItem<>("Carregando...");
-                    itemFuncao.getChildren().add(dummyNode);
-                    // Escuta expansão da função
-                    itemFuncao.expandedProperty().addListener((obs, valorAntigo, foiExpandido) -> {
-                        if (foiExpandido) {
-                            if (itemFuncao.getChildren().size() == 1 && itemFuncao.getChildren().get(0) == dummyNode) {
-                                itemFuncao.getChildren().clear();
-                                try {
-                                    java.util.Collection<Arquivo> arquivosFuncao = contexto.getIGerenciadorModulosArquivos()
-                                            .carregarArquivos(
-                                                    contexto.getIGerenciadorConfiguracao().getDiretorioArquivo(),
-                                                    moduloFinal.getNome(),
-                                                    funcaoFinal.getNome()
-                                            );
-                                    List<Arquivo> ordenados = arquivosFuncao.stream()
-                                            .sorted(java.util.Comparator.comparing(a -> a.getNome().toLowerCase()))
-                                            .toList();
-                                    for (Arquivo arq : ordenados) {
-                                        itemFuncao.getChildren().add(new TreeItem<>("📄 " + arq.getNome()));
-                                    }
-                                } catch (Exception ex) {
-                                    contexto.getIGerenciadorJanelas().exibirDialogo(
-                                            TipoDialogo.ERRO,
-                                            "Erro ao ler arquivos",
-                                            "Não foi possível carregar os arquivos da função: " + funcaoFinal.getNome(),
-                                            ex.getMessage()
-                                    );
-                                }
-                            }
-                        }
-                    });
+
+                    boolean temfuncaoArquivo = contexto.getSincronizarModulos().temFuncaoArquivo(diretorioArquivo, modulo.getNome(), funcao.getNome());
+
+                    if (temfuncaoArquivo) {
+                        TreeItem<String> dummyNode = new TreeItem<>("Carregando...");
+                        itemFuncao.getChildren().add(dummyNode);
+                        carregarTreeItem(contexto, itemFuncao, modulo.getNome(), funcao.getNome(), dummyNode, ItemsCarregados);
+                    }
+
                     itemModulo.getChildren().add(itemFuncao);
                 }
+
+                boolean temFuncoes = !modulo.getFuncoes().isEmpty();
+                boolean temfuncaoArquivo = contexto.getSincronizarModulos().temFuncaoArquivo(diretorioArquivo, modulo.getNome(), "");
+
+                if (temFuncoes || temfuncaoArquivo) {
+                    if (temFuncoes) {
+                        carregarTreeItem(contexto, itemModulo, modulo.getNome(), "", null, ItemsCarregados);
+                    } else {
+                        TreeItem<String> dummyNode = new TreeItem<>("Carregando...");
+                        itemModulo.getChildren().add(dummyNode);
+                        carregarTreeItem(contexto, itemModulo, modulo.getNome(), "", dummyNode, ItemsCarregados);
+                    }
+                }
+
                 modulos.getChildren().add(itemModulo);
             }
             treeArquivos.setRoot(modulos);
+            treeArquivos.setShowRoot(false);
         } catch (Exception e) {
             contexto.getIGerenciadorJanelas().exibirDialogo(
                     TipoDialogo.ERRO,
@@ -154,4 +116,54 @@ public class GerenciadorArvoreModulos {
                 .collect(Collectors.joining("\n"));
     }
 
+    private static void carregarTreeItem(
+            ContextoAplicacao contexto,
+            TreeItem<String> treeItem,
+            String nomeModulo,
+            String nomeFuncao,
+            TreeItem<String> dummyNode,
+            Set<TreeItem<String>> carregados) {
+        treeItem.expandedProperty().addListener((obs, valorAntigo, expandido) -> {
+            if (expandido) {
+
+                if (carregados.contains(treeItem)) {
+                    return;
+                }
+
+                if (dummyNode != null && treeItem.getChildren().size() == 1 && treeItem.getChildren().getFirst() == dummyNode) {
+                    treeItem.getChildren().clear();
+                }
+                carregarArquivos(contexto, treeItem, nomeModulo, nomeFuncao);
+
+                carregados.add(treeItem);
+            }
+        });
+    }
+
+    private static void carregarArquivos(ContextoAplicacao contexto, TreeItem<String> treeItem, String nomeModulo, String nomeFuncao) {
+        try {
+
+            java.util.Collection<Arquivo> arquivos = contexto.getSincronizarModulos()
+                    .carregarArquivos(
+                            contexto.getIGerenciadorConfiguracao().getDiretorioArquivo(),
+                            nomeModulo,
+                            nomeFuncao
+                    );
+
+            List<Arquivo> arquivosOrdenados = arquivos.stream()
+                    .sorted(java.util.Comparator.comparing(arquivo -> arquivo.getNome().toLowerCase()))
+                    .toList();
+
+            for (Arquivo arquivo : arquivosOrdenados) {
+                treeItem.getChildren().add(new TreeItem<>(arquivo.getNome()));
+            }
+
+        } catch (Exception e) {
+            contexto.getIGerenciadorJanelas().exibirDialogo(TipoDialogo.ERRO,
+                    MensagemSistema.ERRO_CRIAR_ARVORE_MODULOS_ARQUIVOS.getMensagem(),
+                    MensagemSistema.ERRO_CRIAR_ARVORE_ARQUIVOS.MensagemComParametro(nomeModulo),
+                    e.getMessage()
+            );
+        }
+    }
 }
