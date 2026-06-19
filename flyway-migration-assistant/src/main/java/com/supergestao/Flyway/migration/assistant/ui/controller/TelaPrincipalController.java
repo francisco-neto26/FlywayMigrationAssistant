@@ -1,6 +1,8 @@
 package com.supergestao.Flyway.migration.assistant.ui.controller;
 
 import com.supergestao.Flyway.migration.assistant.dominio.mensagem.MensagemSistema;
+import com.supergestao.Flyway.migration.assistant.dominio.regra.sql.indentar.IndentarSql;
+import com.supergestao.Flyway.migration.assistant.dominio.regra.sql.indentar.IndentarSqlApiPgFormatter;
 import com.supergestao.Flyway.migration.assistant.ui.estado.ContextoAplicacao;
 import com.supergestao.Flyway.migration.assistant.ui.utilitario.*;
 import javafx.animation.PauseTransition;
@@ -45,6 +47,7 @@ public class TelaPrincipalController implements ITelasModal {
     private BorderPane painelRaiz;
 
     private ContextoAplicacao contexto;
+    private GerenciadorArvoreArquivos gerenciadorArvoreArquivos;
 
     public void setContextoAplicacao(ContextoAplicacao contextoAplicacao) {
         this.contexto = contextoAplicacao;
@@ -55,6 +58,12 @@ public class TelaPrincipalController implements ITelasModal {
         buscaTempoReal();
         Platform.runLater(() -> {
             verifcaEcarregarModuloFuncao();
+            this.gerenciadorArvoreArquivos = new GerenciadorArvoreArquivos(
+                    this.contexto, treeArquivos, txtAreaSql,
+                    btnSalvarSql, btnCancelarEdicao, btnIndentar, btnValidarSql
+            );
+            this.gerenciadorArvoreArquivos.selecaoArvore();
+            this.gerenciadorArvoreArquivos.limparEdicaoSql();
             GerenciadorEstiloBotao.gerenciadorEstiloBotao(painelRaiz);
             AtivaDesativaBotoesPrincipais();
         });
@@ -100,7 +109,12 @@ public class TelaPrincipalController implements ITelasModal {
 
     @FXML
     private void indentar() {
-
+        if (this.gerenciadorArvoreArquivos != null && txtAreaSql.getText() != null) {
+            String sqlOriginal = txtAreaSql.getText();
+            //String sqlFormatado = IndentarSqlApiPgFormatter.formatar(sqlOriginal);
+            String sqlFormatado = IndentarSql.formatar(sqlOriginal);
+            txtAreaSql.setText(sqlFormatado);
+        }
     }
 
     @FXML
@@ -110,38 +124,34 @@ public class TelaPrincipalController implements ITelasModal {
 
     @FXML
     private void cancelarEdicao() {
-
+        if (this.gerenciadorArvoreArquivos != null) {
+            this.gerenciadorArvoreArquivos.reverterEdicaoSql();
+        }
     }
 
     @FXML
     private void salvarSql() {
+        if (this.gerenciadorArvoreArquivos != null && this.gerenciadorArvoreArquivos.getCaminhoArquivoSelecionado() != null) {
+            try {
+                String caminho = this.gerenciadorArvoreArquivos.getCaminhoArquivoSelecionado();
+                String conteudo = txtAreaSql.getText();
 
-    }
+                this.contexto.salvarArquivo(caminho, conteudo);
 
-    private void buscaTempoReal() {
-        PauseTransition atrasoBusca = new PauseTransition(Duration.millis(500));
-        atrasoBusca.setOnFinished(event -> {
-            buscarArquivo(txtBuscarArquivo.getText());
-        });
-        txtBuscarArquivo.textProperty().addListener((observable, valorAntigo, valorNovo) -> {
-            atrasoBusca.playFromStart();
-        });
+                this.contexto.exibirDialogo(TipoDialogo.MENSAGEM,
+                        MensagemSistema.MENSAGEM_INFORMATIVA.getMensagem(),
+                        null,
+                        MensagemSistema.ARQUIVO_SALVO.getMensagem());
 
-        btnBuscar.setOnAction(event -> buscarArquivo(txtBuscarArquivo.getText()));
-    }
+                this.gerenciadorArvoreArquivos.atualizarConteudoOriginalArquivo(conteudo);
 
-    private void buscarArquivo(String nomeArquivo) {
-
-    }
-
-    private void AtivaDesativaBotoesPrincipais() {
-        boolean existeDiretorioConfigurado = !this.contexto.getDiretoriosConfigurados();
-        btnAtualizar.setDisable(existeDiretorioConfigurado);
-        btnNovoModulo.setDisable(existeDiretorioConfigurado);
-        btnNovaFuncao.setDisable(existeDiretorioConfigurado);
-        btnNovoMigration.setDisable(existeDiretorioConfigurado);
-        btnBuscar.setDisable(existeDiretorioConfigurado);
-        txtBuscarArquivo.setDisable(existeDiretorioConfigurado);
+            } catch (Exception e) {
+                this.contexto.exibirDialogo(TipoDialogo.ERRO,
+                        MensagemSistema.ERRO.getMensagem(),
+                        MensagemSistema.ERRO_SALVAR_ARQUIVO.getMensagem(),
+                        e.getMessage());
+            }
+        }
     }
 
     @FXML
@@ -159,4 +169,30 @@ public class TelaPrincipalController implements ITelasModal {
             GerenciadorArvoreModulos.buscarModulosFuncoes(this.contexto, treeArquivos);
         }
     }
+
+    private void buscaTempoReal() {
+        PauseTransition atrasoBusca = new PauseTransition(Duration.millis(500));
+        atrasoBusca.setOnFinished(event -> {
+            buscarArquivo(txtBuscarArquivo.getText());
+        });
+        txtBuscarArquivo.textProperty().addListener((observable, valorAntigo, valorNovo) -> {
+            atrasoBusca.playFromStart();
+        });
+        btnBuscar.setOnAction(event -> buscarArquivo(txtBuscarArquivo.getText()));
+    }
+
+    private void buscarArquivo(String nomeArquivo) {
+
+    }
+
+    private void AtivaDesativaBotoesPrincipais() {
+        boolean existeDiretorioConfigurado = !this.contexto.getDiretoriosConfigurados();
+        btnAtualizar.setDisable(existeDiretorioConfigurado);
+        btnNovoModulo.setDisable(existeDiretorioConfigurado);
+        btnNovaFuncao.setDisable(existeDiretorioConfigurado);
+        btnNovoMigration.setDisable(existeDiretorioConfigurado);
+        btnBuscar.setDisable(existeDiretorioConfigurado);
+        txtBuscarArquivo.setDisable(existeDiretorioConfigurado);
+    }
+
 }

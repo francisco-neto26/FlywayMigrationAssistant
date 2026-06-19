@@ -64,6 +64,7 @@
                                     </children>
                                 </HBox>
 
+
                                 <TextArea fx:id="txtAreaSql" promptText="Escreva ou carregue seu código SQL aqui..."
                                           VBox.vgrow="ALWAYS">
                                     <VBox.margin>
