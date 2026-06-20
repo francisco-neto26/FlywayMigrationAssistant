@@ -1,0 +1,67 @@
+/* Configuração geral do editor SQL (Tema Escuro Clássico) */
+.code-area {
+    -fx-background-color: #1e1e1e;
+    -fx-font-family: "Consolas", "Courier New", monospace;
+    /* -fx-font-size removido para permitir o zoom dinâmico via código Java */
+}
+
+/* Força a cor do texto sem estilização (como espaços e delimitadores) para cinza claro */
+.code-area .text {
+    -fx-fill: #d4d4d4;
+}
+
+/* Fundo do painel de rolagem virtualizado */
+.code-area .virtualized-scroll-pane {
+    -fx-background-color: #1e1e1e;
+}
+
+/* Barra lateral de numeração de linhas (Gutter) */
+.lineno {
+    -fx-background-color: #2d2d2d;
+    -fx-text-fill: #858585;
+    -fx-padding: 0 10 0 10;
+    -fx-border-color: #3e3e3e;
+    -fx-border-width: 0 1 0 0;
+}
+
+/* Destaque sutil para a linha do cursor ativo */
+.code-area .paragraph-box:has-caret {
+    -fx-background-color: #2d2d2d;
+}
+
+/* Cores clássicas do Syntax Highlighter (Tema Escuro / VS Code) */
+
+/* Palavras-chave: Azul claro */
+.code-area .keyword {
+    -fx-fill: #569cd6;
+    -fx-font-weight: bold;
+}
+
+/* Comentários: Verde escuro */
+.code-area .comment {
+    -fx-fill: #6a9955;
+    -fx-font-style: italic;
+}
+
+/* Strings: Laranja/Marrom claro */
+.code-area .string {
+    -fx-fill: #ce9178;
+}
+
+/* Números: Verde claro */
+.code-area .number {
+    -fx-fill: #b5cea8;
+}
+
+/* Operadores: Roxo claro */
+.code-area .operator {
+    -fx-fill: #c586c0;
+    -fx-font-weight: bold;
+}
+
+/* Sublinhado ondulado vermelho de erro usando as propriedades TextExt do RichTextFX */
+.code-area .error-underline {
+    -rtfx-underline-color: #ef4444; /* Vermelho vivo */
+    -rtfx-underline-width: 1.5;
+    -rtfx-underline-wave-radius: 2.5; /* Desenha o efeito ondulado */
+}

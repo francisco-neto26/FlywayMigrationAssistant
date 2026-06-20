@@ -1,0 +1,228 @@
+package com.supergestao.Flyway.migration.assistant.ui.controller;
+
+
+import atlantafx.base.theme.Theme;
+import com.supergestao.Flyway.migration.assistant.dominio.mensagem.MensagemSistema;
+import com.supergestao.Flyway.migration.assistant.exception.PersistenciaException;
+import com.supergestao.Flyway.migration.assistant.ui.estado.ContextoAplicacao;
+import com.supergestao.Flyway.migration.assistant.ui.utilitario.*;
+import javafx.application.Platform;
+import javafx.fxml.FXML;
+import javafx.scene.control.Button;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
+import javafx.scene.layout.VBox;
+import javafx.stage.DirectoryChooser;
+import javafx.stage.FileChooser;
+import javafx.stage.Stage;
+import javafx.util.StringConverter;
+
+import java.io.File;
+import java.util.List;
+
+public class TelaConfiguracoesController implements ITelasModal {
+
+    @FXML
+    private ComboBox<String> comboFonte;
+    @FXML
+    private ComboBox<String> comboDirModulo;
+    @FXML
+    private Label lblDiretorioModulos;
+    @FXML
+    private Label lblDiretorioArquivos;
+    @FXML
+    private TextField txtDiretorioModulos;
+    @FXML
+    private Button btnProcurarDiretorioModulos;
+    @FXML
+    private TextField txtDiretorioArquivos;
+    @FXML
+    private Button btnProcurarDiretorioArquivos;
+    @FXML
+    private ComboBox<Theme> comboTema;
+    @FXML
+    private Button btnCancelar;
+    @FXML
+    private Button btnSalvar;
+    @FXML
+    private VBox painelRaiz;
+    @FXML
+    private Button btnCoresPadrao;
+
+    private ContextoAplicacao contexto;
+    String txtDiretorioModuloAntigo;
+
+    public void setContextoAplicacao(ContextoAplicacao contextoAplicacao) {
+        this.contexto = contextoAplicacao;
+    }
+
+    @FXML
+    public void initialize() {
+
+        Platform.runLater(() -> {
+            GerenciadorEstiloBotao.gerenciadorEstiloBotao(painelRaiz);
+            iniciarCombo();
+            verficaConfigUsaModulo();
+        });
+
+    }
+
+    private void iniciarCombo() {
+        comboTema.setConverter(new StringConverter<Theme>() {
+            @Override
+            public String toString(Theme tema) {
+                return tema != null ? tema.getName() : "";
+            }
+
+            @Override
+            public Theme fromString(String string) {
+                return null;
+            }
+        });
+
+        txtDiretorioModulos.setText(this.contexto.getDiretorioModulo());
+        txtDiretorioArquivos.setText(this.contexto.getDiretorioArquivo());
+        comboTema.getItems().addAll(this.contexto.getListaTema());
+        comboFonte.getItems().addAll(javafx.scene.text.Font.getFamilies());
+        comboDirModulo.getItems().addAll(List.of("Sim", "Não"));
+
+        comboTema.getSelectionModel().select(this.contexto.getTema());
+        comboFonte.getSelectionModel().select(this.contexto.getChaveFonte());
+        comboDirModulo.getSelectionModel().select(this.contexto.getChaveUsaModulo() ? "Sim": "Não");
+    }
+
+    private void verficaConfigUsaModulo() {
+        if (comboDirModulo.getValue().equalsIgnoreCase("Sim")) {
+            txtDiretorioModulos.setEditable(true);
+            btnProcurarDiretorioModulos.setDisable(false);
+            if (txtDiretorioModulos.getText() == null || txtDiretorioModulos.getText().isEmpty()) {
+                txtDiretorioModulos.setText(this.txtDiretorioModuloAntigo);
+            }
+        } else {
+            txtDiretorioModulos.setEditable(false);
+            txtDiretorioModuloAntigo = txtDiretorioModulos.getText();
+            txtDiretorioModulos.setText("");
+            btnProcurarDiretorioModulos.setDisable(true);
+        }
+    }
+
+    @FXML
+    private void fechar() {
+        GerenciadorVisual.aplicarTemaGlobal(comboTema.getValue());
+        GerenciadorVisual.aplicarFonteGlobal(comboFonte.getValue());
+        Stage stage = (Stage) btnCancelar.getScene().getWindow();
+        stage.close();
+    }
+
+    @FXML
+    private void salvar() {
+        if (txtDiretorioModulos.getText().isEmpty() && comboDirModulo.getValue().equalsIgnoreCase("Sim")) {
+            this.contexto.exibirDialogo(TipoDialogo.ALERTA,
+                    MensagemSistema.ALERTA.getMensagem(),
+                    null,
+                    MensagemSistema.CAMPO_OBRIGATORIO.MensagemComParametro(lblDiretorioModulos.getText()));
+            return;
+        }
+        if (txtDiretorioArquivos.getText().isEmpty()) {
+            this.contexto.exibirDialogo(TipoDialogo.ALERTA,
+                    MensagemSistema.ALERTA.getMensagem(),
+                    null,
+                    MensagemSistema.CAMPO_OBRIGATORIO.MensagemComParametro(lblDiretorioArquivos.getText()));
+            return;
+        }
+
+        boolean confirmacao = this.contexto.exibirDialogo(TipoDialogo.CONFIRMACAO,
+                MensagemSistema.CADASTRAR_CONFIGURACAO.getMensagem(),
+                null,
+                MensagemSistema.DESEJA_SALVAR_ALTERACAO.getMensagem()
+        );
+
+        if (confirmacao) {
+            try {
+                this.contexto.salvarDiretorioModulo(txtDiretorioModulos.getText());
+                this.contexto.salvarDiretorioArquivo(txtDiretorioArquivos.getText());
+                this.contexto.salvarTema(comboTema.getValue().getName());
+                this.contexto.salvarChaveFonte(comboFonte.getValue());
+                this.contexto.salvarChaveUsaModulo(comboDirModulo.getValue());
+
+                fechar();
+
+            } catch (PersistenciaException e) {
+
+                String detalhesDoErro = e.getCause() != null ? e.getCause().toString() : MensagemSistema.ERRO_GENERICO.MensagemComParametro("Erro ao salvar configurações");
+
+                this.contexto.exibirDialogo(TipoDialogo.ERRO,
+                        MensagemSistema.ALERTA.getMensagem(),
+                        MensagemSistema.GRAVAR_REGEDIT.getMensagem(),
+                        detalhesDoErro
+                );
+            }
+        }
+    }
+
+    @FXML
+    private void obterDiretorioModulos() {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle(MensagemSistema.ARQUIVO_JAVA.getMensagem());
+        fileChooser.getExtensionFilters().add(
+                new FileChooser.ExtensionFilter("Arquivos .java", "*.java")
+        );
+
+        if (txtDiretorioModulos.getText() != null && !txtDiretorioModulos.getText().isEmpty()) {
+            File arquivoAtual = new File(txtDiretorioModulos.getText());
+            if (arquivoAtual.exists() && arquivoAtual.isFile()) {
+                File parentDir = arquivoAtual.getParentFile();
+                if (parentDir != null && parentDir.exists() && parentDir.isDirectory()) {
+                    fileChooser.setInitialDirectory(parentDir);
+                }
+            }
+        }
+
+        Stage stage = (Stage) btnProcurarDiretorioModulos.getScene().getWindow();
+        File arquivoSelecionado = fileChooser.showOpenDialog(stage);
+
+        if (arquivoSelecionado != null) {
+            txtDiretorioModulos.setText(arquivoSelecionado.getAbsolutePath());
+        }
+    }
+
+    @FXML
+    private void obterDiretorioArquivos() {
+        DirectoryChooser directoryChooser = new DirectoryChooser();
+        directoryChooser.setTitle(MensagemSistema.SELECIONE_PASTA_ORIGEM.getMensagem());
+
+        File pastaAtual = new File(txtDiretorioArquivos.getText());
+        if (pastaAtual.exists() && pastaAtual.isDirectory()) {
+            directoryChooser.setInitialDirectory(pastaAtual);
+        }
+
+        Stage stage = (Stage) btnProcurarDiretorioArquivos.getScene().getWindow();
+        File pastaSelecionada = directoryChooser.showDialog(stage);
+
+        if (pastaSelecionada != null) {
+            txtDiretorioArquivos.setText(pastaSelecionada.getAbsolutePath());
+        }
+    }
+
+    @FXML
+    private void aplicarfonte() {
+        GerenciadorVisual.aplicarFonteGlobal(comboFonte.getValue());
+    }
+
+    @FXML
+    private void aplicarTema() {
+        GerenciadorVisual.aplicarTemaGlobal(comboTema.getValue());
+    }
+
+    @FXML
+    private void usaDiretorioModulo() {
+        verficaConfigUsaModulo();
+    }
+
+    @FXML
+    private void coresPadrao() {
+
+    }
+
+}
