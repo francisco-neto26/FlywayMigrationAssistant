@@ -10,6 +10,7 @@ import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
 import javafx.stage.DirectoryChooser;
@@ -27,6 +28,10 @@ public class TelaConfiguracoesController implements ITelasModal {
     @FXML
     private ComboBox<String> comboDirModulo;
     @FXML
+    private Label lblDiretorioModulos;
+    @FXML
+    private Label lblDiretorioArquivos;
+    @FXML
     private TextField txtDiretorioModulos;
     @FXML
     private Button btnProcurarDiretorioModulos;
@@ -42,15 +47,12 @@ public class TelaConfiguracoesController implements ITelasModal {
     private Button btnSalvar;
     @FXML
     private VBox painelRaiz;
-
     @FXML
     private Button btnCoresPadrao;
-
 
     private ContextoAplicacao contexto;
     String txtDiretorioModuloAntigo;
 
-    // terminar de implementar as alterações de usamodulo, fonte
     public void setContextoAplicacao(ContextoAplicacao contextoAplicacao) {
         this.contexto = contextoAplicacao;
     }
@@ -79,15 +81,15 @@ public class TelaConfiguracoesController implements ITelasModal {
             }
         });
 
-        txtDiretorioModulos.setText(this.contexto.getIGerenciadorConfiguracao().getDiretorioModulo());
-        txtDiretorioArquivos.setText(this.contexto.getIGerenciadorConfiguracao().getDiretorioArquivo());
-        comboTema.getItems().addAll(this.contexto.getIGerenciadorConfiguracao().getListaTema());
+        txtDiretorioModulos.setText(this.contexto.getDiretorioModulo());
+        txtDiretorioArquivos.setText(this.contexto.getDiretorioArquivo());
+        comboTema.getItems().addAll(this.contexto.getListaTema());
         comboFonte.getItems().addAll(javafx.scene.text.Font.getFamilies());
         comboDirModulo.getItems().addAll(List.of("Sim", "Não"));
 
-        comboTema.getSelectionModel().select(this.contexto.getIGerenciadorConfiguracao().getTema());
-        comboFonte.getSelectionModel().select(this.contexto.getIGerenciadorConfiguracao().getChaveFonte());
-        comboDirModulo.getSelectionModel().select(this.contexto.getIGerenciadorConfiguracao().getChaveUsaModulo() ? "Sim": "Não");
+        comboTema.getSelectionModel().select(this.contexto.getTema());
+        comboFonte.getSelectionModel().select(this.contexto.getChaveFonte());
+        comboDirModulo.getSelectionModel().select(this.contexto.getChaveUsaModulo() ? "Sim": "Não");
     }
 
     private void verficaConfigUsaModulo() {
@@ -116,33 +118,33 @@ public class TelaConfiguracoesController implements ITelasModal {
     @FXML
     private void salvar() {
         if (txtDiretorioModulos.getText().isEmpty() && comboDirModulo.getValue().equalsIgnoreCase("Sim")) {
-            this.contexto.getIGerenciadorJanelas().exibirDialogo(TipoDialogo.ALERTA,
-                    "Alerta",
+            this.contexto.exibirDialogo(TipoDialogo.ALERTA,
+                    MensagemSistema.ALERTA.getMensagem(),
                     null,
-                    "O diretório dos módulos não pode estar vazio.");
+                    MensagemSistema.CAMPO_OBRIGATORIO.MensagemComParametro(lblDiretorioModulos.getText()));
             return;
         }
         if (txtDiretorioArquivos.getText().isEmpty()) {
-            this.contexto.getIGerenciadorJanelas().exibirDialogo(TipoDialogo.ALERTA,
-                    "Alerta",
+            this.contexto.exibirDialogo(TipoDialogo.ALERTA,
+                    MensagemSistema.ALERTA.getMensagem(),
                     null,
-                    "O diretório dos arquivos não pode estar vazio.");
+                    MensagemSistema.CAMPO_OBRIGATORIO.MensagemComParametro(lblDiretorioArquivos.getText()));
             return;
         }
 
-        boolean confirmacao = this.contexto.getIGerenciadorJanelas().exibirDialogo(TipoDialogo.CONFIRMACAO,
-                "Configurações",
+        boolean confirmacao = this.contexto.exibirDialogo(TipoDialogo.CONFIRMACAO,
+                MensagemSistema.CADASTRAR_CONFIGURACAO.getMensagem(),
                 null,
-                "Deseja salvar as configurações?"
+                MensagemSistema.DESEJA_SALVAR_ALTERACAO.getMensagem()
         );
 
         if (confirmacao) {
             try {
-                this.contexto.getIGerenciadorConfiguracao().salvarDiretorioModulo(txtDiretorioModulos.getText());
-                this.contexto.getIGerenciadorConfiguracao().salvarDiretorioArquivo(txtDiretorioArquivos.getText());
-                this.contexto.getIGerenciadorConfiguracao().salvarTema(comboTema.getValue().getName());
-                this.contexto.getIGerenciadorConfiguracao().salvarChaveFonte(comboFonte.getValue());
-                this.contexto.getIGerenciadorConfiguracao().salvarChaveUsaModulo(comboDirModulo.getValue());
+                this.contexto.salvarDiretorioModulo(txtDiretorioModulos.getText());
+                this.contexto.salvarDiretorioArquivo(txtDiretorioArquivos.getText());
+                this.contexto.salvarTema(comboTema.getValue().getName());
+                this.contexto.salvarChaveFonte(comboFonte.getValue());
+                this.contexto.salvarChaveUsaModulo(comboDirModulo.getValue());
 
                 fechar();
 
@@ -150,9 +152,9 @@ public class TelaConfiguracoesController implements ITelasModal {
 
                 String detalhesDoErro = e.getCause() != null ? e.getCause().toString() : MensagemSistema.ERRO_GENERICO.MensagemComParametro("Erro ao salvar configurações");
 
-                this.contexto.getIGerenciadorJanelas().exibirDialogo(TipoDialogo.ERRO,
-                        "Falha Crítica",
-                        "Não foi possível gravar no RegEdit do Windows",
+                this.contexto.exibirDialogo(TipoDialogo.ERRO,
+                        MensagemSistema.ALERTA.getMensagem(),
+                        MensagemSistema.GRAVAR_REGEDIT.getMensagem(),
                         detalhesDoErro
                 );
             }
@@ -162,7 +164,7 @@ public class TelaConfiguracoesController implements ITelasModal {
     @FXML
     private void obterDiretorioModulos() {
         FileChooser fileChooser = new FileChooser();
-        fileChooser.setTitle("Selecione o arquivo .java com os módulos");
+        fileChooser.setTitle(MensagemSistema.ARQUIVO_JAVA.getMensagem());
         fileChooser.getExtensionFilters().add(
                 new FileChooser.ExtensionFilter("Arquivos .java", "*.java")
         );
@@ -188,7 +190,7 @@ public class TelaConfiguracoesController implements ITelasModal {
     @FXML
     private void obterDiretorioArquivos() {
         DirectoryChooser directoryChooser = new DirectoryChooser();
-        directoryChooser.setTitle("Selecione a pasta raiz dos Módulos");
+        directoryChooser.setTitle(MensagemSistema.SELECIONE_PASTA_ORIGEM.getMensagem());
 
         File pastaAtual = new File(txtDiretorioArquivos.getText());
         if (pastaAtual.exists() && pastaAtual.isDirectory()) {

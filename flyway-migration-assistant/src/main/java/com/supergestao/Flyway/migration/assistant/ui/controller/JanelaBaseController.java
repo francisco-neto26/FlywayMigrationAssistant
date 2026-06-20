@@ -110,7 +110,7 @@ public class JanelaBaseController implements ITelasModal {
     }
 
     public void setfonte(){
-        String fonteEscolhida = this.contexto.getIGerenciadorConfiguracao().getChaveFonte();
+        String fonteEscolhida = this.contexto.getChaveFonte();
         painelPrincipal.setStyle("-fx-font-family: '" + fonteEscolhida + "';");
     }
 

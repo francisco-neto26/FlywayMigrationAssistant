@@ -37,7 +37,6 @@ public class GerenciadorModulosArquivosDisco implements IGerenciadorModulosArqui
     public String buscarConteudoArquivo(String caminhoDoArquivo) {
 
         Path pasta = Paths.get(caminhoDoArquivo);
-
         try {
             return Files.readString(pasta);
         } catch (IOException e) {
