@@ -4,7 +4,6 @@ import com.supergestao.Flyway.migration.assistant.dominio.mensagem.MensagemSiste
 import com.supergestao.Flyway.migration.assistant.ui.estado.ContextoAplicacao;
 import javafx.application.Platform;
 import javafx.scene.control.Button;
-import javafx.scene.control.TextArea;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
 
@@ -13,7 +12,7 @@ import java.nio.file.Paths;
 public class GerenciadorArvoreArquivos {
     private final ContextoAplicacao contexto;
     private final TreeView<String> treeArquivos;
-    private final TextArea txtAreaSql;
+    private final GerenciadorEditorSql editorSql;
     private final Button btnSalvarSql;
     private final Button btnCancelarEdicao;
     private final Button btnIndentar;
@@ -21,11 +20,11 @@ public class GerenciadorArvoreArquivos {
     private String caminhoArquivoSelecionado;
     private String conteudoOriginal;
 
-    public GerenciadorArvoreArquivos(ContextoAplicacao contexto, TreeView<String> treeArquivos, TextArea txtAreaSql,
+    public GerenciadorArvoreArquivos(ContextoAplicacao contexto, TreeView<String> treeArquivos, GerenciadorEditorSql editorSql,
                                      Button btnSalvarSql, Button btnCancelarEdicao, Button btnIndentar, Button btnValidarSql) {
         this.contexto = contexto;
         this.treeArquivos = treeArquivos;
-        this.txtAreaSql = txtAreaSql;
+        this.editorSql = editorSql;
         this.btnSalvarSql = btnSalvarSql;
         this.btnCancelarEdicao = btnCancelarEdicao;
         this.btnIndentar = btnIndentar;
@@ -48,7 +47,6 @@ public class GerenciadorArvoreArquivos {
                 }
             }
 
-
             if (itemNovo != null && itemNovo.getValue() != null && itemNovo.getValue().toLowerCase().endsWith(".sql")) {
                 carregarConteudoArquivo(itemNovo);
             } else {
@@ -56,14 +54,13 @@ public class GerenciadorArvoreArquivos {
             }
         });
 
-        txtAreaSql.textProperty().addListener((observable, textoAntigo, textoNovo) -> {
+        editorSql.textProperty().addListener((observable, textoAntigo, textoNovo) -> {
             if (caminhoArquivoSelecionado != null) {
                 boolean modificado = textoModificado();
                 btnSalvarSql.setDisable(!modificado);
                 btnCancelarEdicao.setDisable(!modificado);
             }
         });
-
     }
 
     private void carregarConteudoArquivo(TreeItem<String> itemArquivo) {
@@ -90,7 +87,8 @@ public class GerenciadorArvoreArquivos {
             ).toAbsolutePath().toString();
             String conteudo = this.contexto.buscarConteudoArquivo(this.caminhoArquivoSelecionado);
             this.conteudoOriginal = conteudo;
-            txtAreaSql.setText(conteudo);
+
+            editorSql.setTexto(conteudo);
 
             btnSalvarSql.setDisable(true);
             btnCancelarEdicao.setDisable(true);
@@ -108,7 +106,7 @@ public class GerenciadorArvoreArquivos {
     }
 
     public void limparEdicaoSql() {
-        txtAreaSql.clear();
+        editorSql.limpar();
         this.caminhoArquivoSelecionado = null;
         this.conteudoOriginal = null;
 
@@ -120,7 +118,7 @@ public class GerenciadorArvoreArquivos {
 
     public void reverterEdicaoSql() {
         if (caminhoArquivoSelecionado != null) {
-            txtAreaSql.setText(conteudoOriginal != null ? conteudoOriginal : "");
+            editorSql.setTexto(conteudoOriginal != null ? conteudoOriginal : "");
             btnSalvarSql.setDisable(true);
             btnCancelarEdicao.setDisable(true);
         }
@@ -130,7 +128,7 @@ public class GerenciadorArvoreArquivos {
         if (caminhoArquivoSelecionado == null) {
             return false;
         }
-        String atual = txtAreaSql.getText() != null ? txtAreaSql.getText() : "";
+        String atual = editorSql.getTexto() != null ? editorSql.getTexto() : "";
         String original = conteudoOriginal != null ? conteudoOriginal : "";
         return !atual.equals(original);
     }
