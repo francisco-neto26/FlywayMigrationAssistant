@@ -6,7 +6,7 @@ import com.supergestao.Flyway.migration.assistant.dominio.configuracao.Gerenciad
 import com.supergestao.Flyway.migration.assistant.dominio.configuracao.IGerenciadorConfiguracao;
 import com.supergestao.Flyway.migration.assistant.dominio.modelo.Arquivo;
 import com.supergestao.Flyway.migration.assistant.dominio.modelo.Modulo;
-import com.supergestao.Flyway.migration.assistant.dominio.modelo.RetornoSalvarDiretorio;
+import com.supergestao.Flyway.migration.assistant.dominio.modelo.Resultado;
 import com.supergestao.Flyway.migration.assistant.persistencia.gerenciador.modulos.arquivos.IGerenciadorModulosArquivosDisco;
 import com.supergestao.Flyway.migration.assistant.persistencia.gerenciador.modulos.arquivos.GerenciadorModulosArquivosDisco;
 import com.supergestao.Flyway.migration.assistant.ui.utilitario.GerenciadorJanelas;
@@ -95,11 +95,11 @@ public class ContextoAplicacao {
         return this.sincronizarModulosArquivos.moduloParaSincronizar(caminhoOrigem, caminhoExistentes);
     }
 
-    public List<RetornoSalvarDiretorio> criarNovoModulo(Map<String, Modulo> modulosNovos, String caminhoExistentes) {
+    public List<Resultado> criarNovoModulo(Map<String, Modulo> modulosNovos, String caminhoExistentes) {
         return this.sincronizarModulosArquivos.criarNovoModulo(modulosNovos, caminhoExistentes);
     }
 
-    public List<RetornoSalvarDiretorio> criarModuloFuncao(String modulo, String funcao, String caminhoCompleto) {
+    public List<Resultado> criarModuloFuncao(String modulo, String funcao, String caminhoCompleto) {
         String diretorioCompleto = "";
         if (funcao == null){
             diretorioCompleto = Paths.get(caminhoCompleto, modulo).toString();

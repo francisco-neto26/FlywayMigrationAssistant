@@ -51,7 +51,16 @@ public enum MensagemSistema {
     SCRIPT_SEM_DICIONARIO("Ausência de Dicionário de Dados: Faltou a instrução 'COMMENT ON' para documentar a criação: %s"),
     SCRIPT_SEM_PADRAO_SQL("Não segue o padrão SQL: %s"),
     ERRO_ABERTURA_TELA("Erro ao tentar abrir a tela de: %s"),
-    ERRO_GENERICO("Erro inesperado: %s");
+    ERRO_GENERICO("Erro inesperado: %s"),
+    ERRO_CSS("Erro ao carregar o arquivo CSS do editor SQL."),
+    ERRO_LINHA_ERRO("Erro ao marcar o erro no editor SQL."),
+    ERRO_PERL("Interpretador Perl não encontrado no PATH nem nos caminhos do Git.\nInstale o Strawberry Perl (https://strawberryperl.com/) ou adicione o Perl do Git às variáveis de ambiente."),
+    ERRO_RODAR_PGFORMATTER("Erro ao rodar pgFormatter local, código de saída:  %s: %s"),
+    ERRO_IO_PGFORMATTER("Erro de E/S ao extrair ou rodar o pgFormatter, certifique-se de ter o Perl ou Git instalado: %s"),
+    ERRO_INTERRUPCAO_PGFORMATTER("Processo do pgFormatter foi interrompido: %s"),
+    ERRO_GERAL_PGFORMATTER("Falha geral ao formatar SQL localmente (certifique-se de que o Perl está no PATH): %s"),
+    ERRO_INDENTAR_SQL("Falha ao indentar SQL"),
+    ERRO_LER_CLASS("Recurso não encontrado no classpath: %s");
 
     private final String mensagem;
 

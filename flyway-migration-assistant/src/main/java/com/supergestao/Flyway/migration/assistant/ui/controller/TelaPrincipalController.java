@@ -1,8 +1,8 @@
 package com.supergestao.Flyway.migration.assistant.ui.controller;
 
 import com.supergestao.Flyway.migration.assistant.dominio.mensagem.MensagemSistema;
+import com.supergestao.Flyway.migration.assistant.dominio.modelo.Resultado;
 import com.supergestao.Flyway.migration.assistant.dominio.regra.sql.indentar.IndentarSql;
-import com.supergestao.Flyway.migration.assistant.dominio.regra.sql.indentar.IndentarSqlApiPgFormatter;
 import com.supergestao.Flyway.migration.assistant.dominio.regra.sql.validacao.ValidacaoCompletaSql;
 import com.supergestao.Flyway.migration.assistant.ui.estado.ContextoAplicacao;
 import com.supergestao.Flyway.migration.assistant.ui.utilitario.*;
@@ -13,8 +13,6 @@ import javafx.scene.control.*;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.StackPane;
 import javafx.util.Duration;
-import org.fxmisc.richtext.CodeArea;
-import org.fxmisc.richtext.LineNumberFactory;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -64,7 +62,7 @@ public class TelaPrincipalController implements ITelasModal {
     @FXML
     public void initialize() {
 
-        this.editorSql = new GerenciadorEditorSql(containerSql);
+        this.editorSql = new GerenciadorEditorSql(containerSql, this.contexto);
 
         // Registra as ações para as teclas de atalho do editor
         this.editorSql.setAcaoSalvar(this::salvarSql);
@@ -126,8 +124,17 @@ public class TelaPrincipalController implements ITelasModal {
     private void indentar() {
         if (this.gerenciadorArvoreArquivos != null && editorSql.getTexto() != null) {
             String sqlOriginal = editorSql.getTexto();
-            String sqlFormatado = IndentarSql.formatar(sqlOriginal);
-            editorSql.setTexto(sqlFormatado);
+            Resultado resultado = IndentarSql.formatar(sqlOriginal);
+            if (resultado.temErro()) {
+                this.contexto.exibirDialogo(
+                        TipoDialogo.ERRO,
+                        MensagemSistema.ERRO.getMensagem(),
+                        MensagemSistema.ERRO_INDENTAR_SQL.getMensagem(),
+                        resultado.mensagemErro()
+                );
+            } else {
+                editorSql.setTexto(resultado.valor());
+            }
         }
     }
 
@@ -163,7 +170,7 @@ public class TelaPrincipalController implements ITelasModal {
                 int coluna = Integer.parseInt(matcher.group(2));
 
                 // Marca o erro visualmente no editor SQL
-                this.editorSql.marcarErro(linha, coluna, mensagemErro);
+                this.editorSql.marcarLinhaErro(linha);
             }
         } catch (Exception e) {
             txtAreaMensagens.setText("Falha na validação do SQL: " + e.getMessage());

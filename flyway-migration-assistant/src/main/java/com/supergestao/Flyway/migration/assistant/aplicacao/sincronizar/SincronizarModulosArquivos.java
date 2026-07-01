@@ -3,7 +3,7 @@ package com.supergestao.Flyway.migration.assistant.aplicacao.sincronizar;
 import com.supergestao.Flyway.migration.assistant.aplicacao.buscar.BuscarArquivos;
 import com.supergestao.Flyway.migration.assistant.dominio.modelo.Arquivo;
 import com.supergestao.Flyway.migration.assistant.dominio.modelo.Modulo;
-import com.supergestao.Flyway.migration.assistant.dominio.modelo.RetornoSalvarDiretorio;
+import com.supergestao.Flyway.migration.assistant.dominio.modelo.Resultado;
 import com.supergestao.Flyway.migration.assistant.persistencia.gerenciador.modulos.arquivos.IGerenciadorModulosArquivosDisco;
 
 import java.io.File;
@@ -26,8 +26,8 @@ public class SincronizarModulosArquivos {
         );
     }
 
-    public List<RetornoSalvarDiretorio> criarNovoModulo(Map<String, Modulo> modulosNovos, String caminhoExistentes) {
-        List<RetornoSalvarDiretorio> resultados = new ArrayList<>();
+    public List<Resultado> criarNovoModulo(Map<String, Modulo> modulosNovos, String caminhoExistentes) {
+        List<Resultado> resultados = new ArrayList<>();
         for (Modulo modulo : modulosNovos.values()) {
             String nome = modulo.getNome();
             String caminhoCompleto = Paths.get(caminhoExistentes, nome).toString();
@@ -36,14 +36,14 @@ public class SincronizarModulosArquivos {
         return resultados;
     }
 
-    public List<RetornoSalvarDiretorio> criarModuloFuncao(String moduloFuncao, String caminhoCompleto) {
+    public List<Resultado> criarModuloFuncao(String moduloFuncao, String caminhoCompleto) {
         return salvarModuloFuncao(moduloFuncao, caminhoCompleto);
     }
 
-    private List<RetornoSalvarDiretorio> salvarModuloFuncao(String moduloFuncao, String caminhoCompleto) {
-        List<RetornoSalvarDiretorio> resultados = new ArrayList<>();
+    private List<Resultado> salvarModuloFuncao(String moduloFuncao, String caminhoCompleto) {
+        List<Resultado> resultados = new ArrayList<>();
         boolean criado = iGerenciadorModulosArquivosDisco.salvarModuloFuncao(caminhoCompleto);
-        resultados.add(new RetornoSalvarDiretorio(criado, moduloFuncao));
+        resultados.add(new Resultado(criado, moduloFuncao, null));
         return resultados;
     }
 

@@ -1,19 +1,26 @@
 package com.supergestao.Flyway.migration.assistant.ui.utilitario;
 
+import com.supergestao.Flyway.migration.assistant.dominio.mensagem.MensagemSistema;
+import com.supergestao.Flyway.migration.assistant.dominio.tipo.PalavraChaveSql;
+import com.supergestao.Flyway.migration.assistant.ui.estado.ContextoAplicacao;
 import javafx.application.Platform;
 import javafx.beans.value.ObservableValue;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.StackPane;
 import org.fxmisc.flowless.VirtualizedScrollPane;
 import org.fxmisc.richtext.CodeArea;
 import org.fxmisc.richtext.LineNumberFactory;
 
-import java.util.Arrays;
+import java.net.URL;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import static java.util.Collections.singleton;
 
 public class GerenciadorEditorSql {
 
@@ -22,40 +29,43 @@ public class GerenciadorEditorSql {
     private final List<String> palavrasChaveAutocomplete;
 
     private int tamanhoFonte = 14;
-    private int erroInicio = -1;
+    private int linhaErro = -1;
     private int erroFim = -1;
 
     private Runnable acaoSalvar;
     private Runnable acaoIndentar;
+    private final ContextoAplicacao contextoAplicacao;
 
-    public GerenciadorEditorSql(StackPane containerSql) {
+
+    public GerenciadorEditorSql(StackPane containerSql, ContextoAplicacao contextoAplicacao) {
+        this.contextoAplicacao = contextoAplicacao;
         this.codeArea = new CodeArea();
+
 
         atualizarEstiloFonte();
         this.codeArea.setParagraphGraphicFactory(LineNumberFactory.get(this.codeArea));
 
-        this.palavrasChaveAutocomplete = Arrays.asList(
-                "SELECT", "FROM", "WHERE", "INSERT", "UPDATE", "DELETE", "CREATE", "DROP", "ALTER",
-                "TABLE", "VIEW", "FUNCTION", "TRIGGER", "INDEX", "RETURNS", "DECLARE", "BEGIN", "END",
-                "LOOP", "IF", "THEN", "ELSE", "ELSIF", "COALESCE", "SUBSTRING", "UPPER", "LOWER",
-                "RETURNS TRIGGER", "LANGUAGE 'plpgsql'"
-        );
+        this.palavrasChaveAutocomplete = new ArrayList<>(PalavraChaveSql.getListaPalavras());
+        this.palavrasChaveAutocomplete.add("RETURNS TRIGGER");
+        this.palavrasChaveAutocomplete.add("LANGUAGE 'PL/pgSQL'");
         this.menuAutocomplete = new ContextMenu();
         this.menuAutocomplete.setAutoHide(true);
 
         // Listener para realce de sintaxe e autocomplete
         this.codeArea.textProperty().addListener((obs, antigo, novo) -> {
-            // Se o usuário digitar, remove a marcação vermelha de erro anterior
-            if (erroInicio >= 0) {
-                this.erroInicio = -1;
-                this.erroFim = -1;
+            if (linhaErro >= 0) {
+                try {
+                    this.codeArea.setParagraphStyle(linhaErro, java.util.Collections.emptyList());
+                } catch (Exception ignored) {
+                }
+                this.linhaErro = -1;
             }
-            recalcularEstilos(novo);
+            atualizarEstilos(novo);
             Platform.runLater(this::processarAutocomplete);
         });
 
         // Zoom com Ctrl + Scroll
-        this.codeArea.setOnScroll(event -> {
+        this.codeArea.addEventFilter(ScrollEvent.SCROLL, event -> {
             if (event.isControlDown()) {
                 double deltaY = event.getDeltaY();
                 if (deltaY > 0) {
@@ -133,63 +143,44 @@ public class GerenciadorEditorSql {
             }
         });
 
-        carregarFolhaEstilos(containerSql);
+        carregarCssEstilos(containerSql);
 
         VirtualizedScrollPane<CodeArea> scrollPane = new VirtualizedScrollPane<>(this.codeArea);
         containerSql.getChildren().add(scrollPane);
     }
 
-    private void carregarFolhaEstilos(StackPane containerSql) {
+    private void carregarCssEstilos(StackPane containerSql) {
         try {
-            java.net.URL cssUrl = getClass().getResource("editor-sql.css");
-            if (cssUrl == null) {
-                cssUrl = getClass().getResource("/com/supergestao/Flyway/migration/assistant/ui/controller/editor-sql.css");
-            }
+
+            URL cssUrl = getClass().getResource(CaminhoTela.EDITOR_SQL.getCaminho());
             if (cssUrl != null) {
                 containerSql.getStylesheets().add(cssUrl.toExternalForm());
             }
         } catch (Exception e) {
-            System.err.println("Erro ao carregar o arquivo CSS do editor SQL: " + e.getMessage());
+            throw new RuntimeException(MensagemSistema.ERRO_CSS.getMensagem() + e.getMessage(), e);
         }
     }
 
-    public void recalcularEstilos(String texto) {
-        this.codeArea.setStyleSpans(0, SqlSyntaxHighlighting.calcularStyles(texto, erroInicio, erroFim));
+    public void atualizarEstilos(String texto) {
+        this.codeArea.setStyleSpans(0, RealceSintaxeSql.atualizarEstilos(texto));
     }
 
-    /**
-     * Aplica o sublinhado ondulado vermelho no trecho com erro e rola a tela até ele.
-     */
-    public void marcarErro(int linha, int coluna, String mensagem) {
+    public void marcarLinhaErro(int linha) {
         try {
             if (linha > 0) {
+                limparErros();
                 int indiceLinha = Math.min(linha - 1, codeArea.getParagraphs().size() - 1);
-                int comprimentoParagrafo = codeArea.getParagraphLength(indiceLinha);
-                int col = Math.min(coluna, comprimentoParagrafo);
-
-                int posicaoAbsoluta = codeArea.getAbsolutePosition(indiceLinha, col);
-                this.erroInicio = posicaoAbsoluta;
-
-                // Calcula o fim da palavra com erro para limitar o sublinhado
-                int fim = posicaoAbsoluta + 5;
-                String texto = codeArea.getText();
-                if (posicaoAbsoluta < texto.length()) {
-                    int j = posicaoAbsoluta;
-                    while (j < texto.length() && Character.isLetterOrDigit(texto.charAt(j))) {
-                        j++;
-                    }
-                    fim = j > posicaoAbsoluta ? j : posicaoAbsoluta + 1;
-                }
-                this.erroFim = Math.min(fim, texto.length());
-
-                recalcularEstilos(texto);
-
-                // Move o cursor e foca a visualização na linha com erro
-                codeArea.moveTo(indiceLinha, col);
+                this.linhaErro = indiceLinha;
+                codeArea.setParagraphStyle(indiceLinha, singleton("error-line"));
+                // Move o cursor e foca a visualização no início da linha com erro
+                codeArea.moveTo(indiceLinha, 0);
                 codeArea.requestFollowCaret();
             }
         } catch (Exception e) {
-            System.err.println("Erro ao marcar o erro no editor SQL: " + e.getMessage());
+            contextoAplicacao.exibirDialogo(TipoDialogo.ERRO,
+                    MensagemSistema.ERRO_GENERICO.getMensagem(),
+                    MensagemSistema.ERRO_LINHA_ERRO.getMensagem(),
+                    e.getMessage());
         }
     }
 
@@ -197,10 +188,12 @@ public class GerenciadorEditorSql {
      * Remove qualquer sublinhado vermelho de erro ativo.
      */
     public void limparErros() {
-        if (this.erroInicio >= 0) {
-            this.erroInicio = -1;
-            this.erroFim = -1;
-            recalcularEstilos(codeArea.getText());
+        if (this.linhaErro >= 0) {
+            try {
+                codeArea.setParagraphStyle(linhaErro, java.util.Collections.emptyList());
+            } catch (Exception ignored) {
+            }
+            this.linhaErro = -1;
         }
     }
 

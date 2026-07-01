@@ -59,9 +59,6 @@
     -fx-font-weight: bold;
 }
 
-/* Sublinhado ondulado vermelho de erro usando as propriedades TextExt do RichTextFX */
-.code-area .error-underline {
-    -rtfx-underline-color: #ef4444; /* Vermelho vivo */
-    -rtfx-underline-width: 1.5;
-    -rtfx-underline-wave-radius: 2.5; /* Desenha o efeito ondulado */
+.code-area .error-line {
+    -fx-background-color: #5c2626;
 }
