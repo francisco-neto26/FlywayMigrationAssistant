@@ -1,8 +1,9 @@
-package com.supergestao.Flyway.migration.assistant.ui.utilitario;
+package com.supergestao.Flyway.migration.assistant.ui.utilitario.arvore;
 
 import com.supergestao.Flyway.migration.assistant.dominio.mensagem.MensagemSistema;
 import com.supergestao.Flyway.migration.assistant.dominio.modelo.*;
 import com.supergestao.Flyway.migration.assistant.ui.estado.ContextoAplicacao;
+import com.supergestao.Flyway.migration.assistant.ui.utilitario.janela.TipoDialogo;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
 

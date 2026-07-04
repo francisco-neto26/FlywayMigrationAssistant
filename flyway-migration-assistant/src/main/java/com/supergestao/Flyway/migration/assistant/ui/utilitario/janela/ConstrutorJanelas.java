@@ -1,4 +1,4 @@
-package com.supergestao.Flyway.migration.assistant.ui.utilitario;
+package com.supergestao.Flyway.migration.assistant.ui.utilitario.janela;
 
 import atlantafx.base.theme.Theme;
 import com.supergestao.Flyway.migration.assistant.dominio.mensagem.MensagemSistema;

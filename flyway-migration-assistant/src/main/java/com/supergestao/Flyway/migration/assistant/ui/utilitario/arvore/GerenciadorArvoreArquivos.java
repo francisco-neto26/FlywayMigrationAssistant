@@ -1,7 +1,10 @@
-package com.supergestao.Flyway.migration.assistant.ui.utilitario;
+package com.supergestao.Flyway.migration.assistant.ui.utilitario.arvore;
 
 import com.supergestao.Flyway.migration.assistant.dominio.mensagem.MensagemSistema;
+import com.supergestao.Flyway.migration.assistant.ui.controller.TelaPrincipalController;
 import com.supergestao.Flyway.migration.assistant.ui.estado.ContextoAplicacao;
+import com.supergestao.Flyway.migration.assistant.ui.utilitario.editorSql.GerenciadorEditorSql;
+import com.supergestao.Flyway.migration.assistant.ui.utilitario.janela.TipoDialogo;
 import javafx.application.Platform;
 import javafx.scene.control.Button;
 import javafx.scene.control.TreeItem;
@@ -19,6 +22,7 @@ public class GerenciadorArvoreArquivos {
     private final Button btnValidarSql;
     private String caminhoArquivoSelecionado;
     private String conteudoOriginal;
+    private boolean revertendoSelecao = false;
 
     public GerenciadorArvoreArquivos(ContextoAplicacao contexto, TreeView<String> treeArquivos, GerenciadorEditorSql editorSql,
                                      Button btnSalvarSql, Button btnCancelarEdicao, Button btnIndentar, Button btnValidarSql) {
@@ -33,6 +37,9 @@ public class GerenciadorArvoreArquivos {
 
     public void selecaoArvore() {
         treeArquivos.getSelectionModel().selectedItemProperty().addListener((observable, itemAntigo, itemNovo) -> {
+            if (revertendoSelecao) {
+                return;
+            }
 
             if (textoModificado()) {
                 boolean querDescartar = contexto.exibirDialogo(TipoDialogo.CONFIRMACAO,
@@ -42,7 +49,17 @@ public class GerenciadorArvoreArquivos {
                 );
 
                 if (!querDescartar) {
-                    Platform.runLater(() -> treeArquivos.getSelectionModel().select(itemAntigo));
+                    revertendoSelecao = true;
+                    btnSalvarSql.fire();
+                    if(!textoModificado()){
+                        carregarConteudoArquivo(itemNovo);
+                        revertendoSelecao = false;
+                    }else {
+                        Platform.runLater(() -> {
+                            treeArquivos.getSelectionModel().select(itemAntigo);
+                            revertendoSelecao = false;
+                        });
+                    }
                     return;
                 }
             }
@@ -131,6 +148,7 @@ public class GerenciadorArvoreArquivos {
         String atual = editorSql.getTexto() != null ? editorSql.getTexto() : "";
         String original = conteudoOriginal != null ? conteudoOriginal : "";
         return !atual.equals(original);
+
     }
 
     public void atualizarConteudoOriginalArquivo(String novoConteudo) {

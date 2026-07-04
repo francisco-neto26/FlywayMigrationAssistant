@@ -5,7 +5,7 @@ import com.supergestao.Flyway.migration.assistant.dominio.regra.sql.validacao.an
 import com.supergestao.Flyway.migration.assistant.dominio.regra.sql.validacao.antlr.PostgreSQLParser;
 import com.supergestao.Flyway.migration.assistant.exception.SqlException;
 import org.antlr.v4.runtime.*;
-
+import org.antlr.v4.runtime.tree.ParseTreeWalker;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -29,7 +29,7 @@ public class ValidarScriptSQL implements RegraValidacaoSql {
         if (!capturarErros.getErros().isEmpty()) {
             throw new SqlException(MensagemSistema.SCRIPT_ERRO_SINTAXE.MensagemComParametro(String.join("\n", capturarErros.getErros())));
         }
-        org.antlr.v4.runtime.tree.ParseTreeWalker walker = new org.antlr.v4.runtime.tree.ParseTreeWalker();
+        ParseTreeWalker walker = new ParseTreeWalker();
         ValidadorAntlrSql fiscalizador = new ValidadorAntlrSql();
         walker.walk(fiscalizador, arvore);
 
@@ -42,7 +42,7 @@ public class ValidarScriptSQL implements RegraValidacaoSql {
 
         @Override
         public void syntaxError(Recognizer<?, ?> recognizer, Object offendingSymbol, int linha, int posicaoColuna, String msg_erro, RecognitionException e) {
-            erros.add(String.format("Erro na linha: %d coluna: %d \n Mensagem: %s", linha, posicaoColuna, msg_erro));
+            erros.add(MensagemSistema.ERRO_LINHA_SQL.MensagemComParametro(linha, posicaoColuna, msg_erro));
         }
 
         public List<String> getErros() {

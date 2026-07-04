@@ -4,8 +4,16 @@ import com.supergestao.Flyway.migration.assistant.dominio.mensagem.MensagemSiste
 import com.supergestao.Flyway.migration.assistant.dominio.modelo.Resultado;
 import com.supergestao.Flyway.migration.assistant.dominio.regra.sql.indentar.IndentarSql;
 import com.supergestao.Flyway.migration.assistant.dominio.regra.sql.validacao.ValidacaoCompletaSql;
+import com.supergestao.Flyway.migration.assistant.exception.SqlException;
 import com.supergestao.Flyway.migration.assistant.ui.estado.ContextoAplicacao;
-import com.supergestao.Flyway.migration.assistant.ui.utilitario.*;
+import com.supergestao.Flyway.migration.assistant.ui.utilitario.arvore.GerenciadorArvoreArquivos;
+import com.supergestao.Flyway.migration.assistant.ui.utilitario.arvore.GerenciadorArvoreModulos;
+import com.supergestao.Flyway.migration.assistant.ui.utilitario.editorSql.GerenciadorEditorSql;
+import com.supergestao.Flyway.migration.assistant.ui.utilitario.estilo.GerenciadorEstiloBotao;
+import com.supergestao.Flyway.migration.assistant.ui.utilitario.estilo.GerenciadorVisual;
+import com.supergestao.Flyway.migration.assistant.ui.utilitario.janela.CaminhoTela;
+import com.supergestao.Flyway.migration.assistant.ui.utilitario.janela.ConstrutorJanelas;
+import com.supergestao.Flyway.migration.assistant.ui.utilitario.janela.TipoDialogo;
 import javafx.animation.PauseTransition;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
@@ -57,16 +65,25 @@ public class TelaPrincipalController implements ITelasModal {
 
     public void setContextoAplicacao(ContextoAplicacao contextoAplicacao) {
         this.contexto = contextoAplicacao;
-    }
-
-    @FXML
-    public void initialize() {
-
         this.editorSql = new GerenciadorEditorSql(containerSql, this.contexto);
 
         // Registra as ações para as teclas de atalho do editor
         this.editorSql.setAcaoSalvar(this::salvarSql);
         this.editorSql.setAcaoIndentar(this::indentar);
+        //Limpa campo de mensagem quando ocorrer alterações
+        this.editorSql.textProperty().addListener((obs, antigo, novo) -> {
+            txtAreaMensagens.clear();
+        });
+        //Limpa linha de erro quando houve alterações
+        this.editorSql.getCodeArea().setOnMouseClicked(event -> {
+            txtAreaMensagens.clear();
+            this.editorSql.removeErroLinha();
+        });
+
+    }
+
+    @FXML
+    public void initialize() {
 
         buscaTempoReal();
         Platform.runLater(() -> {
@@ -77,6 +94,7 @@ public class TelaPrincipalController implements ITelasModal {
             );
             this.gerenciadorArvoreArquivos.selecaoArvore();
             this.gerenciadorArvoreArquivos.limparEdicaoSql();
+
             GerenciadorEstiloBotao.gerenciadorEstiloBotao(painelRaiz);
             AtivaDesativaBotoesPrincipais();
         });
@@ -143,12 +161,10 @@ public class TelaPrincipalController implements ITelasModal {
         if (this.editorSql == null) {
             return;
         }
-        // Limpa erros visuais e mensagens anteriores
         txtAreaMensagens.clear();
-        this.editorSql.limparErros();
+        this.editorSql.removeErroLinha();
         try {
             String sql = this.editorSql.getTexto();
-
             // Instancia o validador que roda as regras do ANTLR4
             ValidacaoCompletaSql validador = new ValidacaoCompletaSql();
             validador.validarScriptCompleto(sql);
@@ -156,24 +172,21 @@ public class TelaPrincipalController implements ITelasModal {
             this.contexto.exibirDialogo(TipoDialogo.MENSAGEM,
                     MensagemSistema.MENSAGEM_INFORMATIVA.getMensagem(),
                     null,
-                    "SQL validado com sucesso! Nenhum erro de sintaxe foi detectado.");
-        } catch (com.supergestao.Flyway.migration.assistant.exception.SqlException e) {
+                    MensagemSistema.SQL_VALIDADO.getMensagem());
+        } catch (SqlException e) {
             // Captura o erro gerado pelo Parser do ANTLR e o exibe no painel de mensagens
             String mensagemErro = e.getMessage();
-            txtAreaMensagens.setText(mensagemErro);
+            txtAreaMensagens.setText(e.getMessage());
             // Faz o parse do erro (Exemplo de string: "Erro na linha: 5 coluna: 12")
             Pattern pattern = Pattern.compile("linha:\\s*(\\d+)\\s*coluna:\\s*(\\d+)", Pattern.CASE_INSENSITIVE);
             Matcher matcher = pattern.matcher(mensagemErro);
 
             if (matcher.find()) {
                 int linha = Integer.parseInt(matcher.group(1));
-                int coluna = Integer.parseInt(matcher.group(2));
-
-                // Marca o erro visualmente no editor SQL
                 this.editorSql.marcarLinhaErro(linha);
             }
         } catch (Exception e) {
-            txtAreaMensagens.setText("Falha na validação do SQL: " + e.getMessage());
+            txtAreaMensagens.setText(MensagemSistema.FALHA_VALIDAR_SQL.MensagemComParametro(e.getMessage()));
         }
     }
 
@@ -190,12 +203,18 @@ public class TelaPrincipalController implements ITelasModal {
             try {
                 String caminho = this.gerenciadorArvoreArquivos.getCaminhoArquivoSelecionado();
                 String conteudo = editorSql.getTexto();
-                this.contexto.salvarArquivo(caminho, conteudo);
-                this.contexto.exibirDialogo(TipoDialogo.MENSAGEM,
-                        MensagemSistema.MENSAGEM_INFORMATIVA.getMensagem(),
+                boolean querSalvar = this.contexto.exibirDialogo(TipoDialogo.CONFIRMACAO,
+                        MensagemSistema.ALTERACAO_NAO_SALVA.getMensagem(),
                         null,
-                        MensagemSistema.ARQUIVO_SALVO.getMensagem());
-                this.gerenciadorArvoreArquivos.atualizarConteudoOriginalArquivo(conteudo);
+                        MensagemSistema.SALVAR_ALTERACAO.getMensagem());
+                if (querSalvar){
+                    this.contexto.salvarArquivo(caminho, conteudo);
+                    this.contexto.exibirDialogo(TipoDialogo.MENSAGEM,
+                            MensagemSistema.MENSAGEM_INFORMATIVA.getMensagem(),
+                            null,
+                            MensagemSistema.ARQUIVO_SALVO.getMensagem());
+                    this.gerenciadorArvoreArquivos.atualizarConteudoOriginalArquivo(conteudo);
+                }
             } catch (Exception e) {
                 this.contexto.exibirDialogo(TipoDialogo.ERRO,
                         MensagemSistema.ERRO.getMensagem(),

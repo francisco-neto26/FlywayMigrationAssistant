@@ -1,4 +1,4 @@
-package com.supergestao.Flyway.migration.assistant.ui.utilitario;
+package com.supergestao.Flyway.migration.assistant.ui.utilitario.janela;
 
 import com.supergestao.Flyway.migration.assistant.dominio.mensagem.MensagemSistema;
 import com.supergestao.Flyway.migration.assistant.ui.controller.TelaDialogoController;

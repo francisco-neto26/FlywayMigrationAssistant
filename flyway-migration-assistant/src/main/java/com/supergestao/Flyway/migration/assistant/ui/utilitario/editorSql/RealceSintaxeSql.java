@@ -1,4 +1,4 @@
-package com.supergestao.Flyway.migration.assistant.ui.utilitario;
+package com.supergestao.Flyway.migration.assistant.ui.utilitario.editorSql;
 
 import com.supergestao.Flyway.migration.assistant.dominio.tipo.PalavraChaveSql;
 import org.fxmisc.richtext.model.StyleSpans;
@@ -28,7 +28,7 @@ public class RealceSintaxeSql {
     );
 
     public static StyleSpans<Collection<String>> atualizarEstilos(String texto) {
-        if (texto == null) {
+        if (texto == null || texto.isEmpty()) {
             return new StyleSpansBuilder<Collection<String>>().add(Collections.emptyList(), 0).create();
         }
 

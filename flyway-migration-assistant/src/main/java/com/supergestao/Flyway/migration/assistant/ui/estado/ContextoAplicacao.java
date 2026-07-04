@@ -9,9 +9,9 @@ import com.supergestao.Flyway.migration.assistant.dominio.modelo.Modulo;
 import com.supergestao.Flyway.migration.assistant.dominio.modelo.Resultado;
 import com.supergestao.Flyway.migration.assistant.persistencia.gerenciador.modulos.arquivos.IGerenciadorModulosArquivosDisco;
 import com.supergestao.Flyway.migration.assistant.persistencia.gerenciador.modulos.arquivos.GerenciadorModulosArquivosDisco;
-import com.supergestao.Flyway.migration.assistant.ui.utilitario.GerenciadorJanelas;
-import com.supergestao.Flyway.migration.assistant.ui.utilitario.IGerenciadorJanelas;
-import com.supergestao.Flyway.migration.assistant.ui.utilitario.TipoDialogo;
+import com.supergestao.Flyway.migration.assistant.ui.utilitario.janela.GerenciadorJanelas;
+import com.supergestao.Flyway.migration.assistant.ui.utilitario.janela.IGerenciadorJanelas;
+import com.supergestao.Flyway.migration.assistant.ui.utilitario.janela.TipoDialogo;
 
 import java.nio.file.Paths;
 import java.util.HashSet;

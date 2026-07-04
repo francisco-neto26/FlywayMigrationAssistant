@@ -2,8 +2,8 @@ package com.supergestao.Flyway.migration.assistant.ui.controller;
 
 import com.supergestao.Flyway.migration.assistant.exception.TelaException;
 import com.supergestao.Flyway.migration.assistant.ui.estado.ContextoAplicacao;
-import com.supergestao.Flyway.migration.assistant.ui.utilitario.GerenciadorEstiloBotao;
-import com.supergestao.Flyway.migration.assistant.ui.utilitario.TipoDialogo;
+import com.supergestao.Flyway.migration.assistant.ui.utilitario.estilo.GerenciadorEstiloBotao;
+import com.supergestao.Flyway.migration.assistant.ui.utilitario.janela.TipoDialogo;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;

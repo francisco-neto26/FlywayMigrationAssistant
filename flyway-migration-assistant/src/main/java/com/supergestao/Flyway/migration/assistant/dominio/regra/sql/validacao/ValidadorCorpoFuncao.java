@@ -593,7 +593,7 @@ public class ValidadorCorpoFuncao {
                 int offsetAbsoluto = inicioCorpo + offsetInicioInstrucao;
                 int[] pos = obterLinhaEColuna(script, offsetAbsoluto);
                 throw new SqlException(String.format(
-                        "Erro na linha: %d coluna: %d \n Mensagem: Comando ou palavra-chave inválida/desconhecida: '%s'.",
+                        "Erro na linha: %d coluna: %d \n Mensagem5: Comando ou palavra-chave inválida/desconhecida: '%s'.",
                         pos[0], pos[1], tokens[0]));
             }
 
