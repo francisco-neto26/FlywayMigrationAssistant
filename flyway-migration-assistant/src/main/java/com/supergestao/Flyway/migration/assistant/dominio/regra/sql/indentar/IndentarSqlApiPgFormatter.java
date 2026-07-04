@@ -20,12 +20,7 @@ public class IndentarSqlApiPgFormatter {
             .connectTimeout(Duration.ofSeconds(TIMEOUT_SEG))
             .build();
 
-    /**
-     * Formata o SQL via API do pgFormatter.
-     *
-     * @param sql SQL bruto a formatar
-     * @return SQL formatado, ou o original em caso de falha
-     */
+    /*Formata o SQL via API do pgFormatter. Crie esta validação, testei, mas neste momento não será usado     */
     public static String formatar(String sql) {
         if (sql == null || sql.isBlank()) {
             return sql;
@@ -81,9 +76,6 @@ public class IndentarSqlApiPgFormatter {
         }
     }
 
-    /**
-     *
-     */
     private static String escapeUnicode(String input) {
         if (input == null) return null;
         StringBuilder sb = new StringBuilder();
@@ -98,9 +90,6 @@ public class IndentarSqlApiPgFormatter {
         return sb.toString();
     }
 
-    /**
-     *
-     */
     private static String unescapeUnicode(String input) {
         if (input == null) return null;
         StringBuilder sb = new StringBuilder();

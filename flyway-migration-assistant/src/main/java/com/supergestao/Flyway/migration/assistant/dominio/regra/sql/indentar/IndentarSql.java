@@ -18,14 +18,8 @@ public class IndentarSql {
     );
 
 
-    /**
-     * Formata o SQL localmente usando o pgFormatter embarcado no projeto.
-     * Extrai os recursos necessários para o diretório temporário do SO
-     * e os executa via interpretador Perl.
-     *
-     * @param sql SQL bruto a formatar
-     * @return SQL formatado, ou o original inalterado em caso de falha/ausência de Perl
-     */
+    /* Formata o SQL usando o pgFormatter do projeto, extrai os recursos necessários para o diretório temporário do SO
+      e os executa via interpretador Perl.*/
     public static Resultado formatar(String sql) {
 
         if (sql == null || sql.isBlank()) {
