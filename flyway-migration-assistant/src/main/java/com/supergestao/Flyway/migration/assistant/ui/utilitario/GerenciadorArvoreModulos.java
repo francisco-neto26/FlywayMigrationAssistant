@@ -1,10 +1,7 @@
 package com.supergestao.Flyway.migration.assistant.ui.utilitario;
 
 import com.supergestao.Flyway.migration.assistant.dominio.mensagem.MensagemSistema;
-import com.supergestao.Flyway.migration.assistant.dominio.modelo.Arquivo;
-import com.supergestao.Flyway.migration.assistant.dominio.modelo.Funcao;
-import com.supergestao.Flyway.migration.assistant.dominio.modelo.Modulo;
-import com.supergestao.Flyway.migration.assistant.dominio.modelo.RetornoSalvarDiretorio;
+import com.supergestao.Flyway.migration.assistant.dominio.modelo.*;
 import com.supergestao.Flyway.migration.assistant.ui.estado.ContextoAplicacao;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
@@ -37,9 +34,9 @@ public class GerenciadorArvoreModulos {
 
                 if (querCriar) {
 
-                    List<RetornoSalvarDiretorio> resultado = contexto.criarNovoModulo(moduloFuncao, contexto.getDiretorioArquivo());
+                    List<Resultado> resultado = contexto.criarNovoModulo(moduloFuncao, contexto.getDiretorioArquivo());
                     String listaResultado = formatarLista(resultado, retorno ->
-                            "Módulo: " + retorno.nome() + " - " + (retorno.criado() ? "Criado com sucesso." : "Erro ao criar")
+                            "Módulo: " + retorno.valor() + " - " + (retorno.sucesso() ? "Criado com sucesso." : "Erro ao criar")
                     );
 
                     contexto.exibirDialogo(TipoDialogo.MENSAGEM,

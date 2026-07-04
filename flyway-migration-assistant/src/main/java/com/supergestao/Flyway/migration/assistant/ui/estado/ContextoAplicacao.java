@@ -1,12 +1,12 @@
 package com.supergestao.Flyway.migration.assistant.ui.estado;
 
 import atlantafx.base.theme.Theme;
-import com.supergestao.Flyway.migration.assistant.aplicacao.sincronizar.SincronizarModulos;
+import com.supergestao.Flyway.migration.assistant.aplicacao.sincronizar.SincronizarModulosArquivos;
 import com.supergestao.Flyway.migration.assistant.dominio.configuracao.GerenciadorConfiguracao;
 import com.supergestao.Flyway.migration.assistant.dominio.configuracao.IGerenciadorConfiguracao;
 import com.supergestao.Flyway.migration.assistant.dominio.modelo.Arquivo;
 import com.supergestao.Flyway.migration.assistant.dominio.modelo.Modulo;
-import com.supergestao.Flyway.migration.assistant.dominio.modelo.RetornoSalvarDiretorio;
+import com.supergestao.Flyway.migration.assistant.dominio.modelo.Resultado;
 import com.supergestao.Flyway.migration.assistant.persistencia.gerenciador.modulos.arquivos.IGerenciadorModulosArquivosDisco;
 import com.supergestao.Flyway.migration.assistant.persistencia.gerenciador.modulos.arquivos.GerenciadorModulosArquivosDisco;
 import com.supergestao.Flyway.migration.assistant.ui.utilitario.GerenciadorJanelas;
@@ -22,13 +22,13 @@ public class ContextoAplicacao {
     private final IGerenciadorModulosArquivosDisco iGerenciadorModulosArquivosDisco;
     private final IGerenciadorConfiguracao iGerenciadorConfiguracao;
     private final IGerenciadorJanelas iGerenciadorJanelas;
-    private final SincronizarModulos sincronizarModulos;
+    private final SincronizarModulosArquivos sincronizarModulosArquivos;
 
     public ContextoAplicacao() {
         this.iGerenciadorModulosArquivosDisco = new GerenciadorModulosArquivosDisco();
         this.iGerenciadorConfiguracao = new GerenciadorConfiguracao();
         this.iGerenciadorJanelas = new GerenciadorJanelas(this);
-        this.sincronizarModulos = new SincronizarModulos(getIGerenciadorModulosArquivos());
+        this.sincronizarModulosArquivos = new SincronizarModulosArquivos(getIGerenciadorModulosArquivos());
     }
 
     private IGerenciadorJanelas getIGerenciadorJanelas() {
@@ -92,39 +92,48 @@ public class ContextoAplicacao {
     }
 
     public Map<String, Modulo> moduloParaSincronizar(String caminhoOrigem, String caminhoExistentes) {
-        return this.sincronizarModulos.moduloParaSincronizar(caminhoOrigem, caminhoExistentes);
+        return this.sincronizarModulosArquivos.moduloParaSincronizar(caminhoOrigem, caminhoExistentes);
     }
 
-    public List<RetornoSalvarDiretorio> criarNovoModulo(Map<String, Modulo> modulosNovos, String caminhoExistentes) {
-        return this.sincronizarModulos.criarNovoModulo(modulosNovos, caminhoExistentes);
+    public List<Resultado> criarNovoModulo(Map<String, Modulo> modulosNovos, String caminhoExistentes) {
+        return this.sincronizarModulosArquivos.criarNovoModulo(modulosNovos, caminhoExistentes);
     }
 
-    public List<RetornoSalvarDiretorio> criarModuloFuncao(String modulo, String funcao, String caminhoCompleto) {
+    public List<Resultado> criarModuloFuncao(String modulo, String funcao, String caminhoCompleto) {
         String diretorioCompleto = "";
         if (funcao == null){
             diretorioCompleto = Paths.get(caminhoCompleto, modulo).toString();
         }else{
             diretorioCompleto = Paths.get(caminhoCompleto, modulo, funcao).toString();
         }
-        String moduloFuncao = modulo.isBlank() ? funcao : modulo;
-        return this.sincronizarModulos.criarModuloFuncao(moduloFuncao, diretorioCompleto);
+        String moduloFuncao = funcao == null ? modulo : funcao ;
+        return this.sincronizarModulosArquivos.criarModuloFuncao(moduloFuncao, diretorioCompleto);
     }
 
     public Map<String, Modulo> obterModulosExistentes(String caminhoExistentes){
-        return this.sincronizarModulos.obterModulosExistentes(caminhoExistentes);
+        return this.sincronizarModulosArquivos.obterModulosExistentes(caminhoExistentes);
     }
 
     public Map<String, Modulo> obterModulosNovos(Map<String, Modulo> moduloOrigem, Map<String, Modulo> modulosExistentes) {
-        return this.sincronizarModulos.obterModulosNovos(moduloOrigem, modulosExistentes);
+        return this.sincronizarModulosArquivos.obterModulosNovos(moduloOrigem, modulosExistentes);
     }
 
     public HashSet<Arquivo> carregarArquivos(String caminhoFuncao, String nomeModulo, String nomeFuncao){
-        return this.sincronizarModulos.carregarArquivos(caminhoFuncao, nomeModulo, nomeFuncao);
+        return this.sincronizarModulosArquivos.carregarArquivos(caminhoFuncao, nomeModulo, nomeFuncao);
     }
 
     public boolean temFuncaoArquivo(String diretorioRaiz, String nomeModulo, String nomeFuncao){
-        return this.sincronizarModulos.temFuncaoArquivo(diretorioRaiz, nomeModulo, nomeFuncao);
+        return this.sincronizarModulosArquivos.temFuncaoArquivo(diretorioRaiz, nomeModulo, nomeFuncao);
     }
+
+    public String buscarConteudoArquivo(String caminhoArquivo) {
+        return this.sincronizarModulosArquivos.buscarConteudoArquivo(caminhoArquivo);
+    }
+
+    public void salvarArquivo(String caminhoDoArquivo, String conteudoSQL) {
+        this.sincronizarModulosArquivos.salvarArquivo(caminhoDoArquivo, conteudoSQL);
+    }
+
 
 
 

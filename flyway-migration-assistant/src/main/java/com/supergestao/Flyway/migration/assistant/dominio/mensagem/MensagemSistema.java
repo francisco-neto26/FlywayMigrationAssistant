@@ -22,7 +22,10 @@ public enum MensagemSistema {
     ERRO_SALVAR_REGISTRO("Erro ao salvar registro"),
     ERRO_CRIAR_ARVORE_MODULOS("Erro montar Arvore de Módulos/Funções."),
     ERRO_CRIAR_ARVORE_MODULOS_ARQUIVOS("Erro montar Arvore de Módulos/Funções com arquivos."),
-    ERRO_CRIAR_ARVORE_ARQUIVOS("Não foi possível carregar os arquivos do módulo: %s"),
+    ERRO_CRIAR_ARVORE_ARQUIVOS("Não foi possível carregar os arquivo(s) do módulo: %s"),
+    ARQUIVO_SALVO("Arquivo SQL salvo com sucesso!"),
+    ALTERACAO_NAO_SALVA("Alterações não salvas"),
+    DESCARTAR_ALTERACAO("O arquivo atual possui alterações não salvas. Deseja descartá-las para abrir o novo arquivo?"),
     CAMPO_OBRIGATORIO("O Campo %s tem preenchimento obrigatório."),
     FORMATO_DATA_INVALIDO("O Formato %s para data/hora é inválido."),
     FORMATO_DATA_NULL("Formato de data/hora não informado."),
@@ -48,7 +51,16 @@ public enum MensagemSistema {
     SCRIPT_SEM_DICIONARIO("Ausência de Dicionário de Dados: Faltou a instrução 'COMMENT ON' para documentar a criação: %s"),
     SCRIPT_SEM_PADRAO_SQL("Não segue o padrão SQL: %s"),
     ERRO_ABERTURA_TELA("Erro ao tentar abrir a tela de: %s"),
-    ERRO_GENERICO("Erro inesperado: %s");
+    ERRO_GENERICO("Erro inesperado: %s"),
+    ERRO_CSS("Erro ao carregar o arquivo CSS do editor SQL."),
+    ERRO_LINHA_ERRO("Erro ao marcar o erro no editor SQL."),
+    ERRO_PERL("Interpretador Perl não encontrado no PATH nem nos caminhos do Git.\nInstale o Strawberry Perl (https://strawberryperl.com/) ou adicione o Perl do Git às variáveis de ambiente."),
+    ERRO_RODAR_PGFORMATTER("Erro ao rodar pgFormatter local, código de saída:  %s: %s"),
+    ERRO_IO_PGFORMATTER("Erro de E/S ao extrair ou rodar o pgFormatter, certifique-se de ter o Perl ou Git instalado: %s"),
+    ERRO_INTERRUPCAO_PGFORMATTER("Processo do pgFormatter foi interrompido: %s"),
+    ERRO_GERAL_PGFORMATTER("Falha geral ao formatar SQL localmente (certifique-se de que o Perl está no PATH): %s"),
+    ERRO_INDENTAR_SQL("Falha ao indentar SQL"),
+    ERRO_LER_CLASS("Recurso não encontrado no classpath: %s");
 
     private final String mensagem;
 

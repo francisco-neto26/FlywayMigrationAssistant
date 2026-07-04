@@ -2,7 +2,7 @@ package com.supergestao.Flyway.migration.assistant.ui.controller;
 
 import com.supergestao.Flyway.migration.assistant.dominio.mensagem.MensagemSistema;
 import com.supergestao.Flyway.migration.assistant.dominio.modelo.Modulo;
-import com.supergestao.Flyway.migration.assistant.dominio.modelo.RetornoSalvarDiretorio;
+import com.supergestao.Flyway.migration.assistant.dominio.modelo.Resultado;
 import com.supergestao.Flyway.migration.assistant.exception.TelaException;
 import com.supergestao.Flyway.migration.assistant.ui.estado.ContextoAplicacao;
 import com.supergestao.Flyway.migration.assistant.ui.utilitario.GerenciadorEstiloBotao;
@@ -61,19 +61,8 @@ public class TelaNovaFuncaoController implements ITelasModal {
 
     @FXML
     private void salvarFuncao() {
-        String nomeFuncao = txtNomeFuncao.getText().trim();
-        String nomeModulo = comboModulo.getValue().getNome();
 
-        if (nomeFuncao.isBlank()) {
-            this.contexto.exibirDialogo(TipoDialogo.ALERTA,
-                    MensagemSistema.ATENCAO.getMensagem(),
-                    null,
-                    MensagemSistema.CAMPO_OBRIGATORIO.MensagemComParametro(lblModulo.getText())
-            );
-            return;
-        }
-
-        if (nomeModulo.isBlank()) {
+        if (txtNomeFuncao.getText() == null || txtNomeFuncao.getText().trim().isBlank()) {
             this.contexto.exibirDialogo(TipoDialogo.ALERTA,
                     MensagemSistema.ATENCAO.getMensagem(),
                     null,
@@ -82,6 +71,16 @@ public class TelaNovaFuncaoController implements ITelasModal {
             return;
         }
 
+        if (comboModulo.getValue() == null) {
+            this.contexto.exibirDialogo(TipoDialogo.ALERTA,
+                    MensagemSistema.ATENCAO.getMensagem(),
+                    null,
+                    MensagemSistema.CAMPO_OBRIGATORIO.MensagemComParametro(lblModulo.getText())
+            );
+            return;
+        }
+        String nomeFuncao = txtNomeFuncao.getText().trim();
+        String nomeModulo = comboModulo.getValue().getNome();
         String caminhoCompleto = Paths.get(this.contexto.getDiretorioArquivo(), nomeModulo, nomeFuncao).toAbsolutePath().toString();
 
         boolean confirmacao = this.contexto.exibirDialogo(TipoDialogo.CONFIRMACAO,
@@ -92,10 +91,10 @@ public class TelaNovaFuncaoController implements ITelasModal {
 
         if (confirmacao) {
             try {
-                List<RetornoSalvarDiretorio> resultado = this.contexto.criarModuloFuncao(nomeModulo, nomeFuncao, caminhoCompleto);
+                List<Resultado> resultado = this.contexto.criarModuloFuncao(nomeModulo, nomeFuncao, this.contexto.getDiretorioArquivo());
 
                 String listaResultado = formatarLista(resultado, retorno ->
-                        "Função: " + retorno.nome() + " - " + (retorno.criado() ? "Criada com sucesso." : "Erro ao criar")
+                        "Função: " + retorno.valor() + " - " + (retorno.sucesso() ? "Criada com sucesso." : "Erro ao criar")
                 );
 
                 this.contexto.exibirDialogo(TipoDialogo.MENSAGEM,

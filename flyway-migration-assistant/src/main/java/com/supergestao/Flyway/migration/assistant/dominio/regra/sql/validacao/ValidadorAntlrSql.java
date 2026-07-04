@@ -10,6 +10,18 @@ import java.util.List;
 
 public class ValidadorAntlrSql extends PostgreSQLParserBaseListener {
 
+    private final boolean modoCorpoFuncao;
+
+    // Construtor padrão (usado no script SQL externo principal)
+    public ValidadorAntlrSql() {
+        this(false);
+    }
+
+    // Construtor com flag (usado para validar comandos internos do $BODY$)
+    public ValidadorAntlrSql(boolean modoCorpoFuncao) {
+        this.modoCorpoFuncao = modoCorpoFuncao;
+    }
+
     // =========================================================================
     // BLOCO A: SEGURANÇA EXTREMA
     // =========================================================================
@@ -195,7 +207,7 @@ public class ValidadorAntlrSql extends PostgreSQLParserBaseListener {
                     "INSERT inválido ou incompleto"));
         }
 
-        // NOVO — bloqueia INSERT sem lista de colunas explícita: INSERT INTO tabela VALUES(...)
+        // Bloqueia INSERT sem lista de colunas explícita: INSERT INTO tabela VALUES(...)
         if (ctx.insert_rest() != null
                 && ctx.insert_rest().insert_column_list() == null
                 && ctx.insert_rest().selectstmt() != null) {
@@ -206,6 +218,11 @@ public class ValidadorAntlrSql extends PostgreSQLParserBaseListener {
 
     @Override
     public void enterSelectstmt(PostgreSQLParser.SelectstmtContext ctx) {
+        // Ignora a restrição se estiver validando o corpo de uma função
+        if (this.modoCorpoFuncao) {
+            return;
+        }
+
         for (int i = 0; i < ctx.getChildCount(); i++) {
             if (ctx.getChild(i) instanceof PostgreSQLParser.Into_clauseContext) {
                 throw new SqlException(MensagemSistema.SCRIPT_NAO_PERMITIDO.MensagemComParametro(
@@ -343,6 +360,11 @@ public class ValidadorAntlrSql extends PostgreSQLParserBaseListener {
 
     @Override
     public void exitRoot(PostgreSQLParser.RootContext ctx) {
+        // Ignora a validação de comentários se estiver validando o corpo de uma função
+        if (this.modoCorpoFuncao) {
+            return;
+        }
+
         for (String objetoCriado : objetosCriados) {
             boolean temComentario = false;
             for (String comentario : objetosComentados) {
@@ -412,7 +434,6 @@ public class ValidadorAntlrSql extends PostgreSQLParserBaseListener {
     // =========================================================================
     private void validarNomeSnakeCase(String nome, String tipoObjeto) {
         if (nome == null || nome.isBlank()) return;
-        // Remove schema prefix se houver (ex: public.minha_tabela → minha_tabela)
         String nomeSimples = nome.contains(".") ? nome.substring(nome.lastIndexOf('.') + 1) : nome;
         if (!nomeSimples.matches("^[a-z][a-z0-9_]*$")) {
             throw new SqlException(MensagemSistema.SCRIPT_SEM_PADRAO_SQL.MensagemComParametro(

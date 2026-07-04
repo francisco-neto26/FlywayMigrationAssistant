@@ -32,6 +32,9 @@ public class ValidarScriptSQL implements RegraValidacaoSql {
         org.antlr.v4.runtime.tree.ParseTreeWalker walker = new org.antlr.v4.runtime.tree.ParseTreeWalker();
         ValidadorAntlrSql fiscalizador = new ValidadorAntlrSql();
         walker.walk(fiscalizador, arvore);
+
+        // Valida o conteúdo interno de blocos de funções/procedures ($BODY$ ou $$)
+        new ValidadorCorpoFuncao().validar(script);
     }
 
     private static class CapturarErrosSintaxe extends BaseErrorListener {
