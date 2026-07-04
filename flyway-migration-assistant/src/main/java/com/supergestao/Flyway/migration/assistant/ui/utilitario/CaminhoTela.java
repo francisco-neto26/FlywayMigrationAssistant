@@ -7,7 +7,8 @@ public enum CaminhoTela {
     TELA_CONFIGURACOES("/com/supergestao/Flyway/migration/assistant/ui/controller/TelaConfiguracoes.fxml", "Configurações"),
     TELA_NOVO_MODULO("/com/supergestao/Flyway/migration/assistant/ui/controller/TelaNovoModulo.fxml", "Novo Módulo"),
     TELA_NOVA_FUNCAO("/com/supergestao/Flyway/migration/assistant/ui/controller/TelaNovaFuncao.fxml", "Nova Função"),
-    TELA_NOVO_MIGRATION("/com/supergestao/Flyway/migration/assistant/ui/controller/TelaNovoMigration.fxml", "Novo Migration");
+    TELA_NOVO_MIGRATION("/com/supergestao/Flyway/migration/assistant/ui/controller/TelaNovoMigration.fxml", "Novo Migration"),
+    EDITOR_SQL("/com/supergestao/Flyway/migration/assistant/ui/utilitario/editor-sql.css", "");
 
     private final String caminho;
     private final String nome;

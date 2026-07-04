@@ -64,12 +64,12 @@
                                     </children>
                                 </HBox>
 
-                                <TextArea fx:id="txtAreaSql" promptText="Escreva ou carregue seu código SQL aqui..."
-                                          VBox.vgrow="ALWAYS">
+
+                                <StackPane fx:id="containerSql" VBox.vgrow="ALWAYS">
                                     <VBox.margin>
                                         <Insets/>
                                     </VBox.margin>
-                                </TextArea>
+                                </StackPane>
                             </children>
                         </VBox>
 

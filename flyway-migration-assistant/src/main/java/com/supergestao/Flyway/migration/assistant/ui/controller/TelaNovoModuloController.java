@@ -1,5 +1,6 @@
 package com.supergestao.Flyway.migration.assistant.ui.controller;
 
+import com.supergestao.Flyway.migration.assistant.dominio.mensagem.MensagemSistema;
 import com.supergestao.Flyway.migration.assistant.exception.TelaException;
 import com.supergestao.Flyway.migration.assistant.ui.estado.ContextoAplicacao;
 import com.supergestao.Flyway.migration.assistant.ui.utilitario.GerenciadorEstiloBotao;
@@ -7,6 +8,7 @@ import com.supergestao.Flyway.migration.assistant.ui.utilitario.TipoDialogo;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
@@ -22,6 +24,8 @@ public class TelaNovoModuloController implements ITelasModal{
     private Button btnSalvarModulo;
     @FXML
     private VBox painelRaiz;
+    @FXML
+    private Label lblNomeModulo;
 
     private ContextoAplicacao contexto;
 
@@ -47,31 +51,32 @@ public class TelaNovoModuloController implements ITelasModal{
     private void salvarModulo(){
         String nomeModulo = txtNomeModulo.getText().trim();
         if (!nomeModulo.isEmpty()) {
-            String caminho = Paths.get(this.contexto.getIGerenciadorConfiguracao().getDiretorioModulo(), nomeModulo).toAbsolutePath().toString();
-            boolean confirmacao = this.contexto.getIGerenciadorJanelas().exibirDialogo(TipoDialogo.CONFIRMACAO,
-                    "Novo Módulo",
+            String caminho = this.contexto.getDiretorioArquivo();
+            boolean confirmacao = this.contexto.exibirDialogo(TipoDialogo.CONFIRMACAO,
+                    MensagemSistema.NOVO_MODULO.getMensagem(),
                     null,
-                    "Deseja criar o módulo '" + nomeModulo + "' no diretorio '" + caminho + "'?"
+                    MensagemSistema.CRIAR_MODULO.MensagemComParametro(nomeModulo, caminho)
             );
 
             if (confirmacao) {
                 try {
-                    this.contexto.getIGerenciadorModulosArquivosDisco().salvarModuloFuncao(caminho);
+                    this.contexto.criarModuloFuncao(nomeModulo, null, caminho);
                     Stage stage = (Stage) btnSalvarModulo.getScene().getWindow();
                     stage.close();
 
                 } catch (TelaException e) {
-                    this.contexto.getIGerenciadorJanelas().exibirDialogo(TipoDialogo.ERRO,
-                            "Erro ao Salvar",
-                            "Não foi possível criar o módulo",
+                    this.contexto.exibirDialogo(TipoDialogo.ERRO,
+                            MensagemSistema.ERRO_SALVAR_REGISTRO.getMensagem(),
+                            MensagemSistema.ERRO_SALVAR_MODULO.MensagemComParametro(nomeModulo),
                             e.getMessage()
                     );
                 }
             }
         } else {
-            this.contexto.getIGerenciadorJanelas().exibirDialogo(TipoDialogo.ALERTA,
-                    "Atenção", null,
-                    "O nome do módulo não pode estar vazio."
+            this.contexto.exibirDialogo(TipoDialogo.ALERTA,
+                    MensagemSistema.ALERTA.getMensagem(),
+                    null,
+                    MensagemSistema.CAMPO_OBRIGATORIO.MensagemComParametro(lblNomeModulo.getText())
             );
         }
     }
