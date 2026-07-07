@@ -1,16 +1,16 @@
 package com.supergestao.Flyway.migration.assistant.ui.utilitario.editorSql;
 
-import javafx.scene.input.KeyCode;
+import com.supergestao.Flyway.migration.assistant.dominio.tipo.AtalhoTeclado;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.input.ScrollEvent;
 import org.fxmisc.richtext.CodeArea;
 
 public class GerenciadorAtalhosEditor {
 
-    /*Eventos de teclado e mouse(scroll) na área de texto do editor*/
     public static void configurar(GerenciadorEditorSql editor) {
         CodeArea codeArea = editor.getCodeArea();
 
-        //Evento mouse: Zoom com Ctrl + scroll
+        // 1. Evento de Mouse: Zoom com Ctrl + Scroll
         codeArea.addEventFilter(ScrollEvent.SCROLL, event -> {
             if (event.isControlDown()) {
                 double deltaY = event.getDeltaY();
@@ -23,43 +23,39 @@ public class GerenciadorAtalhosEditor {
             }
         });
 
-        //Evento Teclado: Atalhos com Ctrl
+        // 2. Evento de Teclado: Dinâmico baseado no Enum
         codeArea.setOnKeyPressed(event -> {
-            if (event.isControlDown()) {
-                KeyCode key = event.getCode();
-
-                switch (key) {
-                    case S -> {
-                        if (editor.getAcaoSalvar() != null) {
-                            editor.getAcaoSalvar().run();
-                            event.consume();
-                        }
-                    }
-                    case I -> {
-                        if (editor.getAcaoIndentar() != null) {
-                            editor.getAcaoIndentar().run();
-                            event.consume();
-                        }
-                    }
-                    case Z -> {
-                        codeArea.undo();
-                        event.consume();
-                    }
-                    case Y -> {
-                        codeArea.redo();
-                        event.consume();
-                    }
-                    case EQUALS, ADD -> {
-                        editor.alterarTamanhoFonte(1);
-                        event.consume();
-                    }
-                    case MINUS, SUBTRACT -> {
-                        editor.alterarTamanhoFonte(-1);
-                        event.consume();
-                    }
-                    default -> {}
+            for (AtalhoTeclado atalho : AtalhoTeclado.values()) {
+                if (atalho.matches(event)) {
+                    executarAtalho(editor, atalho);
+                    event.consume();
+                    return; // Retorna imediatamente ao processar
                 }
             }
         });
+    }
+
+    /**
+     * Executa a regra lógica atrelada a cada atalho catalogado.
+     */
+    private static void executarAtalho(GerenciadorEditorSql editor, AtalhoTeclado atalho) {
+        switch (atalho) {
+            case SALVAR -> {
+                if (editor.getAcaoSalvar() != null) {
+                    editor.getAcaoSalvar().run();
+                }
+            }
+            case INDENTAR -> {
+                if (editor.getAcaoIndentar() != null) {
+                    editor.getAcaoIndentar().run();
+                }
+            }
+            case DESFAZER -> editor.getCodeArea().undo();
+            case REFAZER -> editor.getCodeArea().redo();
+            case AUMENTAR_FONTE -> editor.alterarTamanhoFonte(1);
+            case DIMINUIR_FONTE -> editor.alterarTamanhoFonte(-1);
+            case PROXIMO_MARCADOR -> editor.getGerenciadorColunaNumeracao().irParaProximoMarcador(false);
+            case MARCADOR_ANTERIOR -> editor.getGerenciadorColunaNumeracao().irParaProximoMarcador(true);
+        }
     }
 }

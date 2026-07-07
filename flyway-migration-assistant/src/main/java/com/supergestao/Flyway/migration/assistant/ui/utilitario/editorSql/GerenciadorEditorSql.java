@@ -6,6 +6,8 @@ import com.supergestao.Flyway.migration.assistant.ui.estado.ContextoAplicacao;
 import com.supergestao.Flyway.migration.assistant.ui.utilitario.janela.TipoDialogo;
 import com.supergestao.Flyway.migration.assistant.ui.utilitario.janela.CaminhoTela;
 import javafx.beans.value.ObservableValue;
+import javafx.scene.Node;
+import javafx.scene.control.Label;
 import javafx.scene.layout.StackPane;
 import org.fxmisc.flowless.VirtualizedScrollPane;
 import org.fxmisc.richtext.CodeArea;
@@ -14,6 +16,7 @@ import org.fxmisc.richtext.LineNumberFactory;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.IntFunction;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singleton;
@@ -27,17 +30,19 @@ public class GerenciadorEditorSql {
     private Runnable acaoSalvar;
     private Runnable acaoIndentar;
     private final ContextoAplicacao contextoAplicacao;
-    private String fonteSitema;
+    private final String fonteSitema;
+    private final GerenciadorColunaNumeracao gerenciadorColunaNumeracao;
 
 
     public GerenciadorEditorSql(StackPane containerSql, ContextoAplicacao contextoAplicacao) {
         this.contextoAplicacao = contextoAplicacao;
         this.codeArea = new CodeArea();
         this.fonteSitema = contextoAplicacao.getChaveFonte();
-
+        this.gerenciadorColunaNumeracao = new GerenciadorColunaNumeracao(this);
+        this.gerenciadorColunaNumeracao.atualizarFabricaNumeracao();
 
         alterarTamanhoFonte(tamanhoFonte);
-        this.codeArea.setParagraphGraphicFactory(LineNumberFactory.get(this.codeArea));
+        //this.codeArea.setParagraphGraphicFactory(LineNumberFactory.get(this.codeArea));
 
         this.palavrasChaveAutocomplete = new ArrayList<>(PalavraChaveSql.getListaPalavras());
         this.palavrasChaveAutocomplete.add("RETURNS TRIGGER");
@@ -118,6 +123,9 @@ public class GerenciadorEditorSql {
             this.codeArea.setStyle("-fx-font-size: " + tamanhoFonte + "px;" +
                     "-fx-font-family: '" + fonteSitema  + "';");
         }
+
+        this.gerenciadorColunaNumeracao.atualizarFabricaNumeracao();
+
     }
 
     public CodeArea getCodeArea() {
@@ -129,10 +137,13 @@ public class GerenciadorEditorSql {
     }
 
     public void setTexto(String texto) {
+
+        this.gerenciadorColunaNumeracao.limparMarcadores();
         codeArea.replaceText(texto != null ? texto : "");
     }
-
     public void limpar() {
+
+        this.gerenciadorColunaNumeracao.limparMarcadores();
         codeArea.clear();
     }
 
@@ -165,5 +176,9 @@ public class GerenciadorEditorSql {
 
     public String getFonteSitema() {
         return fonteSitema;
+    }
+
+    public GerenciadorColunaNumeracao getGerenciadorColunaNumeracao() {
+        return gerenciadorColunaNumeracao;
     }
 }

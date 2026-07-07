@@ -5,6 +5,8 @@ public enum MensagemSistema {
     ATENCAO("Atenção!"),
     MENSAGEM_INFORMATIVA("Mensagem informativa"),
     CONFIRMACAO("Confirmação"),
+    CONFIRMAR("Confirmar"),
+    SAIR("Sair"),
     ERRO("Erro"),
     ALERTA("Alerta"),
     NOVA_FUNCAO("Nova Função"),
@@ -64,7 +66,8 @@ public enum MensagemSistema {
     FALHA_VALIDAR_SQL("Falha na validação do SQL: %s"),
     ERRO_LER_CLASS("Recurso não encontrado no classpath: %s"),
     ERRO_LINHA_SQL("Erro na linha: %s coluna: %s\nMensagem: %s"),
-    SALVAR_ALTERACAO("Deseja salvar as alterações?");
+    SALVAR_ALTERACAO("Deseja salvar as alterações?"),
+    CAMPO_DETALHES_VAZIO("O campo detalhes não pode ser vazio para o tipo de diálogo: %s");
 
     private final String mensagem;
 
