@@ -65,11 +65,7 @@
                                 </HBox>
 
 
-                                <StackPane fx:id="containerSql" VBox.vgrow="ALWAYS">
-                                    <VBox.margin>
-                                        <Insets/>
-                                    </VBox.margin>
-                                </StackPane>
+                                <TabPane fx:id="painelAbasSql" VBox.vgrow="ALWAYS" tabClosingPolicy="ALL_TABS" />
                             </children>
                         </VBox>
 

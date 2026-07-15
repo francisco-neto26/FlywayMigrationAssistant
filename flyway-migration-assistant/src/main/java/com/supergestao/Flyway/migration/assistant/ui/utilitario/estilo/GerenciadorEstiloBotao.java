@@ -1,5 +1,6 @@
-package com.supergestao.Flyway.migration.assistant.ui.utilitario;
+package com.supergestao.Flyway.migration.assistant.ui.utilitario.estilo;
 
+import com.supergestao.Flyway.migration.assistant.ui.utilitario.janela.CoresPadrao;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 

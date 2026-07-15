@@ -1,8 +1,8 @@
 package com.supergestao.Flyway.migration.assistant;
 
 import com.supergestao.Flyway.migration.assistant.ui.estado.ContextoAplicacao;
-import com.supergestao.Flyway.migration.assistant.ui.utilitario.CaminhoTela;
-import com.supergestao.Flyway.migration.assistant.ui.utilitario.ConstrutorJanelas;
+import com.supergestao.Flyway.migration.assistant.ui.utilitario.janela.CaminhoTela;
+import com.supergestao.Flyway.migration.assistant.ui.utilitario.janela.ConstrutorJanelas;
 import javafx.application.Application;
 import javafx.stage.Stage;
 import javafx.application.Platform;
