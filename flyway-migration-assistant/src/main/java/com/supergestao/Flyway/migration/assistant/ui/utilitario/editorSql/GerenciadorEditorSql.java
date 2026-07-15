@@ -3,20 +3,15 @@ package com.supergestao.Flyway.migration.assistant.ui.utilitario.editorSql;
 import com.supergestao.Flyway.migration.assistant.dominio.mensagem.MensagemSistema;
 import com.supergestao.Flyway.migration.assistant.dominio.tipo.PalavraChaveSql;
 import com.supergestao.Flyway.migration.assistant.ui.estado.ContextoAplicacao;
-import com.supergestao.Flyway.migration.assistant.ui.utilitario.janela.TipoDialogo;
 import com.supergestao.Flyway.migration.assistant.ui.utilitario.janela.CaminhoTela;
+import com.supergestao.Flyway.migration.assistant.ui.utilitario.janela.TipoDialogo;
 import javafx.beans.value.ObservableValue;
-import javafx.scene.Node;
-import javafx.scene.control.Label;
-import javafx.scene.layout.StackPane;
 import org.fxmisc.flowless.VirtualizedScrollPane;
 import org.fxmisc.richtext.CodeArea;
-import org.fxmisc.richtext.LineNumberFactory;
 
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.IntFunction;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singleton;
@@ -25,30 +20,33 @@ public class GerenciadorEditorSql {
 
     private final CodeArea codeArea;
     private final List<String> palavrasChaveAutocomplete;
-    private int tamanhoFonte = 8;
+    private int tamanhoFonte;
     private int linhaErro = -1;
     private Runnable acaoSalvar;
     private Runnable acaoIndentar;
     private final ContextoAplicacao contextoAplicacao;
-    private final String fonteSitema;
+    private String fonteSitema;
+    private final VirtualizedScrollPane<CodeArea> scrollPane;
     private final GerenciadorColunaNumeracao gerenciadorColunaNumeracao;
+    private String caminhoArquivo;
+    private String conteudoOriginal;
 
-
-    public GerenciadorEditorSql(StackPane containerSql, ContextoAplicacao contextoAplicacao) {
+    public GerenciadorEditorSql(ContextoAplicacao contextoAplicacao) {
         this.contextoAplicacao = contextoAplicacao;
         this.codeArea = new CodeArea();
         this.fonteSitema = contextoAplicacao.getChaveFonte();
-        this.gerenciadorColunaNumeracao = new GerenciadorColunaNumeracao(this);
-        this.gerenciadorColunaNumeracao.atualizarFabricaNumeracao();
+        this.tamanhoFonte = contextoAplicacao.getTamanhoFonteSql();
 
-        alterarTamanhoFonte(tamanhoFonte);
-        //this.codeArea.setParagraphGraphicFactory(LineNumberFactory.get(this.codeArea));
+        this.scrollPane = new VirtualizedScrollPane<>(this.codeArea);
+        carregarCssEstilos(this.scrollPane);
+
+        this.gerenciadorColunaNumeracao = new GerenciadorColunaNumeracao(this);
+        alterarTamanhoFonte(0);
 
         this.palavrasChaveAutocomplete = new ArrayList<>(PalavraChaveSql.getListaPalavras());
         this.palavrasChaveAutocomplete.add("RETURNS TRIGGER");
         this.palavrasChaveAutocomplete.add("LANGUAGE 'PL/pgSQL'");
 
-        // Listener para realce de sintaxe e autocomplete
         this.codeArea.textProperty().addListener((obs, antigo, novo) -> {
             if (linhaErro >= 0) {
                 try {
@@ -60,26 +58,48 @@ public class GerenciadorEditorSql {
             atualizarEstilos(novo);
         });
 
-        //Atalhos e scroll mouse
         GerenciadorAtalhosEditor.configurar(this);
-
-        carregarCssEstilos(containerSql);
-
-        VirtualizedScrollPane<CodeArea> scrollPane = new VirtualizedScrollPane<>(this.codeArea);
-        containerSql.getChildren().add(scrollPane);
-
         new GerenciadorAutocomplete(this);
     }
 
-    private void carregarCssEstilos(StackPane containerSql) {
+    private void carregarCssEstilos(VirtualizedScrollPane<CodeArea> scroll) {
         try {
             URL cssUrl = getClass().getResource(CaminhoTela.EDITOR_SQL.getCaminho());
             if (cssUrl != null) {
-                containerSql.getStylesheets().add(cssUrl.toExternalForm());
+                scroll.getStylesheets().add(cssUrl.toExternalForm());
             }
         } catch (Exception e) {
             throw new RuntimeException(MensagemSistema.ERRO_CSS.getMensagem() + e.getMessage(), e);
         }
+    }
+
+    public VirtualizedScrollPane<CodeArea> getScrollPane() {
+        return scrollPane;
+    }
+
+    public String getCaminhoArquivo() {
+        return caminhoArquivo;
+    }
+
+    public void setCaminhoArquivo(String caminhoArquivo) {
+        this.caminhoArquivo = caminhoArquivo;
+    }
+
+    public String getConteudoOriginal() {
+        return conteudoOriginal;
+    }
+
+    public void setConteudoOriginal(String conteudoOriginal) {
+        this.conteudoOriginal = conteudoOriginal;
+    }
+
+    public boolean isModificado() {
+        if (caminhoArquivo == null) {
+            return false;
+        }
+        String atual = getTexto();
+        String original = conteudoOriginal != null ? conteudoOriginal : "";
+        return !atual.equals(original);
     }
 
     public void atualizarEstilos(String texto) {
@@ -93,7 +113,6 @@ public class GerenciadorEditorSql {
                 int indiceLinha = Math.min(linha - 1, codeArea.getParagraphs().size() - 1);
                 this.linhaErro = indiceLinha;
                 codeArea.setParagraphStyle(indiceLinha, singleton("error-line"));
-                // Move o cursor e foca a visualização no início da linha com erro
                 codeArea.moveTo(indiceLinha, 0);
                 codeArea.requestFollowCaret();
             }
@@ -105,8 +124,17 @@ public class GerenciadorEditorSql {
         }
     }
 
-
     public void removeErroLinha() {
+        if (this.linhaErro >= 0) {
+            try {
+                codeArea.setParagraphStyle(linhaErro, emptyList());
+            } catch (Exception ignored) {
+            }
+            this.linhaErro = -1;
+        }
+    }
+
+    public void limparErros() {
         if (this.linhaErro >= 0) {
             try {
                 codeArea.setParagraphStyle(linhaErro, emptyList());
@@ -122,10 +150,18 @@ public class GerenciadorEditorSql {
             tamanhoFonte = novoTamanho;
             this.codeArea.setStyle("-fx-font-size: " + tamanhoFonte + "px;" +
                     "-fx-font-family: '" + fonteSitema  + "';");
+            this.gerenciadorColunaNumeracao.atualizarFabricaNumeracao();
         }
+    }
 
+    public void atualizarConfiguracaoFonte(int tamanho, String fonte) {
+        this.tamanhoFonte = tamanho;
+        this.fonteSitema = fonte;
+        this.codeArea.setStyle(
+                "-fx-font-size: " + tamanhoFonte + "px; " +
+                        "-fx-font-family: '" + fonteSitema  + "';"
+        );
         this.gerenciadorColunaNumeracao.atualizarFabricaNumeracao();
-
     }
 
     public CodeArea getCodeArea() {
@@ -137,12 +173,11 @@ public class GerenciadorEditorSql {
     }
 
     public void setTexto(String texto) {
-
         this.gerenciadorColunaNumeracao.limparMarcadores();
         codeArea.replaceText(texto != null ? texto : "");
     }
-    public void limpar() {
 
+    public void limpar() {
         this.gerenciadorColunaNumeracao.limparMarcadores();
         codeArea.clear();
     }
@@ -170,6 +205,7 @@ public class GerenciadorEditorSql {
     public int getTamanhoFonte() {
         return tamanhoFonte;
     }
+
     public List<String> getPalavrasChaveAutocomplete() {
         return palavrasChaveAutocomplete;
     }

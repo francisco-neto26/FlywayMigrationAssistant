@@ -8,11 +8,14 @@ public class GerenciadorVisual {
         javafx.application.Application.setUserAgentStylesheet(tema.getUserAgentStylesheet());
     }
 
-    public static void aplicarFonteGlobal(String nomeFonte) {
+    public static void aplicarVisualGlobal(String nomeFonte, int tamanhoSistema) {
         javafx.stage.Window.getWindows().forEach(window -> {
             if (window instanceof javafx.stage.Stage stage) {
                 if (stage.getScene() != null && stage.getScene().getRoot() != null) {
-                    stage.getScene().getRoot().setStyle("-fx-font-family: '" + nomeFonte + "';");
+                    stage.getScene().getRoot().setStyle(
+                            "-fx-font-family: '" + nomeFonte + "'; " +
+                            "-fx-font-size: " + tamanhoSistema + "px;"
+                    );
                 }
             }
         });

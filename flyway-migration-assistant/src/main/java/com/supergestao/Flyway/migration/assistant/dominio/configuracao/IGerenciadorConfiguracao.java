@@ -1,7 +1,6 @@
 package com.supergestao.Flyway.migration.assistant.dominio.configuracao;
 
 import atlantafx.base.theme.Theme;
-
 import java.util.List;
 
 public interface IGerenciadorConfiguracao {
@@ -30,4 +29,11 @@ public interface IGerenciadorConfiguracao {
 
     void salvarChaveUsaModulo(String usa_modulo);
 
+    int getTamanhoFonteSql();
+
+    void salvarTamanhoFonteSql(int tamanho);
+
+    int getTamanhoFonteSistema();
+
+    void salvarTamanhoFonteSistema(int tamanho);
 }

@@ -19,12 +19,13 @@ import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.StackPane;
 import javafx.util.Duration;
 
+import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
 
 public class TelaPrincipalController implements ITelasModal {
 
@@ -43,7 +44,7 @@ public class TelaPrincipalController implements ITelasModal {
     @FXML
     private Button btnSalvarSql;
     @FXML
-    private StackPane containerSql;
+    private TabPane painelAbasSql;
     @FXML
     private TextArea txtAreaMensagens;
     @FXML
@@ -55,49 +56,139 @@ public class TelaPrincipalController implements ITelasModal {
     @FXML
     private Button btnNovoMigration;
     @FXML
-    private Button btnConfiguracoes;
-    @FXML
     private BorderPane painelRaiz;
 
     private ContextoAplicacao contexto;
     private GerenciadorArvoreArquivos gerenciadorArvoreArquivos;
-    private GerenciadorEditorSql editorSql;
+    private final Map<String, Tab> abasAbertas = new HashMap<>();
 
+    @Override
     public void setContextoAplicacao(ContextoAplicacao contextoAplicacao) {
         this.contexto = contextoAplicacao;
-        this.editorSql = new GerenciadorEditorSql(containerSql, this.contexto);
 
-        // Registra as ações para as teclas de atalho do editor
-        this.editorSql.setAcaoSalvar(this::salvarSql);
-        this.editorSql.setAcaoIndentar(this::indentar);
-        //Limpa campo de mensagem quando ocorrer alterações
-        this.editorSql.textProperty().addListener((obs, antigo, novo) -> {
-            txtAreaMensagens.clear();
+        this.painelAbasSql.getSelectionModel().selectedItemProperty().addListener((obs, antigaTab, novaTab) -> {
+            atualizarEstadoBotoes();
         });
-        //Limpa linha de erro quando houve alterações
-        this.editorSql.getCodeArea().setOnMouseClicked(event -> {
-            txtAreaMensagens.clear();
-            this.editorSql.removeErroLinha();
-        });
-
     }
 
     @FXML
     public void initialize() {
+        java.net.URL cssUrl = getClass().getResource(CaminhoTela.EDITOR_SQL.getCaminho());
+        if (cssUrl != null) {
+            painelAbasSql.getStylesheets().add(cssUrl.toExternalForm());
+        }
 
         buscaTempoReal();
         Platform.runLater(() -> {
             verifcaEcarregarModuloFuncao();
             this.gerenciadorArvoreArquivos = new GerenciadorArvoreArquivos(
-                    this.contexto, treeArquivos, editorSql,
+                    this, this.contexto, treeArquivos,
                     btnSalvarSql, btnCancelarEdicao, btnIndentar, btnValidarSql
             );
             this.gerenciadorArvoreArquivos.selecaoArvore();
-            this.gerenciadorArvoreArquivos.limparEdicaoSql();
 
             GerenciadorEstiloBotao.gerenciadorEstiloBotao(painelRaiz);
             AtivaDesativaBotoesPrincipais();
+            atualizarFontesCustomizadas();
+            atualizarEstadoBotoes();
         });
+    }
+
+    public void atualizarFontesCustomizadas() {
+        int tamanhoSql = contexto.getTamanhoFonteSql();
+        String fonte = contexto.getChaveFonte();
+
+        treeArquivos.setStyle("-fx-font-size: " + tamanhoSql + "px;");
+
+        for (Tab aba : painelAbasSql.getTabs()) {
+            GerenciadorEditorSql editor = (GerenciadorEditorSql) aba.getUserData();
+            if (editor != null) {
+                editor.atualizarConfiguracaoFonte(tamanhoSql, fonte);
+            }
+        }
+    }
+
+    public GerenciadorEditorSql obterEditorAtivo() {
+        Tab abaAtiva = painelAbasSql.getSelectionModel().getSelectedItem();
+        if (abaAtiva != null) {
+            return (GerenciadorEditorSql) abaAtiva.getUserData();
+        }
+        return null;
+    }
+
+    public void atualizarEstadoBotoes() {
+        GerenciadorEditorSql editorAtivo = obterEditorAtivo();
+        if (editorAtivo == null || editorAtivo.getCaminhoArquivo() == null) {
+            btnSalvarSql.setDisable(true);
+            btnCancelarEdicao.setDisable(true);
+            btnIndentar.setDisable(true);
+            btnValidarSql.setDisable(true);
+        } else {
+            boolean modificado = editorAtivo.isModificado();
+            btnSalvarSql.setDisable(!modificado);
+            btnCancelarEdicao.setDisable(!modificado);
+            btnIndentar.setDisable(false);
+            btnValidarSql.setDisable(false);
+
+            Tab aba = painelAbasSql.getSelectionModel().getSelectedItem();
+            String nomeBase = Paths.get(editorAtivo.getCaminhoArquivo()).getFileName().toString();
+            if (modificado) {
+                aba.setText(nomeBase + " *");
+            } else {
+                aba.setText(nomeBase);
+            }
+        }
+    }
+
+    public void abrirArquivoEmAba(String caminho) {
+        if (abasAbertas.containsKey(caminho)) {
+            painelAbasSql.getSelectionModel().select(abasAbertas.get(caminho));
+            return;
+        }
+
+        GerenciadorEditorSql novoEditor = new GerenciadorEditorSql(this.contexto);
+        String conteudo = this.contexto.buscarConteudoArquivo(caminho);
+        novoEditor.setCaminhoArquivo(caminho);
+        novoEditor.setConteudoOriginal(conteudo);
+        novoEditor.setTexto(conteudo);
+
+        novoEditor.textProperty().addListener((obs, antigo, novo) -> {
+            if (novoEditor == obterEditorAtivo()) {
+                atualizarEstadoBotoes();
+            }
+        });
+
+        novoEditor.getCodeArea().setOnMouseClicked(event -> {
+            txtAreaMensagens.clear();
+            novoEditor.limparErros();
+        });
+
+        String nomeArquivo = Paths.get(caminho).getFileName().toString();
+        Tab aba = new Tab(nomeArquivo);
+        aba.setId(caminho);
+        aba.setUserData(novoEditor);
+        aba.setContent(novoEditor.getScrollPane());
+
+        aba.setOnCloseRequest(event -> {
+            if (novoEditor.isModificado()) {
+                boolean querDescartar = contexto.exibirDialogo(TipoDialogo.CONFIRMACAO,
+                        MensagemSistema.ALTERACAO_NAO_SALVA.getMensagem(),
+                        null,
+                        MensagemSistema.DESCARTAR_ALTERACAO.getMensagem()
+                );
+                if (!querDescartar) {
+                    event.consume();
+                    return;
+                }
+            }
+            abasAbertas.remove(caminho);
+        });
+
+        painelAbasSql.getTabs().add(aba);
+        abasAbertas.put(caminho, aba);
+        painelAbasSql.getSelectionModel().select(aba);
+
+        atualizarEstadoBotoes();
     }
 
     @FXML
@@ -107,7 +198,8 @@ public class TelaPrincipalController implements ITelasModal {
                 this.contexto
         );
         GerenciadorVisual.aplicarTemaGlobal(contexto.getTema());
-        GerenciadorVisual.aplicarFonteGlobal(contexto.getChaveFonte());
+        GerenciadorVisual.aplicarVisualGlobal(contexto.getChaveFonte(), contexto.getTamanhoFonteSistema());
+        atualizarFontesCustomizadas();
         verifcaEcarregarModuloFuncao();
     }
 
@@ -140,8 +232,9 @@ public class TelaPrincipalController implements ITelasModal {
 
     @FXML
     private void indentar() {
-        if (this.gerenciadorArvoreArquivos != null && editorSql.getTexto() != null) {
-            String sqlOriginal = editorSql.getTexto();
+        GerenciadorEditorSql editorAtivo = obterEditorAtivo();
+        if (editorAtivo != null && editorAtivo.getTexto() != null) {
+            String sqlOriginal = editorAtivo.getTexto();
             Resultado resultado = IndentarSql.formatar(sqlOriginal);
             if (resultado.temErro()) {
                 this.contexto.exibirDialogo(
@@ -151,39 +244,36 @@ public class TelaPrincipalController implements ITelasModal {
                         resultado.mensagemErro()
                 );
             } else {
-                editorSql.setTexto(resultado.valor());
+                editorAtivo.setTexto(resultado.valor());
             }
         }
     }
 
     @FXML
     private void validarSql() {
-        if (this.editorSql == null) {
+        GerenciadorEditorSql editorAtivo = obterEditorAtivo();
+        if (editorAtivo == null) {
             return;
         }
         txtAreaMensagens.clear();
-        this.editorSql.removeErroLinha();
+        editorAtivo.removeErroLinha();
         try {
-            String sql = this.editorSql.getTexto();
-            // Instancia o validador que roda as regras do ANTLR4
+            String sql = editorAtivo.getTexto();
             ValidacaoCompletaSql validador = new ValidacaoCompletaSql();
             validador.validarScriptCompleto(sql);
-            // Se validou com sucesso
             this.contexto.exibirDialogo(TipoDialogo.MENSAGEM,
                     MensagemSistema.MENSAGEM_INFORMATIVA.getMensagem(),
                     null,
                     MensagemSistema.SQL_VALIDADO.getMensagem());
         } catch (SqlException e) {
-            // Captura o erro gerado pelo Parser do ANTLR e o exibe no painel de mensagens
             String mensagemErro = e.getMessage();
             txtAreaMensagens.setText(e.getMessage());
-            // Faz o parse do erro (Exemplo de string: "Erro na linha: 5 coluna: 12")
             Pattern pattern = Pattern.compile("linha:\\s*(\\d+)\\s*coluna:\\s*(\\d+)", Pattern.CASE_INSENSITIVE);
             Matcher matcher = pattern.matcher(mensagemErro);
 
             if (matcher.find()) {
-                int linha = Integer.parseInt(matcher.group(1));
-                this.editorSql.marcarLinhaErro(linha);
+                int javaLinha = Integer.parseInt(matcher.group(1));
+                editorAtivo.marcarLinhaErro(javaLinha);
             }
         } catch (Exception e) {
             txtAreaMensagens.setText(MensagemSistema.FALHA_VALIDAR_SQL.MensagemComParametro(e.getMessage()));
@@ -192,28 +282,32 @@ public class TelaPrincipalController implements ITelasModal {
 
     @FXML
     private void cancelarEdicao() {
-        if (this.gerenciadorArvoreArquivos != null) {
-            this.gerenciadorArvoreArquivos.reverterEdicaoSql();
+        GerenciadorEditorSql editorAtivo = obterEditorAtivo();
+        if (editorAtivo != null) {
+            editorAtivo.setTexto(editorAtivo.getConteudoOriginal());
+            atualizarEstadoBotoes();
         }
     }
 
     @FXML
     private void salvarSql() {
-        if (this.gerenciadorArvoreArquivos != null && this.gerenciadorArvoreArquivos.getCaminhoArquivoSelecionado() != null) {
+        GerenciadorEditorSql editorAtivo = obterEditorAtivo();
+        if (editorAtivo != null && editorAtivo.getCaminhoArquivo() != null) {
             try {
-                String caminho = this.gerenciadorArvoreArquivos.getCaminhoArquivoSelecionado();
-                String conteudo = editorSql.getTexto();
+                String caminho = editorAtivo.getCaminhoArquivo();
+                String conteudo = editorAtivo.getTexto();
                 boolean querSalvar = this.contexto.exibirDialogo(TipoDialogo.CONFIRMACAO,
                         MensagemSistema.ALTERACAO_NAO_SALVA.getMensagem(),
                         null,
                         MensagemSistema.SALVAR_ALTERACAO.getMensagem());
-                if (querSalvar){
+                if (querSalvar) {
                     this.contexto.salvarArquivo(caminho, conteudo);
                     this.contexto.exibirDialogo(TipoDialogo.MENSAGEM,
-                            MensagemSistema.MENSAGEM_INFORMATIVA.getMensagem(),
+                            MensagemSistema.CONFIRMACAO.getMensagem(),
                             null,
                             MensagemSistema.ARQUIVO_SALVO.getMensagem());
-                    this.gerenciadorArvoreArquivos.atualizarConteudoOriginalArquivo(conteudo);
+                    editorAtivo.setConteudoOriginal(conteudo);
+                    atualizarEstadoBotoes();
                 }
             } catch (Exception e) {
                 this.contexto.exibirDialogo(TipoDialogo.ERRO,
@@ -251,8 +345,12 @@ public class TelaPrincipalController implements ITelasModal {
         btnBuscar.setOnAction(event -> buscarArquivo(txtBuscarArquivo.getText()));
     }
 
-    private void buscarArquivo(String nomeArquivo) {
-
+    private void buscarArquivo(String termo) {
+        if (termo == null || termo.trim().isEmpty()) {
+            GerenciadorArvoreModulos.buscarModulosFuncoes(this.contexto, treeArquivos);
+        } else {
+            GerenciadorArvoreModulos.buscarModulosFuncoesFiltrados(this.contexto, treeArquivos, termo);
+        }
     }
 
     private void AtivaDesativaBotoesPrincipais() {
@@ -264,5 +362,4 @@ public class TelaPrincipalController implements ITelasModal {
         btnBuscar.setDisable(existeDiretorioConfigurado);
         txtBuscarArquivo.setDisable(existeDiretorioConfigurado);
     }
-
 }

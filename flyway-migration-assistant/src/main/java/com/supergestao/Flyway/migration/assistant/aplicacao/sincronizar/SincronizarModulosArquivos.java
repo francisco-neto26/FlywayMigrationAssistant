@@ -85,4 +85,42 @@ public class SincronizarModulosArquivos {
         this.iGerenciadorModulosArquivosDisco.salvarArquivo(caminhoDoArquivo, conteudoSQL);
     }
 
+    public Map<String, Map<String, Set<String>>> buscarArquivosPorTermo(String diretorioRaiz, String termoBusca) {
+        Map<String, Map<String, Set<String>>> resultados = new HashMap<>();
+        if (diretorioRaiz == null || diretorioRaiz.isEmpty()) {
+            return resultados;
+        }
+        File pastaRaiz = new File(diretorioRaiz);
+        if (pastaRaiz.exists() && pastaRaiz.isDirectory()) {
+            varrerDiretorioBusca(pastaRaiz, pastaRaiz, termoBusca.toLowerCase().trim(), resultados);
+        }
+        return resultados;
+    }
+    private void varrerDiretorioBusca(File raiz, File dirAtual, String termoBusca, Map<String, Map<String, Set<String>>> resultados) {
+        File[] arquivos = dirAtual.listFiles();
+        if (arquivos == null) {
+            return;
+        }
+        for (File arquivo : arquivos) {
+            if (arquivo.isDirectory()) {
+                varrerDiretorioBusca(raiz, arquivo, termoBusca, resultados);
+            } else if (arquivo.isFile() && arquivo.getName().toLowerCase().endsWith(".sql")) {
+                if (arquivo.getName().toLowerCase().contains(termoBusca)) {
+                    String caminhoRelativo = raiz.toURI().relativize(arquivo.toURI()).getPath();
+                    caminhoRelativo = caminhoRelativo.replace("\\", "/");
+                    String[] partes = caminhoRelativo.split("/");
+                    if (partes.length >= 2) {
+                        String nomeModulo = partes[0];
+                        String nomeFuncao = partes.length == 3 ? partes[1] : "";
+                        String nomeArquivo = partes[partes.length - 1];
+                        resultados.computeIfAbsent(nomeModulo, k -> new HashMap<>())
+                                .computeIfAbsent(nomeFuncao, k -> new TreeSet<>())
+                                .add(nomeArquivo);
+                    }
+                }
+            }
+        }
+    }
+
+
 }

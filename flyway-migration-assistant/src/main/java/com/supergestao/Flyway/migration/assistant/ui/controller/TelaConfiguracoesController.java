@@ -1,6 +1,5 @@
 package com.supergestao.Flyway.migration.assistant.ui.controller;
 
-
 import atlantafx.base.theme.Theme;
 import com.supergestao.Flyway.migration.assistant.dominio.mensagem.MensagemSistema;
 import com.supergestao.Flyway.migration.assistant.exception.PersistenciaException;
@@ -51,9 +50,13 @@ public class TelaConfiguracoesController implements ITelasModal {
     private VBox painelRaiz;
     @FXML
     private Button btnCoresPadrao;
+    @FXML
+    private ComboBox<Integer> comboTamanhoFonteSql;
+    @FXML
+    private ComboBox<Integer> comboTamanhoFonteSistema;
 
     private ContextoAplicacao contexto;
-    String txtDiretorioModuloAntigo;
+    private String txtDiretorioModuloAntigo;
 
     public void setContextoAplicacao(ContextoAplicacao contextoAplicacao) {
         this.contexto = contextoAplicacao;
@@ -61,13 +64,11 @@ public class TelaConfiguracoesController implements ITelasModal {
 
     @FXML
     public void initialize() {
-
         Platform.runLater(() -> {
             GerenciadorEstiloBotao.gerenciadorEstiloBotao(painelRaiz);
             iniciarCombo();
             verficaConfigUsaModulo();
         });
-
     }
 
     private void iniciarCombo() {
@@ -89,9 +90,15 @@ public class TelaConfiguracoesController implements ITelasModal {
         comboFonte.getItems().addAll(javafx.scene.text.Font.getFamilies());
         comboDirModulo.getItems().addAll(List.of("Sim", "Não"));
 
+        comboTamanhoFonteSql.getItems().addAll(10, 11, 12, 13, 14, 15, 16, 17, 18, 20, 22, 24, 26, 28, 30);
+        comboTamanhoFonteSistema.getItems().addAll(10, 11, 12, 13, 14, 15, 16, 17, 18, 20, 22, 24, 26, 28, 30);
+
         comboTema.getSelectionModel().select(this.contexto.getTema());
         comboFonte.getSelectionModel().select(this.contexto.getChaveFonte());
-        comboDirModulo.getSelectionModel().select(this.contexto.getChaveUsaModulo() ? "Sim": "Não");
+        comboDirModulo.getSelectionModel().select(this.contexto.getChaveUsaModulo() ? "Sim" : "Não");
+
+        comboTamanhoFonteSql.getSelectionModel().select(Integer.valueOf(this.contexto.getTamanhoFonteSql()));
+        comboTamanhoFonteSistema.getSelectionModel().select(Integer.valueOf(this.contexto.getTamanhoFonteSistema()));
     }
 
     private void verficaConfigUsaModulo() {
@@ -112,7 +119,8 @@ public class TelaConfiguracoesController implements ITelasModal {
     @FXML
     private void fechar() {
         GerenciadorVisual.aplicarTemaGlobal(comboTema.getValue());
-        GerenciadorVisual.aplicarFonteGlobal(comboFonte.getValue());
+        Integer tamanho = comboTamanhoFonteSistema.getValue() != null ? comboTamanhoFonteSistema.getValue() : 12;
+        GerenciadorVisual.aplicarVisualGlobal(comboFonte.getValue(), tamanho);
         Stage stage = (Stage) btnCancelar.getScene().getWindow();
         stage.close();
     }
@@ -147,13 +155,13 @@ public class TelaConfiguracoesController implements ITelasModal {
                 this.contexto.salvarTema(comboTema.getValue().getName());
                 this.contexto.salvarChaveFonte(comboFonte.getValue());
                 this.contexto.salvarChaveUsaModulo(comboDirModulo.getValue());
+                this.contexto.salvarTamanhoFonteSql(comboTamanhoFonteSql.getValue());
+                this.contexto.salvarTamanhoFonteSistema(comboTamanhoFonteSistema.getValue());
 
                 fechar();
 
             } catch (PersistenciaException e) {
-
-                String detalhesDoErro = e.getCause() != null ? e.getCause().toString() : MensagemSistema.ERRO_GENERICO.MensagemComParametro("Erro ao salvar configurações");
-
+                String detalhesDoErro = e.getCause() != null ? e.getCause().toString() : MensagemSistema.ERRO_SALVAR_CONFIG.getMensagem();
                 this.contexto.exibirDialogo(TipoDialogo.ERRO,
                         MensagemSistema.ALERTA.getMensagem(),
                         MensagemSistema.GRAVAR_REGEDIT.getMensagem(),
@@ -209,7 +217,8 @@ public class TelaConfiguracoesController implements ITelasModal {
 
     @FXML
     private void aplicarfonte() {
-        GerenciadorVisual.aplicarFonteGlobal(comboFonte.getValue());
+        Integer tamanho = comboTamanhoFonteSistema.getValue() != null ? comboTamanhoFonteSistema.getValue() : 12;
+        GerenciadorVisual.aplicarVisualGlobal(comboFonte.getValue(), tamanho);
     }
 
     @FXML
@@ -224,7 +233,5 @@ public class TelaConfiguracoesController implements ITelasModal {
 
     @FXML
     private void coresPadrao() {
-
     }
-
 }

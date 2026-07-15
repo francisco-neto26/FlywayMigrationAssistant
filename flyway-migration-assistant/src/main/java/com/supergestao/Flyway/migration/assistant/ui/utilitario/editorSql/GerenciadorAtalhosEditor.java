@@ -10,7 +10,6 @@ public class GerenciadorAtalhosEditor {
     public static void configurar(GerenciadorEditorSql editor) {
         CodeArea codeArea = editor.getCodeArea();
 
-        // 1. Evento de Mouse: Zoom com Ctrl + Scroll
         codeArea.addEventFilter(ScrollEvent.SCROLL, event -> {
             if (event.isControlDown()) {
                 double deltaY = event.getDeltaY();
@@ -23,21 +22,17 @@ public class GerenciadorAtalhosEditor {
             }
         });
 
-        // 2. Evento de Teclado: Dinâmico baseado no Enum
         codeArea.setOnKeyPressed(event -> {
             for (AtalhoTeclado atalho : AtalhoTeclado.values()) {
                 if (atalho.matches(event)) {
                     executarAtalho(editor, atalho);
                     event.consume();
-                    return; // Retorna imediatamente ao processar
+                    return;
                 }
             }
         });
     }
 
-    /**
-     * Executa a regra lógica atrelada a cada atalho catalogado.
-     */
     private static void executarAtalho(GerenciadorEditorSql editor, AtalhoTeclado atalho) {
         switch (atalho) {
             case SALVAR -> {

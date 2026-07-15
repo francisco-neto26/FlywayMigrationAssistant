@@ -67,7 +67,8 @@ public enum MensagemSistema {
     ERRO_LER_CLASS("Recurso não encontrado no classpath: %s"),
     ERRO_LINHA_SQL("Erro na linha: %s coluna: %s\nMensagem: %s"),
     SALVAR_ALTERACAO("Deseja salvar as alterações?"),
-    CAMPO_DETALHES_VAZIO("O campo detalhes não pode ser vazio para o tipo de diálogo: %s");
+    CAMPO_DETALHES_VAZIO("O campo detalhes não pode ser vazio para o tipo de diálogo: %s"),
+    ERRO_SALVAR_CONFIG("Erro ao salvar configurações");
 
     private final String mensagem;
 

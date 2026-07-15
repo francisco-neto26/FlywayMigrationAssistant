@@ -36,13 +36,11 @@ public enum AtalhoTeclado {
     }
 
     public boolean matches(KeyEvent event) {
-        // Valida modificadores de forma estrita
         if (event.isControlDown() != ctrlRequerido) return false;
         if (event.isShiftDown() != shiftRequerido) return false;
 
         KeyCode code = event.getCode();
 
-        // Tratamento especial para o Zoom devido aos múltiplos botões de mais e menos do teclado
         if (this == AUMENTAR_FONTE) {
             return code == KeyCode.EQUALS || code == KeyCode.ADD;
         }
