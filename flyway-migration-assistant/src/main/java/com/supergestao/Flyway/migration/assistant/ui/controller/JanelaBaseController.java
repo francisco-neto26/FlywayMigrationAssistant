@@ -1,8 +1,8 @@
 package com.supergestao.Flyway.migration.assistant.ui.controller;
 
 import com.supergestao.Flyway.migration.assistant.ui.estado.ContextoAplicacao;
-import com.supergestao.Flyway.migration.assistant.ui.utilitario.CoresPadrao;
-import com.supergestao.Flyway.migration.assistant.ui.utilitario.GerenciadorEstiloBotao;
+import com.supergestao.Flyway.migration.assistant.ui.utilitario.janela.CoresPadrao;
+import com.supergestao.Flyway.migration.assistant.ui.utilitario.estilo.GerenciadorEstiloBotao;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
@@ -32,16 +32,14 @@ public class JanelaBaseController implements ITelasModal {
     private double yOffset = 0;
     private boolean isMaximized = true;
     private double lastX, lastY, lastWidth, lastHeight;
-
     private ContextoAplicacao contexto;
 
-    public void setContextoAplicacao(ContextoAplicacao contextoAplicacao){
+    public void setContextoAplicacao(ContextoAplicacao contextoAplicacao) {
         this.contexto = contextoAplicacao;
     }
 
     @FXML
     public void initialize() {
-
         Platform.runLater(() -> {
             setfonte();
             GerenciadorEstiloBotao.gerenciadorEstiloBotao(painelPrincipal);
@@ -69,7 +67,6 @@ public class JanelaBaseController implements ITelasModal {
         });
 
         btnMaximizar.setOnAction(event -> {
-
             Stage stage = (Stage) btnMaximizar.getScene().getWindow();
             javafx.collections.ObservableList<javafx.stage.Screen> monitores = javafx.stage.Screen.getScreensForRectangle(stage.getX(), stage.getY(), stage.getWidth(), stage.getHeight());
             javafx.stage.Screen monitorAtual = monitores.isEmpty() ? javafx.stage.Screen.getPrimary() : monitores.getFirst();
@@ -98,20 +95,22 @@ public class JanelaBaseController implements ITelasModal {
 
     public void setConteudo(Node conteudo, String titulo) {
         lblTitulo.setText(titulo);
-
         BorderPane conteudoComMoldura = new BorderPane(conteudo);
         conteudoComMoldura.setStyle("-fx-border-color: rgba(128, 128, 128, 0.4); " +
                 "-fx-border-style: solid; " +
                 "-fx-border-width: 2; " +
                 "-fx-effect: innershadow(one-pass-box, rgba(0,0,0,0.15), 10, 0, 0, 3);");
-
         BorderPane.setMargin(conteudoComMoldura, new Insets(5));
         painelPrincipal.setCenter(conteudoComMoldura);
     }
 
-    public void setfonte(){
+    public void setfonte() {
         String fonteEscolhida = this.contexto.getChaveFonte();
-        painelPrincipal.setStyle("-fx-font-family: '" + fonteEscolhida + "';");
+        int tamanhoSistema = this.contexto.getTamanhoFonteSistema();
+        painelPrincipal.setStyle(
+                "-fx-font-family: '" + fonteEscolhida + "'; " +
+                        "-fx-font-size: " + tamanhoSistema + "px;"
+        );
     }
 
     public void defineVisibilidadeMaxMin() {
@@ -125,4 +124,3 @@ public class JanelaBaseController implements ITelasModal {
         hboxTopo.setStyle("-fx-background-color: " + coresPadrao.getCorTipoMensagem() + ";");
     }
 }
-

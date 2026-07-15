@@ -9,14 +9,15 @@ import com.supergestao.Flyway.migration.assistant.dominio.modelo.Modulo;
 import com.supergestao.Flyway.migration.assistant.dominio.modelo.Resultado;
 import com.supergestao.Flyway.migration.assistant.persistencia.gerenciador.modulos.arquivos.IGerenciadorModulosArquivosDisco;
 import com.supergestao.Flyway.migration.assistant.persistencia.gerenciador.modulos.arquivos.GerenciadorModulosArquivosDisco;
-import com.supergestao.Flyway.migration.assistant.ui.utilitario.GerenciadorJanelas;
-import com.supergestao.Flyway.migration.assistant.ui.utilitario.IGerenciadorJanelas;
-import com.supergestao.Flyway.migration.assistant.ui.utilitario.TipoDialogo;
+import com.supergestao.Flyway.migration.assistant.ui.utilitario.janela.GerenciadorJanelas;
+import com.supergestao.Flyway.migration.assistant.ui.utilitario.janela.IGerenciadorJanelas;
+import com.supergestao.Flyway.migration.assistant.ui.utilitario.janela.TipoDialogo;
 
 import java.nio.file.Paths;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class ContextoAplicacao {
     private final IGerenciadorModulosArquivosDisco iGerenciadorModulosArquivosDisco;
@@ -39,19 +40,19 @@ public class ContextoAplicacao {
         return this.iGerenciadorModulosArquivosDisco;
     }
 
-    public String getDiretorioArquivo(){
+    public String getDiretorioArquivo() {
         return this.iGerenciadorConfiguracao.getDiretorioArquivo();
     }
 
-    public String getDiretorioModulo(){
+    public String getDiretorioModulo() {
         return this.iGerenciadorConfiguracao.getDiretorioModulo();
     }
 
-    public String getChaveFonte(){
+    public String getChaveFonte() {
         return this.iGerenciadorConfiguracao.getChaveFonte();
     }
 
-    public Theme getTema(){
+    public Theme getTema() {
         return this.iGerenciadorConfiguracao.getTema();
     }
 
@@ -59,35 +60,51 @@ public class ContextoAplicacao {
         return this.iGerenciadorConfiguracao.getListaTema();
     }
 
-    public boolean getChaveUsaModulo(){
+    public boolean getChaveUsaModulo() {
         return this.iGerenciadorConfiguracao.getChaveUsaModulo();
     }
 
-    public boolean getDiretoriosConfigurados(){
+    public boolean getDiretoriosConfigurados() {
         return this.iGerenciadorConfiguracao.diretoriosConfigurados();
     }
 
-    public void salvarDiretorioModulo(String diretorioModulo){
+    public void salvarDiretorioModulo(String diretorioModulo) {
         this.iGerenciadorConfiguracao.salvarDiretorioModulo(diretorioModulo);
     }
 
-    public void salvarDiretorioArquivo(String diretorioArquivo){
+    public void salvarDiretorioArquivo(String diretorioArquivo) {
         this.iGerenciadorConfiguracao.salvarDiretorioArquivo(diretorioArquivo);
     }
 
-    public void salvarTema(String tema){
+    public void salvarTema(String tema) {
         this.iGerenciadorConfiguracao.salvarTema(tema);
     }
 
-    public void salvarChaveFonte(String fonte){
+    public void salvarChaveFonte(String fonte) {
         this.iGerenciadorConfiguracao.salvarChaveFonte(fonte);
     }
 
-    public void salvarChaveUsaModulo(String usaModulo){
+    public void salvarChaveUsaModulo(String usaModulo) {
         this.iGerenciadorConfiguracao.salvarChaveUsaModulo(usaModulo);
     }
 
-    public boolean exibirDialogo(TipoDialogo tipoDialogo, String titulo, String mensagem, String detalhes){
+    public int getTamanhoFonteSql() {
+        return this.iGerenciadorConfiguracao.getTamanhoFonteSql();
+    }
+
+    public void salvarTamanhoFonteSql(int tamanho) {
+        this.iGerenciadorConfiguracao.salvarTamanhoFonteSql(tamanho);
+    }
+
+    public int getTamanhoFonteSistema() {
+        return this.iGerenciadorConfiguracao.getTamanhoFonteSistema();
+    }
+
+    public void salvarTamanhoFonteSistema(int tamanho) {
+        this.iGerenciadorConfiguracao.salvarTamanhoFonteSistema(tamanho);
+    }
+
+    public boolean exibirDialogo(TipoDialogo tipoDialogo, String titulo, String mensagem, String detalhes) {
         return this.getIGerenciadorJanelas().exibirDialogo(tipoDialogo, titulo, mensagem, detalhes);
     }
 
@@ -101,16 +118,16 @@ public class ContextoAplicacao {
 
     public List<Resultado> criarModuloFuncao(String modulo, String funcao, String caminhoCompleto) {
         String diretorioCompleto = "";
-        if (funcao == null){
+        if (funcao == null) {
             diretorioCompleto = Paths.get(caminhoCompleto, modulo).toString();
-        }else{
+        } else {
             diretorioCompleto = Paths.get(caminhoCompleto, modulo, funcao).toString();
         }
-        String moduloFuncao = funcao == null ? modulo : funcao ;
+        String moduloFuncao = funcao == null ? modulo : funcao;
         return this.sincronizarModulosArquivos.criarModuloFuncao(moduloFuncao, diretorioCompleto);
     }
 
-    public Map<String, Modulo> obterModulosExistentes(String caminhoExistentes){
+    public Map<String, Modulo> obterModulosExistentes(String caminhoExistentes) {
         return this.sincronizarModulosArquivos.obterModulosExistentes(caminhoExistentes);
     }
 
@@ -118,11 +135,11 @@ public class ContextoAplicacao {
         return this.sincronizarModulosArquivos.obterModulosNovos(moduloOrigem, modulosExistentes);
     }
 
-    public HashSet<Arquivo> carregarArquivos(String caminhoFuncao, String nomeModulo, String nomeFuncao){
+    public HashSet<Arquivo> carregarArquivos(String caminhoFuncao, String nomeModulo, String nomeFuncao) {
         return this.sincronizarModulosArquivos.carregarArquivos(caminhoFuncao, nomeModulo, nomeFuncao);
     }
 
-    public boolean temFuncaoArquivo(String diretorioRaiz, String nomeModulo, String nomeFuncao){
+    public boolean temFuncaoArquivo(String diretorioRaiz, String nomeModulo, String nomeFuncao) {
         return this.sincronizarModulosArquivos.temFuncaoArquivo(diretorioRaiz, nomeModulo, nomeFuncao);
     }
 
@@ -134,8 +151,8 @@ public class ContextoAplicacao {
         this.sincronizarModulosArquivos.salvarArquivo(caminhoDoArquivo, conteudoSQL);
     }
 
-
-
+    public Map<String, Map<String, Set<String>>> buscarArquivosPorTermo(String termoBusca) {
+        return this.sincronizarModulosArquivos.buscarArquivosPorTermo(getDiretorioArquivo(), termoBusca);
+    }
 
 }
-

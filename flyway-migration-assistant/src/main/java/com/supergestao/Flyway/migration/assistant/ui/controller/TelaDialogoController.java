@@ -1,9 +1,10 @@
 package com.supergestao.Flyway.migration.assistant.ui.controller;
 
+import com.supergestao.Flyway.migration.assistant.dominio.mensagem.MensagemSistema;
 import com.supergestao.Flyway.migration.assistant.exception.TelaException;
 import com.supergestao.Flyway.migration.assistant.ui.estado.ContextoAplicacao;
-import com.supergestao.Flyway.migration.assistant.ui.utilitario.GerenciadorEstiloBotao;
-import com.supergestao.Flyway.migration.assistant.ui.utilitario.TipoDialogo;
+import com.supergestao.Flyway.migration.assistant.ui.utilitario.estilo.GerenciadorEstiloBotao;
+import com.supergestao.Flyway.migration.assistant.ui.utilitario.janela.TipoDialogo;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
@@ -54,14 +55,14 @@ public class TelaDialogoController implements ITelasModal {
         btnCancelar.setManaged(false);
 
         if (detalhes.isBlank()) {
-            throw new TelaException("O campo detalhes não pode ser vazio para o tipo de diálogo: " + tipoDialogo);
+            throw new TelaException(MensagemSistema.CAMPO_DETALHES_VAZIO.MensagemComParametro(tipoDialogo));
         }
 
         if (tipoDialogo == TipoDialogo.CONFIRMACAO) {
-            btnConfirmar.setText("Confirmar");
+            btnConfirmar.setText(MensagemSistema.CONFIRMAR.getMensagem());
             telaConfirmacao(detalhes);
         } else {
-            btnConfirmar.setText("Sair");
+            btnConfirmar.setText(MensagemSistema.SAIR.getMensagem());
             telaMensagem(detalhes);
         }
 

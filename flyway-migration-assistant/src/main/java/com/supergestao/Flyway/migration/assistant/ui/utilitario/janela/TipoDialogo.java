@@ -1,4 +1,4 @@
-package com.supergestao.Flyway.migration.assistant.ui.utilitario;
+package com.supergestao.Flyway.migration.assistant.ui.utilitario.janela;
 
 public enum TipoDialogo {
     CONFIRMACAO(1, "Confirmação"),

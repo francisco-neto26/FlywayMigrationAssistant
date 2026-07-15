@@ -1,20 +1,21 @@
 package com.supergestao.Flyway.migration.assistant.dominio.configuracao;
 
 import atlantafx.base.theme.*;
-
 import java.util.List;
 import java.util.prefs.Preferences;
 
 public class GerenciadorConfiguracao implements IGerenciadorConfiguracao {
 
-    // Caminho no Regedit: HKEY_CURRENT_USER\Software\JavaSoft\Prefs\com\supergestao\flywayassistant
     private static final Preferences prefs = Preferences.userRoot().node("com/supergestao/flywayassistant");
 
     private static final String CHAVE_DIRETORIO_MODULO = "diretorio_modulo";
     private static final String CHAVE_DIRETORIO_ARQUIVO = "diretorio_arquivo";
-    private static final String CHAVE_FONTE = "fonte_sitema";
+    private static final String CHAVE_FONTE = "fonte_sistema";
     private static final String CHAVE_USA_MODULO = "fonte_usa_modulo";
     private static final String CHAVE_TEMA = "tema_sistema";
+    private static final String CHAVE_TAMANHO_FONTE_SQL = "tamanho_fonte_sql";
+    private static final String CHAVE_TAMANHO_FONTE_SISTEMA = "tamanho_fonte_sistema";
+
     public static final List<Theme> CHAVE_TEMAS_DISPONIVEIS = List.of(
             new PrimerLight(), new PrimerDark(),
             new CupertinoLight(), new CupertinoDark(),
@@ -49,7 +50,6 @@ public class GerenciadorConfiguracao implements IGerenciadorConfiguracao {
     @Override
     public Theme getTema() {
         String temaSalvo = prefs.get(CHAVE_TEMA, "Primer Light");
-
         for (Theme tema : CHAVE_TEMAS_DISPONIVEIS) {
             if (tema.getName().equals(temaSalvo)) {
                 return tema;
@@ -84,17 +84,33 @@ public class GerenciadorConfiguracao implements IGerenciadorConfiguracao {
     }
 
     @Override
-    public boolean diretoriosConfigurados(){
-        //  O diretório de arquivos é obrigatório
+    public int getTamanhoFonteSql() {
+        return prefs.getInt(CHAVE_TAMANHO_FONTE_SQL, 14);
+    }
+
+    @Override
+    public void salvarTamanhoFonteSql(int tamanho) {
+        prefs.putInt(CHAVE_TAMANHO_FONTE_SQL, tamanho);
+    }
+
+    @Override
+    public int getTamanhoFonteSistema() {
+        return prefs.getInt(CHAVE_TAMANHO_FONTE_SISTEMA, 12);
+    }
+
+    @Override
+    public void salvarTamanhoFonteSistema(int tamanho) {
+        prefs.putInt(CHAVE_TAMANHO_FONTE_SISTEMA, tamanho);
+    }
+
+    @Override
+    public boolean diretoriosConfigurados() {
         if (getDiretorioArquivo().isEmpty()) {
             return false;
         }
-        //Se usa módulos, o diretório de módulos é obrigatório
         if (getChaveUsaModulo() && getDiretorioModulo().isEmpty()) {
             return false;
         }
         return true;
     }
-
 }
-

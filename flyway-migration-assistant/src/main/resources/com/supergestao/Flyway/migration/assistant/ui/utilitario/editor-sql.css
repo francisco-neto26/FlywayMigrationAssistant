@@ -62,3 +62,32 @@
 .code-area .error-line {
     -fx-background-color: #5c2626;
 }
+
+.tab-pane {
+    -fx-background-color: #1e1e1e;
+}
+.tab-pane > .tab-header-area {
+    -fx-background-color: #252526;
+    -fx-padding: 0;
+}
+.tab-pane > .tab-header-area > .headers-region > .tab {
+    -fx-background-color: #2d2d2d;
+    -fx-background-insets: 0 1 0 0;
+    -fx-background-radius: 0;
+    -fx-padding: 6 12 6 12;
+}
+.tab-pane > .tab-header-area > .headers-region > .tab .tab-label {
+    -fx-text-fill: #969696;
+}
+.tab-pane > .tab-header-area > .headers-region > .tab:selected {
+    -fx-background-color: #1e1e1e;
+    -fx-border-color: #007acc;
+    -fx-border-width: 2 0 0 0;
+}
+.tab-pane > .tab-header-area > .headers-region > .tab:selected .tab-label {
+    -fx-text-fill: #ffffff;
+    -fx-font-weight: bold;
+}
+.tab-pane > .tab-header-area > .headers-region > .tab:hover {
+    -fx-background-color: #333333;
+}
