@@ -1,780 +1,923 @@
 package com.supergestao.Flyway.migration.assistant.dominio.regra.sql.validacao;
 
+import com.supergestao.Flyway.migration.assistant.dominio.mensagem.MensagemSistema;
 import com.supergestao.Flyway.migration.assistant.dominio.regra.sql.validacao.antlr.PostgreSQLLexer;
 import com.supergestao.Flyway.migration.assistant.dominio.regra.sql.validacao.antlr.PostgreSQLParser;
+import com.supergestao.Flyway.migration.assistant.dominio.regra.sql.validacao.antlr.PostgreSQLParserBaseListener;
+import com.supergestao.Flyway.migration.assistant.dominio.regra.sql.validacao.util.PadroesValidacaoSql;
 import com.supergestao.Flyway.migration.assistant.exception.SqlException;
 import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.tree.ParseTreeWalker;
 
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-import java.util.Stack;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-/**
- * Valida o conteúdo PL/pgSQL dentro de blocos $BODY$...$BODY$ ou $$...$$
- * executando análise estrutural de blocos e validação das instruções DML.
- */
 public class ValidadorCorpoFuncao {
 
-    // Detecta qualquer variação de dollar quote: $$, $BODY$, $FUNCTION$, etc.
-    private static final Pattern PATTERN_DOLLAR = Pattern.compile(
-            "(\\$(\\w*)\\$)(.*?)\\1",
-            Pattern.DOTALL | Pattern.CASE_INSENSITIVE
+    private static final Pattern PADRAO_DECLARACAO_CURSOR = Pattern.compile(
+            "(?m)^[ \\t]*(\\w+)\\s*(?:\\([^)]*\\))?\\s*(CURSOR|CURSO|CRSOR|CUSOR)\\s*(?:\\([^)]*\\))?\\s*(?:FOR|IS)\\s+([\\s\\S]*?);",
+            Pattern.CASE_INSENSITIVE
     );
 
-    // Sanitização de cabeçalhos PL/pgSQL para evitar falsos negativos (Bypass) e erros de parse
-    private static final Pattern PATTERN_PL_HEADER = Pattern.compile(
+    private static final Pattern PADRAO_ESTRUTURAS_CONTROLE = Pattern.compile(
+            "\\b(END\\s+IF|END\\s+LOOP|END\\s+CASE|END|BEGIN|IF|ELSIF|THEN|LOOP|CASE)\\b",
+            Pattern.CASE_INSENSITIVE
+    );
+
+    private static final Pattern PADRAO_CABECALHO_PLPGSQL = Pattern.compile(
             "^\\s*(?:BEGIN|DECLARE|ELSE|EXCEPTION|" +
-                    "IF\\b.*?\\bTHEN|" +
-                    "ELSIF\\b.*?\\bTHEN|" +
-                    "WHEN\\b.*?\\bTHEN|" +
-                    "FOR\\b.*?\\bLOOP|" +
-                    "WHILE\\b.*?\\bLOOP|" +
-                    "FOREACH\\b.*?\\bLOOP|" +
-                    "END\\s+IF|END\\s+LOOP|END\\s+CASE|END" +
-                    ")\\b\\s*",
+                    "IF\\b.*?\\bTHEN|ELSIF\\b.*?\\bTHEN|WHEN\\b.*?\\bTHEN|" +
+                    "FOR\\b.*?\\bLOOP|WHILE\\b.*?\\bLOOP|FOREACH\\b.*?\\bLOOP|" +
+                    "END\\s+IF|END\\s+LOOP|END\\s+CASE|END)\\b\\s*",
             Pattern.CASE_INSENSITIVE | Pattern.DOTALL
     );
 
-    // -------------------------------------------------------------------------
-    // Classes internas auxiliares
-    // -------------------------------------------------------------------------
+    private static final Pattern PADRAO_INICIO_DECLARACAO_VARIAVEL = Pattern.compile(
+            "^[a-zA-Z_][a-zA-Z0-9_]*\\s+\\S"
+    );
 
-    private static class ControlBlock {
-        String type;
-        int line;
-        int col;
-        int offset;
+    private static final Pattern PADRAO_VARIAVEIS_TG = Pattern.compile(
+            "\\b(TG_\\w+)\\b",
+            Pattern.CASE_INSENSITIVE
+    );
 
-        ControlBlock(String type, int line, int col, int offset) {
-            this.type   = type;
-            this.line   = line;
-            this.col    = col;
-            this.offset = offset;
+    private static final Pattern PADRAO_CHAMADA_FUNCAO = Pattern.compile(
+            "\\b(\\w+)\\s*\\(",
+            Pattern.CASE_INSENSITIVE
+    );
+
+    private static final Set<String> VARIAVEIS_TRIGGER_VALIDAS = Set.of(
+            "TG_OP", "TG_TABLE_NAME", "TG_TABLE_SCHEMA", "TG_NAME",
+            "TG_WHEN", "TG_LEVEL", "TG_ARGV", "TG_NARGS"
+    );
+
+    private static final Map<String, String> ERROS_ORTOGRAFICOS_FUNCOES_SISTEMA = Map.ofEntries(
+            Map.entry("SUBSTRNG", "SUBSTRING"),
+            Map.entry("SUBSTRI", "SUBSTRING"),
+            Map.entry("SUBSTING", "SUBSTRING"),
+            Map.entry("COLESCE", "COALESCE"),
+            Map.entry("COALESE", "COALESCE"),
+            Map.entry("COALESC", "COALESCE"),
+            Map.entry("COALECE", "COALESCE"),
+            Map.entry("COLAESCE", "COALESCE"),
+            Map.entry("COALESECE", "COALESCE"),
+            Map.entry("UPER", "UPPER"),
+            Map.entry("UPPR", "UPPER"),
+            Map.entry("UPPE", "UPPER"),
+            Map.entry("LOWR", "LOWER"),
+            Map.entry("LOWRE", "LOWER"),
+            Map.entry("LOEWR", "LOWER"),
+            Map.entry("TRM", "TRIM"),
+            Map.entry("TIRM", "TRIM"),
+            Map.entry("LENGHT", "LENGTH"),
+            Map.entry("LENGT", "LENGTH"),
+            Map.entry("CST", "CAST"),
+            Map.entry("NOw", "NOW"),
+            Map.entry("TOCHAR", "TO_CHAR"),
+            Map.entry("TO_CHR", "TO_CHAR")
+    );
+
+    private static final Map<String, String> ERROS_ORTOGRAFICOS_PALAVRAS_CHAVE_PLPGSQL = Map.ofEntries(
+            Map.entry("EXCUTE", "EXECUTE"),
+            Map.entry("EXECUET", "EXECUTE"),
+            Map.entry("PRFORM", "PERFORM"),
+            Map.entry("PERFOR", "PERFORM"),
+            Map.entry("RETUR", "RETURN"),
+            Map.entry("RETUN", "RETURN"),
+            Map.entry("OPN", "OPEN"),
+            Map.entry("CLSE", "CLOSE"),
+            Map.entry("DECLAR", "DECLARE"),
+            Map.entry("FORACH", "FOREACH"),
+            Map.entry("CONTINE", "CONTINUE"),
+            Map.entry("ELIF", "ELSIF"),
+            Map.entry("WHIL", "WHILE")
+    );
+
+    private static final Map<String, String> ERROS_ORTOGRAFICOS_PALAVRAS_CORPO = Map.of(
+            "USNG", "USING",
+            "USIN", "USING",
+            "STRCT", "STRICT",
+            "STRIT", "STRICT",
+            "FOUUND", "FOUND",
+            "FOND", "FOUND"
+    );
+
+    private static final Set<String> INICIADORES_VALIDOS_PLPGSQL = Set.of(
+            "SELECT", "INSERT", "UPDATE", "DELETE", "IF", "ELSE", "ELSIF",
+            "LOOP", "DECLARE", "BEGIN", "END", "FETCH", "OPEN", "CLOSE",
+            "RETURN", "EXIT", "RAISE", "EXECUTE", "PERFORM", "FOREACH",
+            "CONTINUE", "WHILE", "FOR", "CALL", "EXCEPTION", "WHEN", "CASE", "GET"
+    );
+
+    private static final Set<String> COMANDOS_QUE_EXIGEM_PONTO_VIRGULA = Set.of(
+            "FETCH", "OPEN", "CLOSE", "RETURN", "RAISE", "PERFORM",
+            "EXECUTE", "CALL", "EXIT", "CONTINUE", "GET"
+    );
+
+    private static class BlocoControle {
+        String tipo;
+        final int linha;
+        final int coluna;
+        final int offsetAbsoluto;
+
+        BlocoControle(String tipo, int linha, int coluna, int offsetAbsoluto) {
+            this.tipo = tipo;
+            this.linha = linha;
+            this.coluna = coluna;
+            this.offsetAbsoluto = offsetAbsoluto;
         }
     }
 
-    /** Exceção interna usada apenas para capturar linha/coluna do ANTLR. */
-    private static class SqlInternoException extends RuntimeException {
-        final int line;
-        final int col;
+    private static class ErroSintaxeInterno extends RuntimeException {
+        final int linha;
+        final int coluna;
 
-        SqlInternoException(int line, int col, String msg) {
-            super(msg);
-            this.line = line;
-            this.col  = col;
+        ErroSintaxeInterno(int linha, int coluna, String message) {
+            super(message);
+            this.linha = linha;
+            this.coluna = coluna;
         }
     }
 
-    // =========================================================================
-    // PONTO DE ENTRADA
-    // =========================================================================
+    @FunctionalInterface
+    private interface FabricaMensagemErro {
+        String criar(int linha, int coluna, String mensagem);
+    }
 
+    /**
+     * Ponto de entrada que localiza blocos baseados em dólar ($$) e inicia as validações.
+     */
     public void validar(String sqlCompleto) {
+
+        if (sqlCompleto == null || sqlCompleto.isBlank()) {
+            return;
+        }
+
+        String sqlCompletoSemComentario = removerComentario(sqlCompleto);
+        Matcher correspondenciaBlocos = PadroesValidacaoSql.FUNCTION.matcher(sqlCompletoSemComentario);
+
+        while (correspondenciaBlocos.find()) {
+
+            int inicioBloco = correspondenciaBlocos.start(3);
+            String conteudoBloco = correspondenciaBlocos.group(3);
+
+            if (conteudoBloco == null || conteudoBloco.isBlank()) {
+                continue;
+            }
+            validarDeclare(sqlCompletoSemComentario, conteudoBloco, inicioBloco);
+            //validarSecaoDeclare(sqlCompletoSemComentario, conteudoBloco, inicioBloco);
+
+            /*validarVariaveisTrigger(sqlCompleto, conteudoBloco, inicioBloco);
+            validarErrosOrtograficosFuncoesSistema(sqlCompleto, conteudoBloco, inicioBloco);
+            validarEstruturaControle(sqlCompleto, conteudoBloco, inicioBloco);
+
+            String blocoSemCursores = extrairEValidarCursores(sqlCompleto, conteudoBloco, inicioBloco);
+            validarComandosSqlNoCorpo(sqlCompleto, blocoSemCursores, inicioBloco);*/
+        }
+    }
+
+    //remove comentários de linha (--), comentários de bloco /* */ e literais de string ('...')
+    private String removerComentario(String sql) {
+        if (sql == null) return "";
+
+        StringBuilder sqlBuilder = new StringBuilder(sql);
+        int total = sqlBuilder.length();
+
+        boolean comentarioLinha = false; //ativado após --
+        boolean comentarioBloco = false; //ativado entre /*  */
+        boolean comentarioStringLiteral = false; //ativado entre aspas simples ''
+
+        for (int posicao = 0; posicao < total; posicao++) {
+            char caracterAtual = sqlBuilder.charAt(posicao);
+
+            //comentário de linha desconsidera tudo até o \n
+            if (comentarioLinha) {
+                if (caracterAtual == '\n') {
+                    //fim da linha, mantém a quebra
+                    comentarioLinha = false;
+                } else if (caracterAtual != '\r') {
+                    // apaga conteúdo do comentário
+                    sqlBuilder.setCharAt(posicao, ' ');
+                }
+                continue;
+            }
+
+            // comentário de bloco desconsidera tudo até o */
+            if (comentarioBloco) {
+                if (caracterAtual == '*' && posicao + 1 < total && sqlBuilder.charAt(posicao + 1) == '/') {
+                    sqlBuilder.setCharAt(posicao, ' ');
+                    // apaga o */
+                    sqlBuilder.setCharAt(posicao + 1, ' ');
+                    //fim do bloco pula o '/'
+                    comentarioBloco = false;
+                    posicao++;
+                } else if (caracterAtual != '\n' && caracterAtual != '\r') {
+                    // apaga conteúdo interno do bloco
+                    sqlBuilder.setCharAt(posicao, ' ');
+                }
+                continue;
+            }
+            /*inicialmente não vamos remover o texto dentro das aspas
+            // comentário string literal desconsidera até o fechamento da aspas
+            if (comentarioStringLiteral) {
+                if (caracterAtual == '\'') {
+                    if (posicao + 1 < total && sqlBuilder.charAt(posicao + 1) == '\'') {
+                        sqlBuilder.setCharAt(posicao, ' ');
+                        //apaga os dois e permanece na string
+                        sqlBuilder.setCharAt(posicao + 1, ' ');
+                        posicao++;
+                    } else {
+                        //aspas de fechamento, sai da string
+                        comentarioStringLiteral = false;
+                    }
+                } else if (caracterAtual != '\n' && caracterAtual != '\r') {
+                    //apaga conteúdo da string
+                    sqlBuilder.setCharAt(posicao, ' ');
+                }
+                continue;
+            }
+            */
+            //SQL normal detecta comentario linha
+            if (caracterAtual == '-' && posicao + 1 < total && sqlBuilder.charAt(posicao + 1) == '-') {
+                // remove o --
+                sqlBuilder.setCharAt(posicao, ' ');
+                sqlBuilder.setCharAt(posicao + 1, ' ');
+                comentarioLinha = true;
+                posicao++;
+                continue;
+            }
+
+            //SQL normal detecta comentario bloco
+            if (caracterAtual == '/' && posicao + 1 < total && sqlBuilder.charAt(posicao + 1) == '*') {
+                sqlBuilder.setCharAt(posicao, ' ');
+                sqlBuilder.setCharAt(posicao + 1, ' ');  // apaga o /*
+                comentarioBloco = true;
+                posicao++;
+                continue;
+            }
+            //SQL normal detecta comentario string literal, aspas simples
+            if (caracterAtual == '\'') {
+                //entra na string literal
+                comentarioStringLiteral = true;
+            }
+        }
+        return sqlBuilder.toString();
+    }
+
+    //valida o declare, separa o cursor das demais validações
+    private void validarDeclare(String scriptCompleto, String conteudoBloco, int inicioBloco) {
+
+        Matcher correspondenciaDeclare = PadroesValidacaoSql.BLOCO_DECLARE.matcher(conteudoBloco);
+
+        if (!correspondenciaDeclare.find()) {
+            return;
+        }
+
+        int inicioSecao = correspondenciaDeclare.start(1);
+        String declareOriginal = correspondenciaDeclare.group(1);
+        String cursoresDeclare = cursorDeclare(declareOriginal);
+        String declareSemCursores = variaveisDeclare(declareOriginal, cursoresDeclare);
+
+        System.out.println("Declare original:\n" + declareSemCursores);
+
+        /*StringBuilder secaoSemCursores = new StringBuilder(declareOriginal);
+        Matcher correspondenciaCursor = PadroesValidacaoSql.DECLARACAO_CURSOR.matcher(secaoDeclareLimpa);
+
+        while (correspondenciaCursor.find()) {
+            int offsetBaseCursor = inicioBloco + inicioSecao + correspondenciaCursor.start();
+            String declaracaoOriginal = declareOriginal.substring(
+                    correspondenciaCursor.start(), correspondenciaCursor.end());
+
+            String palavraCursorDetectada = correspondenciaCursor.group(2).toUpperCase();
+            if (!palavraCursorDetectada.equals("CURSOR")) {
+                int offsetErroPalavra = offsetBaseCursor + correspondenciaCursor.start(2);
+                int[] pos = posicaoAbsoluta(scriptCompleto, offsetErroPalavra);
+                throw new SqlException(MensagemSistema.ERRO_PALAVRA_CHAVE_INCORRETA
+                        .MensagemComParametro(pos[0], pos[1], correspondenciaCursor.group(2), "CURSOR"));
+            }
+
+            validarSqlDoCursor(
+                    scriptCompleto,
+                    correspondenciaCursor.group(1),
+                    declaracaoOriginal,
+                    correspondenciaCursor.group(0),
+                    offsetBaseCursor,
+                    correspondenciaCursor.start(3)
+            );
+
+            int fimTrecho = correspondenciaCursor.end();
+            if (secaoSemCursores.charAt(fimTrecho - 1) == ';') {
+                fimTrecho--;
+            }
+
+            apagarTrechoPreservandoQuebras(secaoSemCursores, correspondenciaCursor.start(), correspondenciaCursor.end());
+        }
+
+        validarDeclaracoesDeVariaveis(scriptCompleto, declareOriginal, secaoSemCursores.toString(), inicioBloco, inicioSecao);*/
+    }
+
+    private String variaveisDeclare(String declareOriginal, String cursorDeclare) {
+        ArrayList<String> listaCursores = new ArrayList<>();
+        String declareSemCursores = declareOriginal;
+
+        if (cursorDeclare.contains("\n")) {
+            String[] cursores = cursorDeclare.split("\n");
+            for (String cursor : cursores) {
+                if (!cursor.trim().isEmpty()) {
+                    listaCursores.add(cursor.trim());
+                }
+            }
+        }
+
+        for (String cursor : listaCursores) {
+            declareSemCursores = declareSemCursores.replace(cursor, "");
+        }
+        return declareSemCursores.lines()
+                .filter(linha -> !linha.isBlank())
+                .collect(java.util.stream.Collectors.joining("\n"));
+    }
+
+    private String cursorDeclare(String declareOriginal) {
+        StringBuilder cursores = new StringBuilder();
+        int posicaoAtual = 0;
+        int posicaoFim;
+
+        while ((posicaoFim = declareOriginal.indexOf(';', posicaoAtual)) != -1) {
+            String declareOriginalAjustado = declareOriginal.substring(posicaoAtual, posicaoFim).trim();
+            posicaoAtual = posicaoFim + 1;
+
+            if (declareOriginalAjustado.isEmpty()) {
+                continue;
+            }
+            if (declareOriginalAjustado.toUpperCase().contains("CURSOR")) {
+                cursores.append(declareOriginalAjustado).append(";\n").append("\n");
+            }
+        }
+
+        return cursores.toString();
+    }
+
+    private void validarDeclareSemCursor(String scriptCompleto, String conteudoBloco, int offsetInicioBloco) {
+
+    }
+
+    private void validarCursorDeclare(String scriptCompleto, String conteudoBloco, int offsetInicioBloco) {
+
+    }
+
+
+    /**
+     * Valida scripts SQL avulsos estruturais executados fora de funções.
+     */
+    public void validarComandosSqlSoltos(String sqlCompleto) {
         if (sqlCompleto == null || sqlCompleto.isBlank()) return;
+        if (PadroesValidacaoSql.FUNCTION.matcher(sqlCompleto).find()) return;
+        validarComandosSqlNoCorpo(sqlCompleto, sqlCompleto, 0);
+    }
 
-        Matcher matcher = PATTERN_DOLLAR.matcher(sqlCompleto);
-        while (matcher.find()) {
-            int    inicioCorpo    = matcher.start(3);
-            String conteudoCorpo  = matcher.group(3);
+    /**
 
-            if (conteudoCorpo == null || conteudoCorpo.isBlank()) continue;
+     private void validarSecaoDeclare(String scriptCompleto, String conteudoBloco, int offsetInicioBloco) {
+     Matcher correspondenciaDeclare = BLOCO_DECLARE.matcher(conteudoBloco);
+     if (!correspondenciaDeclare.find()){
+     return;
+     }
 
-            // Validações de ortografia e estrutura da seção DECLARE
-            validarSecaoDeclare(sqlCompleto, conteudoCorpo, inicioCorpo);
-            validarVariaveisTrigger(sqlCompleto, conteudoCorpo, inicioCorpo);
-            validarErrosComunsFuncoes(sqlCompleto, conteudoCorpo, inicioCorpo);
+     int offsetInicioSecao = correspondenciaDeclare.start(1);
+     String secaoDeclareOriginal = correspondenciaDeclare.group(1);
+     String secaoDeclareLimpa = removerComentario(secaoDeclareOriginal);
 
-            // 1. Valida estruturas de controle (IF/THEN/ELSIF/LOOP/BEGIN/END)
-            validarEstruturaControle(sqlCompleto, conteudoCorpo, inicioCorpo);
+     StringBuilder secaoSemCursores = new StringBuilder(secaoDeclareLimpa);
+     Matcher correspondenciaCursor = PADRAO_DECLARACAO_CURSOR.matcher(secaoDeclareLimpa);
 
-            // 2. Valida e extrai cursores da seção DECLARE
-            String conteudoSemCursores = validarEExtrairCursores(sqlCompleto, conteudoCorpo, inicioCorpo);
+     while (correspondenciaCursor.find()) {
+     int offsetBaseCursor = offsetInicioBloco + offsetInicioSecao + correspondenciaCursor.start();
+     String declaracaoOriginal = secaoDeclareOriginal.substring(
+     correspondenciaCursor.start(), correspondenciaCursor.end());
 
-            // 3. Valida os comandos DML/SQL restantes no corpo
-            validarComandosSqlInternos(sqlCompleto, conteudoSemCursores, inicioCorpo);
+     String palavraCursorDetectada = correspondenciaCursor.group(2).toUpperCase();
+     if (!palavraCursorDetectada.equals("CURSOR")) {
+     int offsetErroPalavra = offsetBaseCursor + correspondenciaCursor.start(2);
+     int[] pos = posicaoAbsoluta(scriptCompleto, offsetErroPalavra);
+     throw new SqlException(MensagemSistema.ERRO_PALAVRA_CHAVE_INCORRETA
+     .MensagemComParametro(pos[0], pos[1], correspondenciaCursor.group(2), "CURSOR"));
+     }
+
+     validarSqlDoCursor(
+     scriptCompleto,
+     correspondenciaCursor.group(1),
+     declaracaoOriginal,
+     correspondenciaCursor.group(0),
+     offsetBaseCursor,
+     correspondenciaCursor.start(3)
+     );
+
+     int fimTrecho = correspondenciaCursor.end();
+     if (secaoSemCursores.charAt(fimTrecho - 1) == ';') {
+     fimTrecho--;
+     }
+
+     apagarTrechoPreservandoQuebras(secaoSemCursores, correspondenciaCursor.start(), correspondenciaCursor.end());
+     }
+
+     validarDeclaracoesDeVariaveis(scriptCompleto, secaoDeclareOriginal, secaoSemCursores.toString(), offsetInicioBloco, offsetInicioSecao);
+     }*/
+
+    /**
+     * Valida sintaticamente a query SQL interna associada a um CURSOR.
+     */
+    private void validarSqlDoCursor(String scriptCompleto, String nomeCursor,
+                                    String declaracaoOriginal, String declaracaoLimpa,
+                                    int offsetBaseCursor, int offsetGrupoSelectNaLimpa) {
+        Matcher correspondenciaCursor = PADRAO_DECLARACAO_CURSOR.matcher(declaracaoLimpa);
+        if (!correspondenciaCursor.find()) return;
+
+        String sqlOriginal = declaracaoOriginal.substring(correspondenciaCursor.start(3));
+        sqlOriginal = sqlOriginal.endsWith(";") ? sqlOriginal.substring(0, sqlOriginal.length() - 1) : sqlOriginal;
+
+        String sqlTrimado = sqlOriginal.trim();
+        int espacosInicio = sqlOriginal.length() - sqlOriginal.stripLeading().length();
+        int offsetBaseSelect = offsetBaseCursor + correspondenciaCursor.start(3) + espacosInicio;
+
+        if (sqlTrimado.isEmpty()) return;
+
+        executarValidacaoAntlr(scriptCompleto, sqlTrimado, offsetBaseSelect, 0,
+                (linha, coluna, mensagem) -> MensagemSistema.ERRO_SINTAXE_CURSOR
+                        .MensagemComParametro(linha, coluna, nomeCursor, mensagem));
+    }
+
+    /**
+     * Varre as linhas do DECLARE validando a terminação de ponto e vírgula de cada variável.
+     */
+    private void validarDeclaracoesDeVariaveis(String scriptCompleto, String secaoDeclareOriginal, String secaoSemCursores, int offsetInicioBloco, int offsetInicioSecao) {
+        int posicaoAtual = 0;
+        int posicaoFim;
+
+        while ((posicaoFim = secaoSemCursores.indexOf(';', posicaoAtual)) != -1) {
+            int inicioDeclaracao = posicaoAtual;
+            String declaracaoOriginal = secaoDeclareOriginal.substring(inicioDeclaracao, posicaoFim);
+            String declaracaoLimpa = secaoSemCursores.substring(inicioDeclaracao, posicaoFim).trim();
+            posicaoAtual = posicaoFim + 1;
+
+            if (declaracaoLimpa.isEmpty()) continue;
+
+            validarUmaDeclaracaoPorPontoVirgula(scriptCompleto, declaracaoOriginal, offsetInicioBloco, offsetInicioSecao, inicioDeclaracao);
+            validarAtribuicaoDeclaracao(scriptCompleto, declaracaoOriginal, offsetInicioBloco, offsetInicioSecao, inicioDeclaracao);
+        }
+
+        String restoAposUltimoPontoVirgula = secaoSemCursores.substring(posicaoAtual).trim();
+        if (!restoAposUltimoPontoVirgula.isEmpty()) {
+            int offsetAbsoluto = offsetInicioBloco + offsetInicioSecao + posicaoAtual;
+            int[] posicao = posicaoAbsoluta(scriptCompleto, offsetAbsoluto);
+            throw new SqlException(MensagemSistema.ERRO_DECLARACAO_ANTES_BEGIN.MensagemComParametro(posicao[0], posicao[1]));
         }
     }
 
-    // =========================================================================
-    // VALIDAÇÃO DA SEÇÃO DECLARE (E PONTUAÇÃO DE ;)
-    // =========================================================================
+    /**
+     * Impede que múltiplas variáveis sejam declaradas na mesma instrução sem ponto e vírgula.
+     */
+    private void validarUmaDeclaracaoPorPontoVirgula(String scriptCompleto, String declaracaoOriginal, int offsetInicioBloco, int offsetInicioSecao, int inicioDeclaracao) {
+        int contadorDeclaracoes = 0;
+        int offsetPrimeiraDeclaracao = inicioDeclaracao;
+        int offsetAcumulado = inicioDeclaracao;
 
-    private void validarSecaoDeclare(String script, String conteudoCorpo, int inicioCorpo) {
-        // Encontra o bloco entre o DECLARE e o BEGIN
-        Pattern patternDeclare = Pattern.compile("\\bDECLARE\\b(.*?)\\bBEGIN\\b", Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
-        Matcher matcher = patternDeclare.matcher(conteudoCorpo);
-        if (matcher.find()) {
-            int startSecao = matcher.start(1);
-            String secao = matcher.group(1);
-            String secaoLimpa = limparComentariosEStrings(secao);
-
-            int startPos = 0;
-            int endPos;
-            while ((endPos = secaoLimpa.indexOf(';', startPos)) != -1) {
-                String declOriginal = secao.substring(startPos, endPos);
-                String declLimpa = secaoLimpa.substring(startPos, endPos).trim();
-                startPos = endPos + 1;
-
-                if (declLimpa.isEmpty()) continue;
-
-                // Verifica se existem múltiplos comandos de declaração na mesma instrução (sinal de ; ausente)
-                String[] linhas = declOriginal.split("\\n");
-                int linhasComDeclaracao = 0;
-                for (String linha : linhas) {
-                    String linhaLimpa = limparComentariosEStrings(linha).trim();
-                    if (linhaLimpa.isEmpty()) continue;
-
-                    // Se a linha começa com o padrão: "identificador [CONSTANT] outro_identificador_ou_tipo"
-                    if (linhaLimpa.matches("^[a-zA-Z_][a-zA-Z0-9_]*\\s+(?:CONSTANT\\s+)?(?:[a-zA-Z_][a-zA-Z0-9_]*|\"[^\"]+\").*")) {
-                        linhasComDeclaracao++;
-                    }
-                }
-
-                if (linhasComDeclaracao > 1) {
-                    int offsetAbsoluto = inicioCorpo + startSecao + startPos - declOriginal.length();
-                    int[] pos = obterLinhaEColuna(script, offsetAbsoluto);
-                    throw new SqlException(String.format(
-                            "Erro na linha: %d coluna: %d \n Mensagem: Falta ponto e vírgula (;) ou erro de sintaxe na declaração de variáveis.",
-                            pos[0], pos[1]));
-                }
-            }
-
-            // Verifica se sobrou alguma declaração sem ponto e vírgula antes do BEGIN
-            String restante = secaoLimpa.substring(startPos).trim();
-            if (!restante.isEmpty()) {
-                int offsetAbsoluto = inicioCorpo + startSecao + startPos;
-                int[] pos = obterLinhaEColuna(script, offsetAbsoluto);
-                throw new SqlException(String.format(
-                        "Erro na linha: %d coluna: %d \n Mensagem: Falta ponto e vírgula (;) na última declaração antes do 'BEGIN'.",
-                        pos[0], pos[1]));
-            }
-        }
-    }
-
-    // =========================================================================
-    // VALIDAÇÃO DE ORTOGRAFIA DE FUNÇÕES E VARIÁVEIS ESPECIAIS
-    // =========================================================================
-
-    private void validarVariaveisTrigger(String script, String conteudoCorpo, int inicioCorpo) {
-        Set<String> validTgs = Set.of(
-                "TG_OP", "TG_TABLE_NAME", "TG_TABLE_SCHEMA", "TG_NAME",
-                "TG_WHEN", "TG_LEVEL", "TG_ARGV", "TG_NARGS"
-        );
-        Pattern patternTg = Pattern.compile("\\b(TG_\\w+)\\b", Pattern.CASE_INSENSITIVE);
-        Matcher matcher = patternTg.matcher(conteudoCorpo);
-        while (matcher.find()) {
-            String tgVar = matcher.group(1).toUpperCase();
-            if (!validTgs.contains(tgVar)) {
-                int offsetAbsoluto = inicioCorpo + matcher.start(1);
-                int[] pos = obterLinhaEColuna(script, offsetAbsoluto);
-                throw new SqlException(String.format(
-                        "Erro na linha: %d coluna: %d \n Mensagem: Variável especial de trigger inválida ou incorreta: '%s'. Você quis dizer TG_OP ou TG_TABLE_NAME?",
-                        pos[0], pos[1], matcher.group(1)));
-            }
-        }
-    }
-
-    private void validarErrosComunsFuncoes(String script, String conteudoCorpo, int inicioCorpo) {
-        Map<String, String> typos = Map.ofEntries(
-                Map.entry("SUBSTRING", "SUBSTRING"),
-                Map.entry("SUBSTRNG", "SUBSTRING"),
-                Map.entry("SUBSTRI", "SUBSTRING"),
-                Map.entry("COALESCE", "COALESCE"),
-                Map.entry("COLESCE", "COALESCE"),
-                Map.entry("COALESE", "COALESCE"),
-                Map.entry("COALESC", "COALESCE"),
-                Map.entry("UPPER", "UPPER"),
-                Map.entry("UPER", "UPPER"),
-                Map.entry("UPPR", "UPPER"),
-                Map.entry("LOWER", "LOWER"),
-                Map.entry("LOWR", "LOWER"),
-                Map.entry("LOWRE", "LOWER")
-        );
-
-        Pattern patternFuncao = Pattern.compile("\\b(\\w+)\\s*\\(", Pattern.CASE_INSENSITIVE);
-        Matcher matcher = patternFuncao.matcher(conteudoCorpo);
-        while (matcher.find()) {
-            String func = matcher.group(1).toUpperCase();
-            if (typos.containsKey(func) && !func.equals(typos.get(func))) {
-                int offsetAbsoluto = inicioCorpo + matcher.start(1);
-                int[] pos = obterLinhaEColuna(script, offsetAbsoluto);
-                throw new SqlException(String.format(
-                        "Erro na linha: %d coluna: %d \n Mensagem: Função do sistema incorreta: '%s'. Você quis dizer %s?",
-                        pos[0], pos[1], matcher.group(1), typos.get(func)));
-            }
-        }
-    }
-
-    // =========================================================================
-    // 1. VALIDAÇÃO DE ESTRUTURAS DE CONTROLE
-    // =========================================================================
-
-    private void validarEstruturaControle(String script, String conteudoCorpo, int inicioCorpo) {
-        Set<String> labels = new HashSet<>();
-        Matcher matcherLabels = Pattern.compile("<<(\\w+)>>", Pattern.CASE_INSENSITIVE)
-                .matcher(conteudoCorpo);
-        while (matcherLabels.find()) {
-            labels.add(matcherLabels.group(1).toUpperCase());
-        }
-
-        String conteudoLimpo = limparComentariosEStrings(conteudoCorpo);
-
-        Pattern patternEstruturas = Pattern.compile(
-                "\\b(END\\s+IF|END\\s+LOOP|END\\s+CASE|END|BEGIN|IF|ELSIF|THEN|LOOP|CASE)\\b",
-                Pattern.CASE_INSENSITIVE
-        );
-        Matcher matcher = patternEstruturas.matcher(conteudoLimpo);
-
-        Stack<ControlBlock> stack = new Stack<>();
-        int skipUntilOffset = -1;
-
-        while (matcher.find()) {
-            int offsetNoCorpo = matcher.start();
-            if (offsetNoCorpo < skipUntilOffset) continue;
-
-            String token         = matcher.group(1).toUpperCase().replaceAll("\\s+", " ");
-            int    offsetAbsoluto = inicioCorpo + offsetNoCorpo;
-            int[]  pos            = obterLinhaEColuna(script, offsetAbsoluto);
-
-            if (!token.equals("THEN")) {
-                verificarThenPendente(stack, pos[0], pos[1]);
-            }
-
-            switch (token) {
-                case "BEGIN":
-                case "LOOP":
-                case "CASE":
-                    stack.push(new ControlBlock(token, pos[0], pos[1], offsetAbsoluto));
-                    break;
-
-                case "IF":
-                    stack.push(new ControlBlock("IF_WITHOUT_THEN", pos[0], pos[1], offsetAbsoluto));
-                    break;
-
-                case "ELSIF":
-                    if (stack.isEmpty() || !stack.peek().type.equals("IF")) {
-                        throw new SqlException(String.format(
-                                "Erro na linha: %d coluna: %d \n Mensagem: Instrução 'ELSIF' fora de um bloco 'IF' aberto.",
-                                pos[0], pos[1]));
-                    }
-                    stack.push(new ControlBlock("ELSIF_WITHOUT_THEN", pos[0], pos[1], offsetAbsoluto));
-                    break;
-
-                case "THEN": {
-                    if (stack.isEmpty()) {
-                        throw new SqlException(String.format(
-                                "Erro na linha: %d coluna: %d \n Mensagem: Instrução 'THEN' sem correspondente 'IF' ou 'ELSIF'.",
-                                pos[0], pos[1]));
-                    }
-                    ControlBlock topo = stack.peek();
-                    if (topo.type.equals("CASE")) {
-                        // THEN pertence a WHEN ... THEN dentro de CASE — mantém CASE na pilha
-                    } else if (topo.type.equals("IF_WITHOUT_THEN") || topo.type.equals("ELSIF_WITHOUT_THEN")) {
-                        // Valida a condição entre IF/ELSIF e THEN
-                        int    startCond         = topo.offset + topo.type.replace("_WITHOUT_THEN", "").length();
-                        int    endCond           = offsetAbsoluto;
-                        String condicaoOriginal  = script.substring(startCond, endCond);
-                        String condicao          = condicaoOriginal.trim();
-                        int    leadingSpaces     = condicaoOriginal.length() - condicaoOriginal.stripLeading().length();
-
-                        if (!condicao.isEmpty()) {
-                            String sqlParaValidar = "SELECT " + condicao;
-                            try {
-                                validarInstrucaoSqlInterna(sqlParaValidar);
-                            } catch (SqlInternoException e) {
-                                int offsetErro = calcularOffsetNoScript(
-                                        sqlParaValidar, e.line, e.col,
-                                        startCond + leadingSpaces, 7);
-                                int[] posErro = obterLinhaEColuna(script, offsetErro);
-                                throw new SqlException(String.format(
-                                        "Erro na linha: %d coluna: %d \n Mensagem: Erro de sintaxe na condição do %s: %s",
-                                        posErro[0], posErro[1],
-                                        topo.type.replace("_WITHOUT_THEN", ""), e.getMessage()));
-                            } catch (Exception e) {
-                                throw new SqlException(String.format(
-                                        "Erro na linha: %d coluna: %d \n Mensagem: Erro na condição do %s: %s",
-                                        topo.line, topo.col, topo.type.replace("_WITHOUT_THEN", ""), e.getMessage()));
-                            }
-                        }
-
-                        if (topo.type.equals("IF_WITHOUT_THEN")) {
-                            topo.type = "IF";
-                        } else {
-                            stack.pop(); // remove ELSIF_WITHOUT_THEN; IF pai permanece
-                        }
-                    } else {
-                        throw new SqlException(String.format(
-                                "Erro na linha: %d coluna: %d \n Mensagem: Instrução 'THEN' inesperada nesta posição.",
-                                pos[0], pos[1]));
-                    }
-                    break;
-                }
-
-                case "END IF":
-                    validarEPop(stack, "IF", pos[0], pos[1]);
-                    skipUntilOffset = matcher.end();
-                    break;
-
-                case "END LOOP":
-                    validarEPop(stack, "LOOP", pos[0], pos[1]);
-                    skipUntilOffset = matcher.end();
-                    break;
-
-                case "END CASE":
-                    validarEPop(stack, "CASE", pos[0], pos[1]);
-                    skipUntilOffset = matcher.end();
-                    break;
-
-                case "END": {
-                    if (!stack.isEmpty() && stack.peek().type.equals("CASE")) {
-                        stack.pop();
-                        break;
-                    }
-                    // Lê o próximo token para decidir se é END; ou END label
-                    int    k       = matcher.end();
-                    while (k < conteudoLimpo.length() && Character.isWhitespace(conteudoLimpo.charAt(k))) k++;
-
-                    String nextWord = "";
-                    if (k < conteudoLimpo.length()) {
-                        if (Character.isLetterOrDigit(conteudoLimpo.charAt(k)) || conteudoLimpo.charAt(k) == '_') {
-                            int startW = k;
-                            while (k < conteudoLimpo.length() &&
-                                    (Character.isLetterOrDigit(conteudoLimpo.charAt(k)) || conteudoLimpo.charAt(k) == '_')) k++;
-                            nextWord = conteudoLimpo.substring(startW, k).toUpperCase();
-                        } else {
-                            nextWord = String.valueOf(conteudoLimpo.charAt(k));
-                        }
-                    }
-
-                    if (nextWord.equals(";") || nextWord.isEmpty() || labels.contains(nextWord)) {
-                        validarEPop(stack, "BEGIN", pos[0], pos[1]);
-                    } else {
-                        throw new SqlException(String.format(
-                                "Erro na linha: %d coluna: %d \n Mensagem: 'END' seguido por token inesperado: '%s'. "
-                                        + "Você quis dizer 'END IF', 'END LOOP' ou 'END CASE'?",
-                                pos[0], pos[1], nextWord));
-                    }
-                    break;
+        for (String linha : declaracaoOriginal.split("\\n")) {
+            String linhaLimpa = removerComentario(linha).trim();
+            if (PADRAO_INICIO_DECLARACAO_VARIAVEL.matcher(linhaLimpa).find()) {
+                contadorDeclaracoes++;
+                if (contadorDeclaracoes == 1) {
+                    offsetPrimeiraDeclaracao = offsetAcumulado + (linha.length() - linha.stripLeading().length());
                 }
             }
+            offsetAcumulado += linha.length() + 1;
         }
 
-        if (!stack.isEmpty()) {
-            ControlBlock topo = stack.pop();
-            String tipo = topo.type.replace("_WITHOUT_THEN", "");
-            throw new SqlException(String.format(
-                    "Erro na linha: %d coluna: %d \n Mensagem: A estrutura de controle '%s' iniciada nesta linha não foi fechada corretamente.",
-                    topo.line, topo.col, tipo));
+        if (contadorDeclaracoes > 1) {
+            int offsetAbsoluto = offsetInicioBloco + offsetInicioSecao + offsetPrimeiraDeclaracao;
+            int[] posicao = posicaoAbsoluta(scriptCompleto, offsetAbsoluto);
+            throw new SqlException(MensagemSistema.ERRO_DECLARACAO_SEM_PONTO_VIRGULA.MensagemComParametro(posicao[0], posicao[1]));
         }
     }
 
-    private void verificarThenPendente(Stack<ControlBlock> stack, int line, int col) {
-        if (!stack.isEmpty()) {
-            ControlBlock topo = stack.peek();
-            if (topo.type.equals("IF_WITHOUT_THEN")) {
-                throw new SqlException(String.format(
-                        "Erro na linha: %d coluna: %d \n Mensagem: Instrução 'IF' iniciada na linha %d, coluna %d não possui o 'THEN' correspondente.",
-                        line, col, topo.line, topo.col));
+    /**
+     * Valida sintaticamente o valor padrão ou expressão à direita do operador ':='.
+     */
+    private void validarAtribuicaoDeclaracao(String scriptCompleto, String declaracaoOriginal, int offsetInicioBloco, int offsetInicioSecao, int inicioDeclaracao) {
+        int indiceAtribuicao = declaracaoOriginal.indexOf(":=");
+        if (indiceAtribuicao == -1) return;
+
+        String ladoDireitoOriginal = declaracaoOriginal.substring(indiceAtribuicao + 2);
+        String ladoDireito = ladoDireitoOriginal.trim();
+        int espacosLadoDireito = ladoDireitoOriginal.length() - ladoDireitoOriginal.stripLeading().length();
+        int offsetBaseLadoDireito = offsetInicioBloco + offsetInicioSecao + inicioDeclaracao + indiceAtribuicao + 2 + espacosLadoDireito;
+
+        if (ladoDireito.isEmpty()) return;
+
+        executarValidacaoAntlr(scriptCompleto, "SELECT " + ladoDireito, offsetBaseLadoDireito, 7,
+                MensagemSistema.ERRO_SINTAXE_ATRIBUICAO::MensagemComParametro);
+    }
+
+    /**
+     * Extrai e valida a integridade de cursores declarados de forma dinâmica.
+     */
+    private String extrairEValidarCursores(String scriptCompleto, String conteudoBloco, int offsetInicioBloco) {
+        String conteudoLimpo = removerComentario(conteudoBloco);
+        StringBuilder conteudoSemCursores = new StringBuilder(conteudoBloco);
+        Matcher correspondenciaCursor = PADRAO_DECLARACAO_CURSOR.matcher(conteudoLimpo);
+
+        while (correspondenciaCursor.find()) {
+            String nomeCursor = correspondenciaCursor.group(1);
+            int offsetInicioSelect = correspondenciaCursor.start(3);
+            int offsetFimSelect = correspondenciaCursor.end(3);
+
+            String sqlOriginal = conteudoBloco.substring(offsetInicioSelect, offsetFimSelect);
+            if (sqlOriginal.endsWith(";")) sqlOriginal = sqlOriginal.substring(0, sqlOriginal.length() - 1);
+
+            String sqlTrimado = sqlOriginal.trim();
+            int espacosInicio = sqlOriginal.length() - sqlOriginal.stripLeading().length();
+            int offsetBaseSelect = offsetInicioBloco + offsetInicioSelect + espacosInicio;
+
+            if (!sqlTrimado.isEmpty()) {
+                executarValidacaoAntlr(scriptCompleto, sqlTrimado, offsetBaseSelect, 0,
+                        (linha, coluna, mensagem) -> MensagemSistema.ERRO_SINTAXE_CURSOR
+                                .MensagemComParametro(linha, coluna, nomeCursor, mensagem));
             }
-            if (topo.type.equals("ELSIF_WITHOUT_THEN")) {
-                throw new SqlException(String.format(
-                        "Erro na linha: %d coluna: %d \n Mensagem: Instrução 'ELSIF' iniciada na linha %d, coluna %d não possui o 'THEN' correspondente.",
-                        line, col, topo.line, topo.col));
+
+            int fimTrecho = correspondenciaCursor.end();
+            if (conteudoSemCursores.charAt(fimTrecho - 1) == ';') {
+                fimTrecho--;
+            }
+
+            apagarTrechoPreservandoQuebras(conteudoSemCursores, correspondenciaCursor.start(), correspondenciaCursor.end());
+        }
+
+        return conteudoSemCursores.toString();
+    }
+
+    /**
+     * Valida os prefixos das variáveis especiais de trigger do Postgres.
+     */
+    private void validarVariaveisTrigger(String scriptCompleto, String conteudoBloco, int offsetInicioBloco) {
+        Matcher correspondencia = PADRAO_VARIAVEIS_TG.matcher(conteudoBloco);
+        while (correspondencia.find()) {
+            String variavel = correspondencia.group(1).toUpperCase();
+            if (!VARIAVEIS_TRIGGER_VALIDAS.contains(variavel)) {
+                int[] posicao = posicaoAbsoluta(scriptCompleto, offsetInicioBloco + correspondencia.start(1));
+                throw new SqlException(MensagemSistema.ERRO_VARIAVEL_TRIGGER_INVALIDA
+                        .MensagemComParametro(posicao[0], posicao[1], correspondencia.group(1)));
             }
         }
     }
 
-    private void validarEPop(Stack<ControlBlock> stack, String expectedType, int line, int col) {
-        if (stack.isEmpty()) {
-            throw new SqlException(String.format(
-                    "Erro na linha: %d coluna: %d \n Mensagem: Instrução 'END %s' sem correspondente '%s' aberto.",
-                    line, col, expectedType, expectedType));
+    /**
+     * Protege contra erros ortográficos em rotinas internas do banco de dados.
+     */
+    private void validarErrosOrtograficosFuncoesSistema(String scriptCompleto, String conteudoBloco, int offsetInicioBloco) {
+        Matcher correspondencia = PADRAO_CHAMADA_FUNCAO.matcher(conteudoBloco);
+        while (correspondencia.find()) {
+            String nomeFuncao = correspondencia.group(1).toUpperCase();
+            if (ERROS_ORTOGRAFICOS_FUNCOES_SISTEMA.containsKey(nomeFuncao)) {
+                int[] posicao = posicaoAbsoluta(scriptCompleto, offsetInicioBloco + correspondencia.start(1));
+                throw new SqlException(MensagemSistema.ERRO_FUNCAO_SISTEMA_INCORRETA
+                        .MensagemComParametro(posicao[0], posicao[1],
+                                correspondencia.group(1),
+                                ERROS_ORTOGRAFICOS_FUNCOES_SISTEMA.get(nomeFuncao)));
+            }
         }
-        ControlBlock topo = stack.peek();
-        if (!topo.type.equals(expectedType)) {
-            throw new SqlException(String.format(
-                    "Erro na linha: %d coluna: %d \n Mensagem: Esperava fechar '%s' (iniciado na linha %d, coluna %d), mas tentou fechar '%s'.",
-                    line, col, topo.type, topo.line, topo.col, expectedType));
-        }
-        stack.pop();
     }
 
-    // =========================================================================
-    // 2. VALIDAÇÃO DE CURSORES
-    // =========================================================================
+    /**
+     * Detecta erros ortográficos em modificadores isolados de comandos do corpo da função.
+     */
+    private void validarErrosOrtograficosPalavrasCorpo(String scriptCompleto, String instrucaoOriginal, int offsetInicioBloco, int offsetInicioInstrucao) {
+        for (String palavra : instrucaoOriginal.split("\\s+")) {
+            String palavraLimpa = palavra.replaceAll("[^a-zA-Z_]", "").toUpperCase();
+            if (ERROS_ORTOGRAFICOS_PALAVRAS_CORPO.containsKey(palavraLimpa)) {
+                int posNaPalavra = instrucaoOriginal.toUpperCase().indexOf(palavraLimpa);
+                int offsetAbsoluto = offsetInicioBloco + offsetInicioInstrucao + posNaPalavra;
+                int[] posicao = posicaoAbsoluta(scriptCompleto, offsetAbsoluto);
+                throw new SqlException(MensagemSistema.ERRO_PALAVRA_CHAVE_INCORRETA
+                        .MensagemComParametro(posicao[0], posicao[1],
+                                palavra, ERROS_ORTOGRAFICOS_PALAVRAS_CORPO.get(palavraLimpa)));
+            }
+        }
+    }
 
-    private String validarEExtrairCursores(String script, String conteudoCorpo, int inicioCorpo) {
-        // Suporta parâmetros opcionais tanto antes de CURSOR (padrão Oracle) quanto depois (padrão Postgres).
-        Pattern patternCursor = Pattern.compile(
-                "\\b(\\w+)\\s*(?:\\([^)]*\\))?\\s*CURSOR\\s*(?:\\([^)]*\\))?\\s*(?:FOR|IS)\\s+(.*?);",
-                Pattern.DOTALL | Pattern.CASE_INSENSITIVE
-        );
+    /**
+     * Gerencia a pilha de escopos e aninhamento lógico de estruturas condicionais e de repetição.
+     */
+    private void validarEstruturaControle(String scriptCompleto, String conteudoBloco, int offsetInicioBloco) {
+        Set<String> rotulos = extrairRotulos(conteudoBloco);
+        String conteudoLimpo = removerComentario(conteudoBloco);
 
-        Matcher matcher    = patternCursor.matcher(conteudoCorpo);
-        StringBuilder sb   = new StringBuilder(conteudoCorpo);
+        Matcher correspondencia = PADRAO_ESTRUTURAS_CONTROLE.matcher(conteudoLimpo);
+        Stack<BlocoControle> pilha = new Stack<>();
+        int ignorarAteOffset = -1;
 
-        while (matcher.find()) {
-            int    startQueryNoCorpo = matcher.start(2);
-            String queryOriginal     = matcher.group(2);
-            String query             = queryOriginal.trim();
-            int    leadingSpaces     = queryOriginal.length() - queryOriginal.stripLeading().length();
+        while (correspondencia.find()) {
+            int posicaoNoBloco = correspondencia.start();
+            if (posicaoNoBloco < ignorarAteOffset) continue;
 
-            if (!query.isEmpty()) {
-                try {
-                    validarInstrucaoSqlInterna(query);
-                } catch (SqlInternoException e) {
-                    int offsetErro = calcularOffsetNoScript(
-                            query, e.line, e.col,
-                            inicioCorpo + startQueryNoCorpo + leadingSpaces, 0);
-                    int[] posicao = obterLinhaEColuna(script, offsetErro);
-                    throw new SqlException(String.format(
-                            "Erro na linha: %d coluna: %d \n Mensagem: Erro de sintaxe no cursor '%s': %s",
-                            posicao[0], posicao[1], matcher.group(1), e.getMessage()));
-                } catch (SqlException e) {
-                    int offsetErro = inicioCorpo + startQueryNoCorpo + leadingSpaces;
-                    int[] posicao  = obterLinhaEColuna(script, offsetErro);
-                    throw new SqlException(String.format(
-                            "Erro na linha: %d coluna: %d \n Mensagem: %s",
-                            posicao[0], posicao[1], e.getMessage()));
+            String palavraChave = correspondencia.group(1).toUpperCase().replaceAll("\\s+", " ");
+            int offsetAbsoluto = offsetInicioBloco + posicaoNoBloco;
+            int[] posicao = posicaoAbsoluta(scriptCompleto, offsetAbsoluto);
+
+            if (!palavraChave.equals("THEN")) verificarThenPendente(pilha, posicao[0], posicao[1]);
+
+            switch (palavraChave) {
+                case "BEGIN", "LOOP", "CASE" ->
+                        pilha.push(new BlocoControle(palavraChave, posicao[0], posicao[1], offsetAbsoluto));
+                case "IF" -> pilha.push(new BlocoControle("IF_SEM_THEN", posicao[0], posicao[1], offsetAbsoluto));
+                case "ELSIF" -> {
+                    if (pilha.isEmpty() || !pilha.peek().tipo.equals("IF"))
+                        throw new SqlException(MensagemSistema.ERRO_ELSIF_FORA_IF.MensagemComParametro(posicao[0], posicao[1]));
+                    pilha.push(new BlocoControle("ELSIF_SEM_THEN", posicao[0], posicao[1], offsetAbsoluto));
                 }
-            }
-
-            for (int i = matcher.start(); i < matcher.end(); i++) {
-                if (sb.charAt(i) != '\n') sb.setCharAt(i, ' ');
+                case "THEN" -> processarThen(scriptCompleto, pilha, offsetAbsoluto, posicao);
+                case "END IF" -> {
+                    desempilharValidando(pilha, "IF", posicao[0], posicao[1]);
+                    ignorarAteOffset = correspondencia.end();
+                }
+                case "END LOOP" -> {
+                    desempilharValidando(pilha, "LOOP", posicao[0], posicao[1]);
+                    ignorarAteOffset = correspondencia.end();
+                }
+                case "END CASE" -> {
+                    desempilharValidando(pilha, "CASE", posicao[0], posicao[1]);
+                    ignorarAteOffset = correspondencia.end();
+                }
+                case "END" -> processarEnd(scriptCompleto, pilha, rotulos, conteudoLimpo, correspondencia, posicao);
             }
         }
-        return sb.toString();
+
+        if (!pilha.isEmpty()) {
+            BlocoControle naoFechado = pilha.pop();
+            throw new SqlException(MensagemSistema.ERRO_ESTRUTURA_NAO_FECHADA
+                    .MensagemComParametro(naoFechado.linha, naoFechado.coluna, naoFechado.tipo.replace("_SEM_THEN", "")));
+        }
     }
 
-    // =========================================================================
-    // 3. VALIDAÇÃO DE COMANDOS SQL INTERNOS
-    // =========================================================================
+    /**
+     * Valida a query condicional localizada entre blocos estruturais e sua respectiva palavra chave THEN.
+     */
+    private void processarThen(String scriptCompleto, Stack<BlocoControle> pilha, int offsetAbsolutoThen, int[] posicaoThen) {
+        if (pilha.isEmpty())
+            throw new SqlException(MensagemSistema.ERRO_THEN_SEM_IF.MensagemComParametro(posicaoThen[0], posicaoThen[1]));
 
-    private void validarComandosSqlInternos(String script, String conteudoCorpo, int inicioCorpo) {
-        String conteudoLimpo = limparComentariosEStrings(conteudoCorpo);
+        BlocoControle topo = pilha.peek();
+        if (topo.tipo.equals("CASE")) return;
 
-        Set<String> validStarters = Set.of(
-                "SELECT", "INSERT", "UPDATE", "DELETE", "IF", "ELSE", "ELSIF", "LOOP", "DECLARE",
-                "BEGIN", "END", "FETCH", "OPEN", "CLOSE", "RETURN", "EXIT", "RAISE", "EXECUTE",
-                "PERFORM", "FOREACH", "CONTINUE", "WHILE", "FOR", "CALL", "EXCEPTION", "WHEN", "CASE", "GET"
-        );
+        if (!topo.tipo.equals("IF_SEM_THEN") && !topo.tipo.equals("ELSIF_SEM_THEN"))
+            throw new SqlException(MensagemSistema.ERRO_THEN_INESPERADO.MensagemComParametro(posicaoThen[0], posicaoThen[1]));
 
-        Map<String, String> keywordsTypos = Map.ofEntries(
-                Map.entry("EXCUTE", "EXECUTE"),
-                Map.entry("EXECUET", "EXECUTE"),
-                Map.entry("PRFORM", "PERFORM"),
-                Map.entry("PERFOR", "PERFORM"),
-                Map.entry("RETUR", "RETURN"),
-                Map.entry("RETUN", "RETURN"),
-                Map.entry("OPN", "OPEN"),
-                Map.entry("CLSE", "CLOSE"),
-                Map.entry("DECLAR", "DECLARE"),
-                Map.entry("FORACH", "FOREACH"),
-                Map.entry("CONTINE", "CONTINUE"),
-                Map.entry("ELIF", "ELSIF"),
-                Map.entry("WHIL", "WHILE")
-        );
+        String tipoBase = topo.tipo.replace("_SEM_THEN", "");
+        int offsetInicioCondicao = topo.offsetAbsoluto + tipoBase.length();
+        String condicaoOriginal = scriptCompleto.substring(offsetInicioCondicao, offsetAbsolutoThen);
+        String condicaoTrimada = condicaoOriginal.trim();
+        int espacosIniciais = condicaoOriginal.length() - condicaoOriginal.stripLeading().length();
 
-        Map<String, String> bodyTypos = Map.of(
-                "USNG", "USING",
-                "USIN", "USING",
-                "STRCT", "STRICT",
-                "STRIT", "STRICT",
-                "FOUUND", "FOUND",
-                "FOND", "FOUND"
-        );
+        if (!condicaoTrimada.isEmpty()) {
+            executarValidacaoAntlr(scriptCompleto, "SELECT " + condicaoTrimada, offsetInicioCondicao + espacosIniciais, 7,
+                    (linha, coluna, mensagem) -> MensagemSistema.ERRO_SINTAXE_CONDICAO_CONTROLE.MensagemComParametro(linha, coluna, tipoBase, mensagem));
+        }
 
-        int startPos = 0;
-        int endPos;
+        if (topo.tipo.equals("IF_SEM_THEN")) {
+            topo.tipo = "IF";
+        } else {
+            pilha.pop();
+        }
+    }
 
-        while ((endPos = conteudoLimpo.indexOf(';', startPos)) != -1) {
-            String stripLinha = conteudoLimpo.substring(startPos, endPos);
-            String stripOriginal = conteudoCorpo.substring(startPos, endPos);
-            String instrucaoLimpa    = stripLinha.trim();
-            String instrucaoOriginal = stripOriginal.trim();
+    /**
+     * Resolve o fechamento de blocos baseando-se em analisadores de tokens de fechamento genérico (END).
+     */
+    private void processarEnd(String scriptCompleto, Stack<BlocoControle> pilha, Set<String> rotulos, String conteudoLimpo, Matcher correspondencia, int[] posicao) {
+        if (!pilha.isEmpty() && pilha.peek().tipo.equals("CASE")) {
+            pilha.pop();
+            return;
+        }
 
-            // Offset do início desta instrução dentro do conteudoCorpo considerando espaços iniciais
-            int offsetInicioInstrucao = startPos
-                    + (stripLinha.length() - stripLinha.stripLeading().length());
+        int posicaoPesquisa = correspondencia.end();
+        while (posicaoPesquisa < conteudoLimpo.length() && Character.isWhitespace(conteudoLimpo.charAt(posicaoPesquisa)))
+            posicaoPesquisa++;
 
-            startPos = endPos + 1;
+        String proximoToken = lerProximoToken(conteudoLimpo, posicaoPesquisa);
+
+        if (proximoToken.equals(";") || proximoToken.isEmpty() || rotulos.contains(proximoToken)) {
+            desempilharValidando(pilha, "BEGIN", posicao[0], posicao[1]);
+        } else {
+            throw new SqlException(MensagemSistema.ERRO_END_TOKEN_INESPERADO.MensagemComParametro(posicao[0], posicao[1], proximoToken));
+        }
+    }
+
+    /**
+     * Intercepta inconformidades quando comandos condicionais omitiram o token THEN obrigatório.
+     */
+    private void verificarThenPendente(Stack<BlocoControle> pilha, int linha, int coluna) {
+        if (pilha.isEmpty()) return;
+        BlocoControle topo = pilha.peek();
+        if (topo.tipo.equals("IF_SEM_THEN"))
+            throw new SqlException(MensagemSistema.ERRO_IF_SEM_THEN.MensagemComParametro(linha, coluna, topo.linha, topo.coluna));
+        if (topo.tipo.equals("ELSIF_SEM_THEN"))
+            throw new SqlException(MensagemSistema.ERRO_ELSIF_SEM_THEN.MensagemComParametro(linha, coluna, topo.linha, topo.coluna));
+    }
+
+    /**
+     * Confirma a conformidade do bloco atual do topo da pilha em relação ao token de fechamento esperado.
+     */
+    private void desempilharValidando(Stack<BlocoControle> pilha, String tipoEsperado, int linha, int coluna) {
+        if (pilha.isEmpty())
+            throw new SqlException(MensagemSistema.ERRO_END_SEM_ABERTURA.MensagemComParametro(linha, coluna, tipoEsperado, tipoEsperado));
+        BlocoControle topo = pilha.peek();
+        if (!topo.tipo.equals(tipoEsperado))
+            throw new SqlException(MensagemSistema.ERRO_END_FECHAMENTO_ERRADO.MensagemComParametro(linha, coluna, topo.tipo, topo.linha, topo.coluna, tipoEsperado));
+        pilha.pop();
+    }
+
+    /**
+     * Valida de forma encadeada as fatias de comandos e instruções SQL identificadas após a cláusula BEGIN.
+     */
+    private void validarComandosSqlNoCorpo(String scriptCompleto, String conteudoBloco, int offsetInicioBloco) {
+        String conteudoLimpo = removerComentario(conteudoBloco);
+        Matcher correspondenciaBegin = Pattern.compile("\\bBEGIN\\b", Pattern.CASE_INSENSITIVE).matcher(conteudoLimpo);
+
+        int posicaoAtual = correspondenciaBegin.find() ? correspondenciaBegin.end() : 0;
+        int posicaoFim;
+
+        while ((posicaoFim = conteudoLimpo.indexOf(';', posicaoAtual)) != -1) {
+            String fragmentoLimpo = conteudoLimpo.substring(posicaoAtual, posicaoFim);
+            String fragmentoOriginal = conteudoBloco.substring(posicaoAtual, posicaoFim);
+            String instrucaoLimpa = fragmentoLimpo.trim();
+            String instrucaoOriginal = fragmentoOriginal.trim();
+
+            int offsetInicioInstrucao = posicaoAtual + (fragmentoLimpo.length() - fragmentoLimpo.stripLeading().length());
+            posicaoAtual = posicaoFim + 1;
 
             if (instrucaoLimpa.isEmpty()) continue;
 
-            // Sanitização: Substitui estruturas de controle PL/pgSQL no início do fragmento por espaços equivalentes
-            String instrucaoParaValidar = instrucaoOriginal;
-            Matcher plMatcher = PATTERN_PL_HEADER.matcher(instrucaoParaValidar);
-            while (plMatcher.find()) {
-                int start = plMatcher.start();
-                int end = plMatcher.end();
-                StringBuilder spaces = new StringBuilder();
-                for (int i = start; i < end; i++) {
-                    char c = instrucaoParaValidar.charAt(i);
-                    spaces.append(c == '\n' ? '\n' : ' ');
-                }
-                instrucaoParaValidar = instrucaoParaValidar.substring(0, start) + spaces + instrucaoParaValidar.substring(end);
-                plMatcher = PATTERN_PL_HEADER.matcher(instrucaoParaValidar);
-            }
+            String instrucaoSemCabecalho = removerCabecalhosPlpgsql(instrucaoOriginal);
+            validarPontoVirgulaNosComandos(scriptCompleto, instrucaoSemCabecalho, offsetInicioBloco, offsetInicioInstrucao);
 
-            String instrucaoLimpaAux = instrucaoParaValidar.trim();
-            if (instrucaoLimpaAux.isEmpty()) {
+            if (instrucaoSemCabecalho.isBlank()) continue;
+
+            validarErrosOrtograficosPalavrasCorpo(scriptCompleto, instrucaoOriginal, offsetInicioBloco, offsetInicioInstrucao);
+
+            if (instrucaoLimpa.contains(":=")) {
+                validarAtribuicaoNoCorpo(scriptCompleto, instrucaoOriginal, offsetInicioBloco, offsetInicioInstrucao);
                 continue;
             }
 
-            String[] tokens = instrucaoLimpaAux.split("\\s+");
-            if (tokens.length == 0) continue;
-            String firstWord = tokens[0].toUpperCase();
-
-            // --- Validação ortográfica de erros no corpo do comando (ex: USNG, STRCT, FOUUND) ---
-            for (String token : tokens) {
-                String cleanToken = token.replaceAll("[^a-zA-Z_]", "").toUpperCase();
-                if (bodyTypos.containsKey(cleanToken)) {
-                    int offsetAbsoluto = inicioCorpo + offsetInicioInstrucao + instrucaoOriginal.toUpperCase().indexOf(cleanToken);
-                    int[] pos = obterLinhaEColuna(script, offsetAbsoluto);
-                    throw new SqlException(String.format(
-                            "Erro na linha: %d coluna: %d \n Mensagem: Palavra-chave incorreta: '%s'. Você quis dizer %s?",
-                            pos[0], pos[1], token, bodyTypos.get(cleanToken)));
-                }
+            String primeiraPalavra = instrucaoSemCabecalho.trim().split("\\s+")[0].toUpperCase();
+            if (ERROS_ORTOGRAFICOS_PALAVRAS_CHAVE_PLPGSQL.containsKey(primeiraPalavra)) {
+                int[] posicao = posicaoAbsoluta(scriptCompleto, offsetInicioBloco + offsetInicioInstrucao + instrucaoOriginal.toUpperCase().indexOf(primeiraPalavra));
+                throw new SqlException(MensagemSistema.ERRO_PALAVRA_CHAVE_INCORRETA.MensagemComParametro(posicao[0], posicao[1], primeiraPalavra, ERROS_ORTOGRAFICOS_PALAVRAS_CHAVE_PLPGSQL.get(primeiraPalavra)));
             }
 
-            // --- Atribuição := ---
-            if (instrucaoLimpaAux.contains(":=")) {
-                int idx = instrucaoOriginal.indexOf(":=");
-                if (idx != -1) {
-                    String rhsOriginal = instrucaoOriginal.substring(idx + 2);
-                    String rhs         = rhsOriginal.trim();
-                    int    leadingRhs  = rhsOriginal.length() - rhsOriginal.stripLeading().length();
-
-                    int offsetBaseRhs = inicioCorpo + offsetInicioInstrucao + idx + 2 + leadingRhs;
-
-                    if (!rhs.isEmpty()) {
-                        if (rhs.endsWith(";")) {
-                            rhs = rhs.substring(0, rhs.length() - 1).trim();
-                        }
-                        String sqlValidar = "SELECT " + rhs;
-                        try {
-                            validarInstrucaoSqlInterna(sqlValidar);
-                        } catch (SqlInternoException e) {
-                            int offsetErro = calcularOffsetNoScript(
-                                    sqlValidar, e.line, e.col, offsetBaseRhs, 7);
-                            int[] posicao = obterLinhaEColuna(script, offsetErro);
-                            throw new SqlException(String.format(
-                                    "Erro na linha: %d coluna: %d \n Mensagem: Erro de sintaxe na expressão da atribuição: %s",
-                                    posicao[0], posicao[1], e.getMessage()));
-                        } catch (SqlException e) {
-                            int[] posicao = obterLinhaEColuna(script, offsetBaseRhs);
-                            throw new SqlException(String.format(
-                                    "Erro na linha: %d coluna: %d \n Mensagem: %s",
-                                    posicao[0], posicao[1], e.getMessage()));
-                        }
-                    }
+            if (INICIADORES_VALIDOS_PLPGSQL.contains(primeiraPalavra)) {
+                if (Set.of("SELECT", "INSERT", "UPDATE", "DELETE").contains(primeiraPalavra)) {
+                    executarValidacaoAntlr(scriptCompleto, instrucaoSemCabecalho, offsetInicioBloco + offsetInicioInstrucao, 0,
+                            (linha, coluna, mensagem) -> MensagemSistema.ERRO_SQL_LINHA_COLUNA.MensagemComParametro(linha, coluna, mensagem));
                 }
+            }
+        }
+    }
+
+    /**
+     * Isola e valida gramaticalmente expressões de atribuição de variáveis no corpo das instruções.
+     */
+    private void validarAtribuicaoNoCorpo(String scriptCompleto, String instrucaoOriginal, int offsetInicioBloco, int offsetInicioInstrucao) {
+        int idx = instrucaoOriginal.indexOf(":=");
+        String ladoDireito = instrucaoOriginal.substring(idx + 2).trim();
+        if (!ladoDireito.isEmpty()) {
+            int offsetLadoDireito = offsetInicioBloco + offsetInicioInstrucao + idx + 2 + (instrucaoOriginal.substring(idx + 2).length() - ladoDireito.length());
+            executarValidacaoAntlr(scriptCompleto, "SELECT " + ladoDireito, offsetLadoDireito, 7,
+                    MensagemSistema.ERRO_SINTAXE_ATRIBUICAO::MensagemComParametro);
+        }
+    }
+
+    /**
+     * Garante que múltiplos comandos que exijam terminação por ponto e vírgula não estejam agrupados irregularmente.
+     */
+    private void validarPontoVirgulaNosComandos(String scriptCompleto, String instrucao, int offsetInicioBloco, int offsetInicioInstrucao) {
+        String[] tokens = instrucao.trim().split("\\s+");
+        for (int i = 0; i < tokens.length - 1; i++) {
+            String tokenLimpo = tokens[i].replaceAll("[^a-zA-Z_]", "").toUpperCase();
+            if (i == 0 && COMANDOS_QUE_EXIGEM_PONTO_VIRGULA.contains(tokenLimpo)) {
                 continue;
             }
-
-            // --- Validação ortográfica de erros na primeira palavra do comando ---
-            if (keywordsTypos.containsKey(firstWord)) {
-                int offsetAbsoluto = inicioCorpo + offsetInicioInstrucao;
-                int[] pos = obterLinhaEColuna(script, offsetAbsoluto);
-                throw new SqlException(String.format(
-                        "Erro na linha: %d coluna: %d \n Mensagem: Palavra-chave PL/pgSQL incorreta: '%s'. Você quis dizer %s?",
-                        pos[0], pos[1], tokens[0], keywordsTypos.get(firstWord)));
-            }
-
-            // Pula validações adicionais de palavras-chave estruturais conhecidas do PL/pgSQL
-            if (validStarters.contains(firstWord)) continue;
-
-            // Se não começou com palavra válida do PL/pgSQL e não é atribuição, lança comando inválido
-            if (!instrucaoLimpaAux.contains("=") && !instrucaoLimpaAux.contains(":=")) {
-                int offsetAbsoluto = inicioCorpo + offsetInicioInstrucao;
-                int[] pos = obterLinhaEColuna(script, offsetAbsoluto);
-                throw new SqlException(String.format(
-                        "Erro na linha: %d coluna: %d \n Mensagem5: Comando ou palavra-chave inválida/desconhecida: '%s'.",
-                        pos[0], pos[1], tokens[0]));
-            }
-
-            // --- SQL puro (SELECT, INSERT, UPDATE, DELETE, etc.) ---
-            boolean pareceSql = instrucaoLimpaAux.toUpperCase()
-                    .matches(".*\\b(FROM|WHERE|VALUES|SET|JOIN)\\b.*")
-                    || firstWord.startsWith("SELE")
-                    || firstWord.startsWith("UPDA")
-                    || firstWord.startsWith("DELE")
-                    || firstWord.startsWith("INSE");
-
-            if (pareceSql) {
-                int offsetBaseInstrucao = inicioCorpo + offsetInicioInstrucao;
-                try {
-                    validarInstrucaoSqlInterna(instrucaoParaValidar);
-                } catch (SqlInternoException e) {
-                    int offsetErro = calcularOffsetNoScript(
-                            instrucaoParaValidar, e.line, e.col,
-                            offsetBaseInstrucao, 0);
-                    int[] posicao = obterLinhaEColuna(script, offsetErro);
-                    throw new SqlException(String.format(
-                            "Erro na linha: %d coluna: %d \n Mensagem: Erro de sintaxe: %s",
-                            posicao[0], posicao[1], e.getMessage()));
-                } catch (SqlException e) {
-                    int[] posicao = obterLinhaEColuna(script, offsetBaseInstrucao);
-                    throw new SqlException(String.format(
-                            "Erro na linha: %d coluna: %d \n Mensagem: %s",
-                            posicao[0], posicao[1], e.getMessage()));
-                }
+            if (COMANDOS_QUE_EXIGEM_PONTO_VIRGULA.contains(tokenLimpo)) {
+                int[] pos = posicaoAbsoluta(scriptCompleto, offsetInicioBloco + offsetInicioInstrucao + instrucao.indexOf(tokens[i]));
+                throw new SqlException(MensagemSistema.ERRO_DECLARACAO_SEM_PONTO_VIRGULA.MensagemComParametro(pos[0], pos[1]));
             }
         }
     }
 
-    // =========================================================================
-    // VALIDAÇÃO VIA ANTLR4
-    // =========================================================================
-
-    private void validarInstrucaoSqlInterna(String instrucao) {
-        CharStream       input  = CharStreams.fromString(instrucao);
-        PostgreSQLLexer  lexer  = new PostgreSQLLexer(input);
-        CommonTokenStream tokens = new CommonTokenStream(lexer);
-        PostgreSQLParser parser = new PostgreSQLParser(tokens);
-
-        lexer.removeErrorListeners();
-        parser.removeErrorListeners();
-
-        BaseErrorListener errorListener = new BaseErrorListener() {
-            @Override
-            public void syntaxError(Recognizer<?, ?> recognizer, Object offendingSymbol,
-                                    int line, int charPositionInLine,
-                                    String msg, RecognitionException e) {
-                throw new SqlInternoException(line, charPositionInLine, msg);
-            }
-        };
-        lexer.addErrorListener(errorListener);
-        parser.addErrorListener(errorListener);
-
-        PostgreSQLParser.RootContext tree = parser.root();
-        ParseTreeWalker.DEFAULT.walk(new ValidadorAntlrSql(true), tree);
-    }
-
-    // =========================================================================
-    // UTILITÁRIOS
-    // =========================================================================
-
-    private int calcularOffsetNoScript(String fragmento, int relativeLine, int relativeCol,
-                                       int offsetBase, int prefixLength) {
-        int offsetInicioLinha = 0;
-        int currentLine       = 1;
-
-        for (int i = 0; i < fragmento.length(); i++) {
-            if (currentLine == relativeLine) {
-                offsetInicioLinha = i;
-                break;
-            }
-            if (fragmento.charAt(i) == '\n') {
-                currentLine++;
-            }
+    /**
+     * Remove metadados de cabeçalhos internos do bloco PL/pgSQL para isolar puramente as consultas SQL.
+     */
+    private String removerCabecalhosPlpgsql(String instrucao) {
+        String resultado = instrucao;
+        Matcher m = PADRAO_CABECALHO_PLPGSQL.matcher(resultado);
+        while (m.find()) {
+            resultado = resultado.substring(0, m.start()) + " ".repeat(m.end() - m.start()) + resultado.substring(m.end());
+            m = PADRAO_CABECALHO_PLPGSQL.matcher(resultado);
         }
-
-        int offsetNoFragmento = offsetInicioLinha + relativeCol;
-
-        // O prefixo artificial (ex: "SELECT ") adicionado no início do fragmento desloca
-        // o offset absoluto de todos os caracteres subsequentes. Portanto, devemos sempre
-        // descontar o prefixLength do offset absoluto final, independente da linha do erro.
-        offsetNoFragmento = Math.max(0, offsetNoFragmento - prefixLength);
-
-        return offsetBase + offsetNoFragmento;
+        return resultado;
     }
 
-    private String limparComentariosEStrings(String sql) {
-        char[]  chars          = sql.toCharArray();
-        int     n              = chars.length;
-        boolean inLineComment  = false;
-        boolean inBlockComment = false;
-        boolean inString       = false;
-        boolean escaped        = false;
+    /**
+     * Executa a análise léxica e sintática estrutural por meio da infraestrutura de Listeners do ANTLR4.
+     */
+    private void executarValidacaoAntlr(String scriptCompleto, String sqlParaValidar, int offsetBaseAbsoluto, int offsetTruncamentoAntlr, FabricaMensagemErro fabricaErro) {
+        try {
+            CharStream input = CharStreams.fromString(sqlParaValidar);
+            PostgreSQLLexer lexer = new PostgreSQLLexer(input);
+            lexer.removeErrorListeners();
 
-        for (int i = 0; i < n; i++) {
-            char c = chars[i];
+            CommonTokenStream tokens = new CommonTokenStream(lexer);
+            PostgreSQLParser parser = new PostgreSQLParser(tokens);
+            parser.removeErrorListeners();
 
-            if (inLineComment) {
-                if (c == '\n') inLineComment = false;
-                else chars[i] = ' ';
-
-            } else if (inBlockComment) {
-                if (c == '*' && i + 1 < n && chars[i + 1] == '/') {
-                    chars[i]     = ' ';
-                    chars[i + 1] = ' ';
-                    i++;
-                    inBlockComment = false;
-                } else if (c != '\n') {
-                    chars[i] = ' ';
+            parser.addErrorListener(new BaseErrorListener() {
+                @Override
+                public void syntaxError(Recognizer<?, ?> recognizer, Object offendingSymbol, int line, int charPositionInLine, String msg, RecognitionException e) {
+                    throw new ErroSintaxeInterno(line, charPositionInLine, msg);
                 }
+            });
 
-            } else if (inString) {
-                if (escaped) {
-                    escaped = false;
-                    if (c != '\n') chars[i] = ' ';
-                } else if (c == '\\') {
-                    escaped  = true;
-                    chars[i] = ' ';
-                } else if (c == '\'') {
-                    chars[i] = ' ';
-                    inString = false;
-                } else if (c != '\n') {
-                    chars[i] = ' ';
-                }
+            ParseTreeWalker.DEFAULT.walk(new PostgreSQLParserBaseListener(), parser.root());
 
+        } catch (ErroSintaxeInterno erro) {
+            int offsetErro = calcularOffsetAbsoluto(sqlParaValidar, erro.linha, erro.coluna, offsetBaseAbsoluto, offsetTruncamentoAntlr);
+            int[] pos = posicaoAbsoluta(scriptCompleto, offsetErro);
+            throw new SqlException(fabricaErro.criar(pos[0], pos[1], erro.getMessage()));
+        }
+    }
+
+    /**
+     * Calcula o deslocamento absoluto do erro sintático remapeando de volta para a string original.
+     */
+    private int calcularOffsetAbsoluto(String fragmentoSql, int linhaErro, int colunaErro, int offsetBaseAbsoluto, int offsetTruncamento) {
+        String[] linhas = fragmentoSql.split("\\r?\\n");
+        int offsetAcumulado = 0;
+        for (int i = 0; i < linhaErro - 1; i++) {
+            offsetAcumulado += linhas[i].length() + 1;
+        }
+        return offsetBaseAbsoluto + offsetAcumulado + colunaErro - offsetTruncamento;
+    }
+
+    /**
+     * Mapeia um offset absoluto de strings unidimensionais para sua respectiva coordenada bidimensional (Linha e Coluna).
+     */
+    private int[] posicaoAbsoluta(String texto, int offsetAbsoluto) {
+        int linha = 1;
+        int coluna = 1;
+        int limite = Math.min(offsetAbsoluto, texto.length());
+        for (int i = 0; i < limite; i++) {
+            if (texto.charAt(i) == '\n') {
+                linha++;
+                coluna = 1;
             } else {
-                // Detecção de Dollar Quotes ($$ ou $tag$)
-                if (c == '$') {
-                    int j = i + 1;
-                    while (j < n && (Character.isLetterOrDigit(chars[j]) || chars[j] == '_')) {
-                        j++;
-                    }
-                    if (j < n && chars[j] == '$') {
-                        String tag = new String(chars, i, j - i + 1);
-                        int closingIdx = sql.indexOf(tag, j + 1);
-                        if (closingIdx != -1) {
-                            for (int k = j + 1; k < closingIdx; k++) {
-                                if (chars[k] != '\n') {
-                                    chars[k] = ' ';
-                                }
-                            }
-                            i = closingIdx + tag.length() - 1;
-                            continue;
-                        }
-                    }
-                }
-
-                if (c == '-' && i + 1 < n && chars[i + 1] == '-') {
-                    inLineComment = true;
-                    chars[i]     = ' ';
-                    chars[i + 1]   = ' ';
-                    i++;
-                } else if (c == '/' && i + 1 < n && chars[i + 1] == '*') {
-                    inBlockComment = true;
-                    chars[i]       = ' ';
-                    chars[i + 1]   = ' ';
-                    i++;
-                } else if (c == '\'') {
-                    inString = true;
-                    chars[i] = ' ';
-                }
+                coluna++;
             }
         }
-        return new String(chars);
+        return new int[]{linha, coluna};
     }
 
-    private int[] obterLinhaEColuna(String text, int offset) {
-        int line = 1;
-        int col  = 1;
-        for (int i = 0; i < offset && i < text.length(); i++) {
-            if (text.charAt(i) == '\n') {
-                line++;
-                col = 1;
-            } else {
-                col++;
+    /**
+     * Extrai e mapeia rótulos nomeados (Labels) definidos dentro da rotina PL/pgSQL.
+     */
+    private Set<String> extrairRotulos(String conteudoBloco) {
+        Set<String> rotulos = new HashSet<>();
+        Matcher m = Pattern.compile("<<(\\w+)>>").matcher(conteudoBloco);
+        while (m.find()) rotulos.add(m.group(1).toUpperCase());
+        return rotulos;
+    }
+
+    /**
+     * Lê e consome o token alfanumérico imediatamente subsequente a um determinado índice.
+     */
+    private String lerProximoToken(String texto, int posicao) {
+        if (posicao >= texto.length()) return "";
+        char c = texto.charAt(posicao);
+        if (Character.isLetterOrDigit(c) || c == '_') {
+            int fim = posicao;
+            while (fim < texto.length() && (Character.isLetterOrDigit(texto.charAt(fim)) || texto.charAt(fim) == '_'))
+                fim++;
+            return texto.substring(posicao, fim).toUpperCase();
+        }
+        return String.valueOf(c);
+    }
+
+    /**
+     * Substitui o conteúdo de um trecho de texto por espaços vazios preservando quebras de linha.
+     */
+    private void apagarTrechoPreservandoQuebras(StringBuilder sb, int inicio, int fim) {
+        for (int i = inicio; i < fim && i < sb.length(); i++) {
+            if (sb.charAt(i) != '\n' && sb.charAt(i) != '\r') {
+                sb.setCharAt(i, ' ');
             }
         }
-        return new int[]{line, col};
     }
 }
