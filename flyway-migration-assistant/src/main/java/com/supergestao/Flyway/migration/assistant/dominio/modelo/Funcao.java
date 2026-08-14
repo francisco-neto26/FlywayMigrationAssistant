@@ -33,10 +33,6 @@ public class Funcao {
         }
     }
 
-    public boolean pertenceAFuncao(String nomeArquivo) {
-        return nomeArquivo != null && nomeArquivo.startsWith(nome);
-    }
-
     @Override
     public String toString() {
         return nome;

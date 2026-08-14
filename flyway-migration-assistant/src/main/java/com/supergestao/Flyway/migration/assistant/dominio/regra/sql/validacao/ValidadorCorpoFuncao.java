@@ -145,16 +145,13 @@ public class ValidadorCorpoFuncao {
         String criar(int linha, int coluna, String mensagem);
     }
 
-    /**
-     * Ponto de entrada que localiza blocos baseados em dólar ($$) e inicia as validações.
-     */
     public void validar(String sqlCompleto) {
 
         if (sqlCompleto == null || sqlCompleto.isBlank()) {
             return;
         }
 
-        String sqlCompletoSemComentario = removerComentario(sqlCompleto);
+        String sqlCompletoSemComentario = sqlCompleto;
         Matcher correspondenciaBlocos = PadroesValidacaoSql.FUNCTION.matcher(sqlCompletoSemComentario);
 
         while (correspondenciaBlocos.find()) {
@@ -177,93 +174,6 @@ public class ValidadorCorpoFuncao {
         }
     }
 
-    //remove comentários de linha (--), comentários de bloco /* */ e literais de string ('...')
-    private String removerComentario(String sql) {
-        if (sql == null) return "";
-
-        StringBuilder sqlBuilder = new StringBuilder(sql);
-        int total = sqlBuilder.length();
-
-        boolean comentarioLinha = false; //ativado após --
-        boolean comentarioBloco = false; //ativado entre /*  */
-        boolean comentarioStringLiteral = false; //ativado entre aspas simples ''
-
-        for (int posicao = 0; posicao < total; posicao++) {
-            char caracterAtual = sqlBuilder.charAt(posicao);
-
-            //comentário de linha desconsidera tudo até o \n
-            if (comentarioLinha) {
-                if (caracterAtual == '\n') {
-                    //fim da linha, mantém a quebra
-                    comentarioLinha = false;
-                } else if (caracterAtual != '\r') {
-                    // apaga conteúdo do comentário
-                    sqlBuilder.setCharAt(posicao, ' ');
-                }
-                continue;
-            }
-
-            // comentário de bloco desconsidera tudo até o */
-            if (comentarioBloco) {
-                if (caracterAtual == '*' && posicao + 1 < total && sqlBuilder.charAt(posicao + 1) == '/') {
-                    sqlBuilder.setCharAt(posicao, ' ');
-                    // apaga o */
-                    sqlBuilder.setCharAt(posicao + 1, ' ');
-                    //fim do bloco pula o '/'
-                    comentarioBloco = false;
-                    posicao++;
-                } else if (caracterAtual != '\n' && caracterAtual != '\r') {
-                    // apaga conteúdo interno do bloco
-                    sqlBuilder.setCharAt(posicao, ' ');
-                }
-                continue;
-            }
-            /*inicialmente não vamos remover o texto dentro das aspas
-            // comentário string literal desconsidera até o fechamento da aspas
-            if (comentarioStringLiteral) {
-                if (caracterAtual == '\'') {
-                    if (posicao + 1 < total && sqlBuilder.charAt(posicao + 1) == '\'') {
-                        sqlBuilder.setCharAt(posicao, ' ');
-                        //apaga os dois e permanece na string
-                        sqlBuilder.setCharAt(posicao + 1, ' ');
-                        posicao++;
-                    } else {
-                        //aspas de fechamento, sai da string
-                        comentarioStringLiteral = false;
-                    }
-                } else if (caracterAtual != '\n' && caracterAtual != '\r') {
-                    //apaga conteúdo da string
-                    sqlBuilder.setCharAt(posicao, ' ');
-                }
-                continue;
-            }
-            */
-            //SQL normal detecta comentario linha
-            if (caracterAtual == '-' && posicao + 1 < total && sqlBuilder.charAt(posicao + 1) == '-') {
-                // remove o --
-                sqlBuilder.setCharAt(posicao, ' ');
-                sqlBuilder.setCharAt(posicao + 1, ' ');
-                comentarioLinha = true;
-                posicao++;
-                continue;
-            }
-
-            //SQL normal detecta comentario bloco
-            if (caracterAtual == '/' && posicao + 1 < total && sqlBuilder.charAt(posicao + 1) == '*') {
-                sqlBuilder.setCharAt(posicao, ' ');
-                sqlBuilder.setCharAt(posicao + 1, ' ');  // apaga o /*
-                comentarioBloco = true;
-                posicao++;
-                continue;
-            }
-            //SQL normal detecta comentario string literal, aspas simples
-            if (caracterAtual == '\'') {
-                //entra na string literal
-                comentarioStringLiteral = true;
-            }
-        }
-        return sqlBuilder.toString();
-    }
 
     //valida o declare, separa o cursor das demais validações
     private void validarDeclare(String scriptCompleto, String conteudoBloco, int inicioBloco) {
@@ -483,7 +393,7 @@ public class ValidadorCorpoFuncao {
         int offsetAcumulado = inicioDeclaracao;
 
         for (String linha : declaracaoOriginal.split("\\n")) {
-            String linhaLimpa = removerComentario(linha).trim();
+            String linhaLimpa = linha.trim();
             if (PADRAO_INICIO_DECLARACAO_VARIAVEL.matcher(linhaLimpa).find()) {
                 contadorDeclaracoes++;
                 if (contadorDeclaracoes == 1) {
@@ -522,7 +432,7 @@ public class ValidadorCorpoFuncao {
      * Extrai e valida a integridade de cursores declarados de forma dinâmica.
      */
     private String extrairEValidarCursores(String scriptCompleto, String conteudoBloco, int offsetInicioBloco) {
-        String conteudoLimpo = removerComentario(conteudoBloco);
+        String conteudoLimpo = conteudoBloco;
         StringBuilder conteudoSemCursores = new StringBuilder(conteudoBloco);
         Matcher correspondenciaCursor = PADRAO_DECLARACAO_CURSOR.matcher(conteudoLimpo);
 
@@ -609,7 +519,7 @@ public class ValidadorCorpoFuncao {
      */
     private void validarEstruturaControle(String scriptCompleto, String conteudoBloco, int offsetInicioBloco) {
         Set<String> rotulos = extrairRotulos(conteudoBloco);
-        String conteudoLimpo = removerComentario(conteudoBloco);
+        String conteudoLimpo = conteudoBloco;
 
         Matcher correspondencia = PADRAO_ESTRUTURAS_CONTROLE.matcher(conteudoLimpo);
         Stack<BlocoControle> pilha = new Stack<>();
@@ -739,7 +649,7 @@ public class ValidadorCorpoFuncao {
      * Valida de forma encadeada as fatias de comandos e instruções SQL identificadas após a cláusula BEGIN.
      */
     private void validarComandosSqlNoCorpo(String scriptCompleto, String conteudoBloco, int offsetInicioBloco) {
-        String conteudoLimpo = removerComentario(conteudoBloco);
+        String conteudoLimpo = (conteudoBloco);
         Matcher correspondenciaBegin = Pattern.compile("\\bBEGIN\\b", Pattern.CASE_INSENSITIVE).matcher(conteudoLimpo);
 
         int posicaoAtual = correspondenciaBegin.find() ? correspondenciaBegin.end() : 0;

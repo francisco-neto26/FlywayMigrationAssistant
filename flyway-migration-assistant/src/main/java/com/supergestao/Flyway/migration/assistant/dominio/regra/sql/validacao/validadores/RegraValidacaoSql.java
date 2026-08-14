@@ -1,8 +1,10 @@
 package com.supergestao.Flyway.migration.assistant.dominio.regra.sql.validacao.validadores;
 
+import com.supergestao.Flyway.migration.assistant.dominio.regra.sql.validacao.modelo.BlocoSql;
 import com.supergestao.Flyway.migration.assistant.dominio.regra.sql.validacao.util.CapturarErro;
 
-public interface RegraValidacaoSql {
+import java.util.List;
 
-    void validar(CapturarErro capturarErro, String script);
+public interface RegraValidacaoSql {
+    void validar(CapturarErro capturarErro, BlocoSql blocoSql);
 }

@@ -25,7 +25,7 @@
                         <VBox spacing="5.0" HBox.hgrow="SOMETIMES">
                             <children>
                                 <Label fx:id="lblFuncao" text="Função:" />
-                                <ComboBox fx:id="comboFuncao" maxWidth="1.7976931348623157E308" prefHeight="25.0" prefWidth="150.0" promptText="Selecione." />
+                                <ComboBox fx:id="comboFuncao" maxWidth="1.7976931348623157E308" prefHeight="25.0" prefWidth="150.0" />
                             </children>
                         </VBox>
                         <VBox spacing="5.0" HBox.hgrow="SOMETIMES">

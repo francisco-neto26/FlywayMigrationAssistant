@@ -1,4 +1,4 @@
-package com.supergestao.Flyway.migration.assistant.dominio.regra.sql.validacao;
+package com.supergestao.Flyway.migration.assistant.dominio.regra.sql.validacao.validadores;
 
 import com.supergestao.Flyway.migration.assistant.dominio.mensagem.MensagemSistema;
 import com.supergestao.Flyway.migration.assistant.dominio.regra.sql.validacao.antlr.PostgreSQLParser;

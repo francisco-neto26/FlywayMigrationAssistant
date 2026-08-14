@@ -32,7 +32,7 @@ public final class ExtrairBlocosSql {
                     case VIEW -> extrairViews(scriptBruto, blocosSql);
                 }
                 tipoIdentificado = true;
-                //break;
+                //break;--comentado para processar outros tipos do arquivo, precisa revisar esta condição
             }
         }
 
@@ -50,7 +50,7 @@ public final class ExtrairBlocosSql {
             int linhaFinal = (int) scriptBruto.lines().count();
             //linha inicial e final do corpo
             int linhaInicioCorpo = calcularLinhaInicial(scriptBruto, matcher.start());
-            int linhaFimCorpo = calcularLinhaInicial(scriptBruto, matcher.end()) - 1;
+            int linhaFimCorpo = calcularLinhaInicial(scriptBruto, matcher.end() - 1);
 
             String conteudocabecalho = scriptIntervaloLinhas(scriptBruto, linhaInicial, linhaInicioCorpo);
             SecaoSql secaoSql = new SecaoSql(conteudocabecalho, linhaInicial);
@@ -58,10 +58,10 @@ public final class ExtrairBlocosSql {
             String conteudoCorpo = scriptIntervaloLinhas(scriptBruto, linhaInicioCorpo + 1, linhaFimCorpo);
             SecaoSql secaoCorpo = new SecaoSql(conteudoCorpo, linhaInicioCorpo);
 
-            String conteudofechamento = scriptIntervaloLinhas(scriptBruto, linhaFimCorpo, linhaFinal);
-            SecaoSql secaofechamento = new SecaoSql(conteudofechamento, linhaFimCorpo);
+            String conteudoFechamento = scriptIntervaloLinhas(scriptBruto, linhaFimCorpo, linhaFinal);
+            SecaoSql secaoFechamento = new SecaoSql(conteudoFechamento, linhaFimCorpo);
 
-            blocosSql.add(new BlocoSql(tipoSql, secaoSql, secaoCorpo, secaofechamento));
+            blocosSql.add(new BlocoSql(tipoSql, scriptBruto, secaoSql, secaoCorpo, secaoFechamento));
         }
     }
 
@@ -75,7 +75,7 @@ public final class ExtrairBlocosSql {
             String conteudoCorpo = scriptIntervaloLinhas(scriptBruto, linhaInicioCorpo, linhaFimCorpo);
             SecaoSql secaoCorpo = new SecaoSql(conteudoCorpo, linhaInicioCorpo);
 
-            blocosSql.add(new BlocoSql(tipoSql, null, secaoCorpo, null));
+            blocosSql.add(new BlocoSql(tipoSql, scriptBruto, null, secaoCorpo, null));
         }
     }
 

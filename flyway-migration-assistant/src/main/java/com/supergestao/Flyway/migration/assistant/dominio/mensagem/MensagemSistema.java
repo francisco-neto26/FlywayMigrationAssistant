@@ -133,7 +133,8 @@ public enum MensagemSistema {
     ERRO_ALTER_TABLE_SEM_TABELA("ALTER TABLE sem identificação da tabela"),
     ERRO_FUNCTION_SEM_NOME("Function sem nome"),
     ERRO_NOMENCLATURA_SNAKE_CASE("%s \"%s\" não segue o padrão snake_case obrigatório. Use apenas letras minúsculas, números e underscore, começando com letra."),
-    ERRO_TAMANHO_NOME_EXCEDIDO("%s \"%s\" ultrapassa 63 caracteres (limite do PostgreSQL). Nomes maiores são truncados silenciosamente pelo banco.");
+    ERRO_TAMANHO_NOME_EXCEDIDO("%s \"%s\" ultrapassa 63 caracteres (limite do PostgreSQL). Nomes maiores são truncados silenciosamente pelo banco."),
+    FUNTION_TRIGGER_ARG("Cabeçalho Function trigger com argumentos.");
 
     private final String mensagem;
 
