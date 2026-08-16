@@ -134,7 +134,9 @@ public enum MensagemSistema {
     ERRO_FUNCTION_SEM_NOME("Function sem nome"),
     ERRO_NOMENCLATURA_SNAKE_CASE("%s \"%s\" não segue o padrão snake_case obrigatório. Use apenas letras minúsculas, números e underscore, começando com letra."),
     ERRO_TAMANHO_NOME_EXCEDIDO("%s \"%s\" ultrapassa 63 caracteres (limite do PostgreSQL). Nomes maiores são truncados silenciosamente pelo banco."),
-    FUNTION_TRIGGER_ARG("Cabeçalho Function trigger com argumentos.");
+    FUNTION_TRIGGER_ARG("Cabeçalho Function trigger com argumentos."),
+    SELECIONE("Selecione um(a) %s"),
+    SELECIONE_UNDO("Selecione o arquivo de origem Undo");
 
     private final String mensagem;
 
