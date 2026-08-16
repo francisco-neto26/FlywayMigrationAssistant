@@ -6,7 +6,7 @@ import com.supergestao.Flyway.migration.assistant.ui.estado.ContextoAplicacao;
 
 public class GerenciadorJanelas implements IGerenciadorJanelas {
 
-    private ContextoAplicacao contextoAplicacao;
+    private final ContextoAplicacao contextoAplicacao;
 
     public GerenciadorJanelas(ContextoAplicacao contextoAplicacao) {
         this.contextoAplicacao = contextoAplicacao;

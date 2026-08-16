@@ -7,6 +7,11 @@ import com.supergestao.Flyway.migration.assistant.dominio.configuracao.IGerencia
 import com.supergestao.Flyway.migration.assistant.dominio.modelo.Arquivo;
 import com.supergestao.Flyway.migration.assistant.dominio.modelo.Modulo;
 import com.supergestao.Flyway.migration.assistant.dominio.modelo.Resultado;
+import com.supergestao.Flyway.migration.assistant.dominio.regra.migration.GerarNomeArquivoMigration;
+import com.supergestao.Flyway.migration.assistant.dominio.regra.tempo.GeradorDataHora;
+import com.supergestao.Flyway.migration.assistant.dominio.tipo.AcaoBanco;
+import com.supergestao.Flyway.migration.assistant.dominio.tipo.ObjetoBanco;
+import com.supergestao.Flyway.migration.assistant.dominio.tipo.TipoMigration;
 import com.supergestao.Flyway.migration.assistant.persistencia.gerenciador.modulos.arquivos.IGerenciadorModulosArquivosDisco;
 import com.supergestao.Flyway.migration.assistant.persistencia.gerenciador.modulos.arquivos.GerenciadorModulosArquivosDisco;
 import com.supergestao.Flyway.migration.assistant.ui.utilitario.janela.GerenciadorJanelas;
@@ -24,12 +29,17 @@ public class ContextoAplicacao {
     private final IGerenciadorConfiguracao iGerenciadorConfiguracao;
     private final IGerenciadorJanelas iGerenciadorJanelas;
     private final SincronizarModulosArquivos sincronizarModulosArquivos;
+    private final GerarNomeArquivoMigration gerarNomeArquivoMigration;
+    private final GeradorDataHora geradorDataHora;
 
     public ContextoAplicacao() {
         this.iGerenciadorModulosArquivosDisco = new GerenciadorModulosArquivosDisco();
         this.iGerenciadorConfiguracao = new GerenciadorConfiguracao();
         this.iGerenciadorJanelas = new GerenciadorJanelas(this);
         this.sincronizarModulosArquivos = new SincronizarModulosArquivos(getIGerenciadorModulosArquivos());
+        this.gerarNomeArquivoMigration = new GerarNomeArquivoMigration();
+        this.geradorDataHora = new GeradorDataHora();
+
     }
 
     private IGerenciadorJanelas getIGerenciadorJanelas() {
@@ -153,6 +163,19 @@ public class ContextoAplicacao {
 
     public Map<String, Map<String, Set<String>>> buscarArquivosPorTermo(String termoBusca) {
         return this.sincronizarModulosArquivos.buscarArquivosPorTermo(getDiretorioArquivo(), termoBusca);
+    }
+
+    public String gerarNomeArquivoMigrationUndo(String nome){
+        return this.gerarNomeArquivoMigration.gerarNomeArquivoMigrationUndo(nome);
+    }
+
+    public String gerarNomeArquivoMigration(TipoMigration tipoMigration,
+                                            AcaoBanco acaoBanco,
+                                            ObjetoBanco objetoBanco,
+                                            String funcao,
+                                            String nome){
+
+        return this.gerarNomeArquivoMigration.gerarNomeArquivoMigration(tipoMigration, acaoBanco, objetoBanco, geradorDataHora.gerarDataFlyway(), funcao, nome);
     }
 
 }

@@ -1,144 +1,170 @@
-package com.supergestao.Flyway.migration.assistant.dominio.regra.sql.validacao;
+package com.supergestao.Flyway.migration.assistant.dominio.regra.sql.validacao.validadores;
 
 import com.supergestao.Flyway.migration.assistant.dominio.mensagem.MensagemSistema;
 import com.supergestao.Flyway.migration.assistant.dominio.regra.sql.validacao.antlr.PostgreSQLParser;
 import com.supergestao.Flyway.migration.assistant.dominio.regra.sql.validacao.antlr.PostgreSQLParserBaseListener;
-import com.supergestao.Flyway.migration.assistant.exception.SqlException;
+import com.supergestao.Flyway.migration.assistant.dominio.regra.sql.validacao.util.CapturarErro;
+import org.antlr.v4.runtime.ParserRuleContext;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class ValidadorAntlrSql extends PostgreSQLParserBaseListener {
 
-    private final boolean modoCorpoFuncao;
+    private final CapturarErro capturarErro;
+    private final int linhaInicial;
+    private final boolean modoCorpoFuncao;// para validar apenas o código interno procedural de uma função ($BODY$).
 
-    // Construtor padrão (usado no script SQL externo principal)
-    public ValidadorAntlrSql() {
-        this(false);
-    }
-
-    // Construtor com flag (usado para validar comandos internos do $BODY$)
-    public ValidadorAntlrSql(boolean modoCorpoFuncao) {
+    public ValidadorAntlrSql(CapturarErro capturarErro, int offsetLinha, boolean modoCorpoFuncao) {
+        this.capturarErro = capturarErro;
+        this.linhaInicial = offsetLinha;
         this.modoCorpoFuncao = modoCorpoFuncao;
     }
 
+    public ValidadorAntlrSql(CapturarErro capturarErro, int offsetLinha) {
+        this(capturarErro, offsetLinha, false);
+    }
+
+    public ValidadorAntlrSql(CapturarErro capturarErro) {
+        this(capturarErro, 1, false);
+    }
+
     // =========================================================================
-    // BLOCO A: SEGURANÇA EXTREMA
+    // MÉTODOS AUXILIARES E ATALHOS DE REGISTRO DE ERROS
+    // =========================================================================
+
+    /**
+     * Atalho limpo para registrar o bloqueio de um comando não permitido.
+     */
+    private void bloquear(ParserRuleContext ctx, MensagemSistema comando) {
+        String msg = MensagemSistema.SCRIPT_NAO_PERMITIDO.MensagemComParametro(comando.getMensagem());
+        registrarErro(ctx, msg);
+    }
+
+    /**
+     * Registra um erro de validação calculando a linha real no arquivo original.
+     */
+    private void registrarErro(ParserRuleContext ctx, String mensagem) {
+        if (capturarErro == null) return;
+        int linhaOriginal = (ctx != null && ctx.getStart() != null) ? ctx.getStart().getLine() : 1;
+        int linhaReal = (linhaInicial > 0) ? (linhaInicial + linhaOriginal - 1) : linhaOriginal;
+        capturarErro.registrarErro(linhaReal, mensagem);
+    }
+
+    // =========================================================================
+    // BLOCO A: SEGURANÇA EXTREMA (BLOQUEIOS)
     // =========================================================================
 
     @Override
     public void enterDropdbstmt(PostgreSQLParser.DropdbstmtContext ctx) {
-        throw new SqlException(MensagemSistema.SCRIPT_NAO_PERMITIDO.MensagemComParametro("DROP DATABASE"));
+        bloquear(ctx, MensagemSistema.CMD_DROP_DATABASE);
     }
 
     @Override
     public void enterDropstmt(PostgreSQLParser.DropstmtContext ctx) {
         String texto = ctx.getText().toUpperCase();
-
         if (texto.contains("CASCADE")) {
-            throw new SqlException(MensagemSistema.SCRIPT_NAO_PERMITIDO.MensagemComParametro("DROP com CASCADE"));
+            bloquear(ctx, MensagemSistema.CMD_DROP_CASCADE);
         }
         if (texto.contains("SCHEMA")) {
-            throw new SqlException(MensagemSistema.SCRIPT_NAO_PERMITIDO.MensagemComParametro("DROP SCHEMA"));
+            bloquear(ctx, MensagemSistema.CMD_DROP_SCHEMA);
         }
     }
 
     @Override
     public void enterDroprolestmt(PostgreSQLParser.DroprolestmtContext ctx) {
-        throw new SqlException(MensagemSistema.SCRIPT_NAO_PERMITIDO.MensagemComParametro("DROP ROLE / DROP USER"));
+        bloquear(ctx, MensagemSistema.CMD_DROP_ROLE);
     }
 
     @Override
     public void enterDropownedstmt(PostgreSQLParser.DropownedstmtContext ctx) {
-        throw new SqlException(MensagemSistema.SCRIPT_NAO_PERMITIDO.MensagemComParametro("DROP OWNED BY"));
+        bloquear(ctx, MensagemSistema.CMD_DROP_OWNED);
     }
 
     @Override
     public void enterTruncatestmt(PostgreSQLParser.TruncatestmtContext ctx) {
-        throw new SqlException(MensagemSistema.SCRIPT_NAO_PERMITIDO.MensagemComParametro("TRUNCATE TABLE"));
+        bloquear(ctx, MensagemSistema.CMD_TRUNCATE);
     }
 
     @Override
     public void enterAltersystemstmt(PostgreSQLParser.AltersystemstmtContext ctx) {
-        throw new SqlException(MensagemSistema.SCRIPT_NAO_PERMITIDO.MensagemComParametro("ALTER SYSTEM"));
+        bloquear(ctx, MensagemSistema.CMD_ALTER_SYSTEM);
     }
 
     @Override
     public void enterAlterrolestmt(PostgreSQLParser.AlterrolestmtContext ctx) {
-        throw new SqlException(MensagemSistema.SCRIPT_NAO_PERMITIDO.MensagemComParametro("ALTER ROLE / ALTER USER"));
+        bloquear(ctx, MensagemSistema.CMD_ALTER_ROLE);
     }
 
     @Override
     public void enterCreateextensionstmt(PostgreSQLParser.CreateextensionstmtContext ctx) {
-        throw new SqlException(MensagemSistema.SCRIPT_NAO_PERMITIDO.MensagemComParametro("CREATE EXTENSION"));
+        bloquear(ctx, MensagemSistema.CMD_CREATE_EXTENSION);
     }
 
     @Override
     public void enterCopystmt(PostgreSQLParser.CopystmtContext ctx) {
-        throw new SqlException(MensagemSistema.SCRIPT_NAO_PERMITIDO.MensagemComParametro("COPY"));
+        bloquear(ctx, MensagemSistema.CMD_COPY);
     }
 
     @Override
     public void enterDostmt(PostgreSQLParser.DostmtContext ctx) {
-        throw new SqlException(MensagemSistema.SCRIPT_NAO_PERMITIDO.MensagemComParametro("DO $$"));
+        bloquear(ctx, MensagemSistema.CMD_DO_BLOCK);
     }
 
     @Override
     public void enterGrantstmt(PostgreSQLParser.GrantstmtContext ctx) {
         String texto = ctx.getText().toUpperCase();
         if (texto.startsWith("REVOKE")) {
-            throw new SqlException(MensagemSistema.SCRIPT_NAO_PERMITIDO.MensagemComParametro("REVOKE"));
+            bloquear(ctx, MensagemSistema.CMD_REVOKE);
         }
         if (texto.startsWith("GRANT")) {
-            throw new SqlException(MensagemSistema.SCRIPT_NAO_PERMITIDO.MensagemComParametro("GRANT"));
+            bloquear(ctx, MensagemSistema.CMD_GRANT);
         }
-
     }
 
     @Override
     public void enterCreaterolestmt(PostgreSQLParser.CreaterolestmtContext ctx) {
-        throw new SqlException(MensagemSistema.SCRIPT_NAO_PERMITIDO.MensagemComParametro("CREATE ROLE / CREATE USER"));
+        bloquear(ctx, MensagemSistema.CMD_CREATE_ROLE);
     }
 
     @Override
     public void enterVariablesetstmt(PostgreSQLParser.VariablesetstmtContext ctx) {
-        throw new SqlException(MensagemSistema.SCRIPT_NAO_PERMITIDO.MensagemComParametro(
-                "SET de variável de sessão/configuração (SET search_path, SET role, etc.)"));
+        bloquear(ctx, MensagemSistema.CMD_SET_VARIABLE);
     }
 
     @Override
     public void enterVariableresetstmt(PostgreSQLParser.VariableresetstmtContext ctx) {
-        throw new SqlException(MensagemSistema.SCRIPT_NAO_PERMITIDO.MensagemComParametro("RESET de variável de configuração"));
+        bloquear(ctx, MensagemSistema.CMD_RESET_VARIABLE);
     }
 
     @Override
     public void enterVacuumstmt(PostgreSQLParser.VacuumstmtContext ctx) {
-        throw new SqlException(MensagemSistema.SCRIPT_NAO_PERMITIDO.MensagemComParametro("VACUUM / ANALYZE"));
+        bloquear(ctx, MensagemSistema.CMD_VACUUM);
     }
 
     @Override
     public void enterClusterstmt(PostgreSQLParser.ClusterstmtContext ctx) {
-        throw new SqlException(MensagemSistema.SCRIPT_NAO_PERMITIDO.MensagemComParametro("CLUSTER"));
+        bloquear(ctx, MensagemSistema.CMD_CLUSTER);
     }
 
     @Override
     public void enterReindexstmt(PostgreSQLParser.ReindexstmtContext ctx) {
-        throw new SqlException(MensagemSistema.SCRIPT_NAO_PERMITIDO.MensagemComParametro("REINDEX"));
+        bloquear(ctx, MensagemSistema.CMD_REINDEX);
     }
 
     @Override
     public void enterLoadstmt(PostgreSQLParser.LoadstmtContext ctx) {
-        throw new SqlException(MensagemSistema.SCRIPT_NAO_PERMITIDO.MensagemComParametro("LOAD"));
+        bloquear(ctx, MensagemSistema.CMD_LOAD);
     }
 
     @Override
     public void enterListenstmt(PostgreSQLParser.ListenstmtContext ctx) {
-        throw new SqlException(MensagemSistema.SCRIPT_NAO_PERMITIDO.MensagemComParametro("LISTEN"));
+        bloquear(ctx, MensagemSistema.CMD_LISTEN);
     }
 
     @Override
     public void enterNotifystmt(PostgreSQLParser.NotifystmtContext ctx) {
-        throw new SqlException(MensagemSistema.SCRIPT_NAO_PERMITIDO.MensagemComParametro("NOTIFY"));
+        bloquear(ctx, MensagemSistema.CMD_NOTIFY);
     }
 
     // =========================================================================
@@ -148,85 +174,72 @@ public class ValidadorAntlrSql extends PostgreSQLParserBaseListener {
     @Override
     public void enterTransactionstmt(PostgreSQLParser.TransactionstmtContext ctx) {
         String texto = ctx.getText().toUpperCase();
-
         if (texto.startsWith("SAVEPOINT")) {
-            throw new SqlException(MensagemSistema.SCRIPT_NAO_PERMITIDO.MensagemComParametro("SAVEPOINT"));
+            bloquear(ctx, MensagemSistema.CMD_SAVEPOINT);
+            return;
         }
         if (texto.startsWith("RELEASE")) {
-            throw new SqlException(MensagemSistema.SCRIPT_NAO_PERMITIDO.MensagemComParametro("RELEASE SAVEPOINT"));
+            bloquear(ctx, MensagemSistema.CMD_RELEASE_SAVEPOINT);
+            return;
         }
-
-        throw new SqlException(MensagemSistema.SCRIPT_NAO_PERMITIDO.MensagemComParametro(
-                "Comandos de transação (BEGIN/COMMIT/ROLLBACK)"));
+        bloquear(ctx, MensagemSistema.CMD_TRANSACTION);
     }
 
     @Override
     public void enterLockstmt(PostgreSQLParser.LockstmtContext ctx) {
-        throw new SqlException(MensagemSistema.SCRIPT_NAO_PERMITIDO.MensagemComParametro("LOCK TABLE"));
+        bloquear(ctx, MensagemSistema.CMD_LOCK_TABLE);
     }
 
     // =========================================================================
     // BLOCO C: SEMÂNTICA DE DML
     // =========================================================================
+
     @Override
     public void enterUpdatestmt(PostgreSQLParser.UpdatestmtContext ctx) {
         if (ctx.where_or_current_clause() == null) {
-            throw new SqlException(
-                    MensagemSistema.SCRIPT_NAO_PERMITIDO.MensagemComParametro("UPDATE sem WHERE detectado.")
-            );
+            registrarErro(ctx, MensagemSistema.ERRO_UPDATE_SEM_WHERE.getMensagem());
         }
 
         String texto = ctx.getText().toUpperCase();
         if (texto.contains("WHERE1=1") || texto.contains("WHERETRUE")) {
-            throw new SqlException(
-                    MensagemSistema.SCRIPT_NAO_PERMITIDO.MensagemComParametro("UPDATE com condição genérica (1=1) detectado.")
-            );
+            registrarErro(ctx, MensagemSistema.ERRO_UPDATE_WHERE_GENERICO.getMensagem());
         }
     }
 
     @Override
     public void enterDeletestmt(PostgreSQLParser.DeletestmtContext ctx) {
         if (ctx.where_or_current_clause() == null) {
-            throw new SqlException(
-                    MensagemSistema.SCRIPT_NAO_PERMITIDO.MensagemComParametro("DELETE sem WHERE detectado.")
-            );
+            registrarErro(ctx, MensagemSistema.ERRO_DELETE_SEM_WHERE.getMensagem());
         }
 
         String texto = ctx.getText().toUpperCase();
         if (texto.contains("WHERE1=1") || texto.contains("WHERETRUE")) {
-            throw new SqlException(
-                    MensagemSistema.SCRIPT_NAO_PERMITIDO.MensagemComParametro("DELETE com condição genérica (1=1) detectado.")
-            );
+            registrarErro(ctx, MensagemSistema.ERRO_DELETE_WHERE_GENERICO.getMensagem());
         }
     }
 
     @Override
     public void enterInsertstmt(PostgreSQLParser.InsertstmtContext ctx) {
         if (ctx.insert_rest() != null && ctx.insert_rest().DEFAULT() != null) {
-            throw new SqlException(MensagemSistema.SCRIPT_NAO_PERMITIDO.MensagemComParametro(
-                    "INSERT inválido ou incompleto"));
+            registrarErro(ctx, MensagemSistema.ERRO_INSERT_INVALIDO.getMensagem());
         }
 
-        // Bloqueia INSERT sem lista de colunas explícita: INSERT INTO tabela VALUES(...)
         if (ctx.insert_rest() != null
                 && ctx.insert_rest().insert_column_list() == null
                 && ctx.insert_rest().selectstmt() != null) {
-            throw new SqlException(MensagemSistema.SCRIPT_NAO_PERMITIDO.MensagemComParametro(
-                    "INSERT sem lista de colunas explícita. Use: INSERT INTO tabela (col1, col2) VALUES (...)"));
+            registrarErro(ctx, MensagemSistema.ERRO_INSERT_SEM_COLUNAS.getMensagem());
         }
     }
 
     @Override
     public void enterSelectstmt(PostgreSQLParser.SelectstmtContext ctx) {
-        // Ignora a restrição se estiver validando o corpo de uma função
         if (this.modoCorpoFuncao) {
             return;
         }
 
         for (int i = 0; i < ctx.getChildCount(); i++) {
             if (ctx.getChild(i) instanceof PostgreSQLParser.Into_clauseContext) {
-                throw new SqlException(MensagemSistema.SCRIPT_NAO_PERMITIDO.MensagemComParametro(
-                        "SELECT INTO não é permitido. Use CREATE TABLE AS SELECT para criar tabelas explicitamente."));
+                registrarErro(ctx, MensagemSistema.ERRO_SELECT_INTO.getMensagem());
             }
         }
     }
@@ -243,8 +256,8 @@ public class ValidadorAntlrSql extends PostgreSQLParserBaseListener {
         if (ctx.qualified_name() != null && !ctx.qualified_name().isEmpty()) {
             String nomeTabela = ctx.qualified_name(0).getText().toLowerCase();
             objetosCriados.add("table " + nomeTabela);
-            validarNomeSnakeCase(nomeTabela, "table");
-            validarTamanhoNome(nomeTabela, "table");
+            validarNomeSnakeCase(ctx, nomeTabela, "table");
+            validarTamanhoNome(ctx, nomeTabela, "table");
         }
 
         boolean temPk = false;
@@ -278,8 +291,7 @@ public class ValidadorAntlrSql extends PostgreSQLParserBaseListener {
         }
 
         if (!temPk) {
-            throw new SqlException(MensagemSistema.SCRIPT_SEM_DICIONARIO.MensagemComParametro(
-                    "Tabela criada sem PRIMARY KEY"));
+            registrarErro(ctx, MensagemSistema.ERRO_TABELA_SEM_PK.getMensagem());
         }
     }
 
@@ -287,16 +299,16 @@ public class ValidadorAntlrSql extends PostgreSQLParserBaseListener {
     public void enterColumnDef(PostgreSQLParser.ColumnDefContext ctx) {
         String nomeColuna = ctx.colid().getText().toLowerCase();
         objetosCriados.add("column " + nomeColuna);
-        validarNomeSnakeCase(nomeColuna, "column");
-        validarTamanhoNome(nomeColuna, "column");
+        validarNomeSnakeCase(ctx, nomeColuna, "column");
+        validarTamanhoNome(ctx, nomeColuna, "column");
     }
 
     @Override
     public void enterCreatetrigstmt(PostgreSQLParser.CreatetrigstmtContext ctx) {
         String nomeTrigger = ctx.name().getText().toLowerCase();
         objetosCriados.add("trigger " + nomeTrigger);
-        validarNomeSnakeCase(nomeTrigger, "Trigger");
-        validarTamanhoNome(nomeTrigger, "Trigger");
+        validarNomeSnakeCase(ctx, nomeTrigger, "Trigger");
+        validarTamanhoNome(ctx, nomeTrigger, "Trigger");
     }
 
     @Override
@@ -304,8 +316,8 @@ public class ValidadorAntlrSql extends PostgreSQLParserBaseListener {
         if (ctx.name() != null) {
             String nomeConstraint = ctx.name().getText().toLowerCase();
             objetosCriados.add("constraint " + nomeConstraint);
-            validarNomeSnakeCase(nomeConstraint, "Constraint");
-            validarTamanhoNome(nomeConstraint, "Constraint");
+            validarNomeSnakeCase(ctx, nomeConstraint, "Constraint");
+            validarTamanhoNome(ctx, nomeConstraint, "Constraint");
         }
     }
 
@@ -314,8 +326,8 @@ public class ValidadorAntlrSql extends PostgreSQLParserBaseListener {
         if (ctx.qualified_name() != null) {
             String nomeSeq = ctx.qualified_name().getText().toLowerCase();
             objetosCriados.add("sequence " + nomeSeq);
-            validarNomeSnakeCase(nomeSeq, "Sequence");
-            validarTamanhoNome(nomeSeq, "Sequence");
+            validarNomeSnakeCase(ctx, nomeSeq, "Sequence");
+            validarTamanhoNome(ctx, nomeSeq, "Sequence");
         }
     }
 
@@ -324,8 +336,8 @@ public class ValidadorAntlrSql extends PostgreSQLParserBaseListener {
         if (ctx.qualified_name() != null) {
             String nomeView = ctx.qualified_name().getText().toLowerCase();
             objetosCriados.add("view " + nomeView);
-            validarNomeSnakeCase(nomeView, "View");
-            validarTamanhoNome(nomeView, "View");
+            validarNomeSnakeCase(ctx, nomeView, "View");
+            validarTamanhoNome(ctx, nomeView, "View");
         }
     }
 
@@ -334,8 +346,8 @@ public class ValidadorAntlrSql extends PostgreSQLParserBaseListener {
         if (ctx.create_mv_target() != null && ctx.create_mv_target().qualified_name() != null) {
             String nomeView = ctx.create_mv_target().qualified_name().getText().toLowerCase();
             objetosCriados.add("materialized view " + nomeView);
-            validarNomeSnakeCase(nomeView, "Materialized view");
-            validarTamanhoNome(nomeView, "Materialized view");
+            validarNomeSnakeCase(ctx, nomeView, "Materialized view");
+            validarTamanhoNome(ctx, nomeView, "Materialized view");
         }
     }
 
@@ -348,8 +360,8 @@ public class ValidadorAntlrSql extends PostgreSQLParserBaseListener {
         if (ctx.any_name() != null && !ctx.any_name().isEmpty()) {
             String nomeTipo = ctx.any_name(0).getText().toLowerCase();
             objetosCriados.add("type " + nomeTipo);
-            validarNomeSnakeCase(nomeTipo, "type (TYPE/ENUM)");
-            validarTamanhoNome(nomeTipo, "type (TYPE/ENUM)");
+            validarNomeSnakeCase(ctx, nomeTipo, "type (TYPE/ENUM)");
+            validarTamanhoNome(ctx, nomeTipo, "type (TYPE/ENUM)");
         }
     }
 
@@ -360,7 +372,6 @@ public class ValidadorAntlrSql extends PostgreSQLParserBaseListener {
 
     @Override
     public void exitRoot(PostgreSQLParser.RootContext ctx) {
-        // Ignora a validação de comentários se estiver validando o corpo de uma função
         if (this.modoCorpoFuncao) {
             return;
         }
@@ -374,8 +385,7 @@ public class ValidadorAntlrSql extends PostgreSQLParserBaseListener {
                 }
             }
             if (!temComentario) {
-                throw new SqlException(MensagemSistema.SCRIPT_SEM_DICIONARIO.MensagemComParametro(
-                        "O elemento (" + objetoCriado + ") foi criado mas não possui comentário!"));
+                registrarErro(ctx, MensagemSistema.ERRO_ELEMENTO_SEM_COMENTARIO.MensagemComParametro(objetoCriado));
             }
         }
     }
@@ -387,68 +397,60 @@ public class ValidadorAntlrSql extends PostgreSQLParserBaseListener {
     @Override
     public void enterIndexstmt(PostgreSQLParser.IndexstmtContext ctx) {
         if (ctx.name() == null || ctx.name().getText().isBlank()) {
-            throw new SqlException(MensagemSistema.SCRIPT_SEM_DICIONARIO.MensagemComParametro(
-                    "Index sem nome definido"));
+            registrarErro(ctx, MensagemSistema.ERRO_INDEX_SEM_NOME.getMensagem());
+            return;
         }
         String nomeIndex = ctx.name().getText().toLowerCase();
-        validarNomeSnakeCase(nomeIndex, "Index");
-        validarTamanhoNome(nomeIndex, "Index");
+        validarNomeSnakeCase(ctx, nomeIndex, "Index");
+        validarTamanhoNome(ctx, nomeIndex, "Index");
     }
 
     @Override
     public void enterAltertablestmt(PostgreSQLParser.AltertablestmtContext ctx) {
         if (ctx.relation_expr() != null && ctx.relation_expr().getText().isBlank()) {
-            throw new SqlException(MensagemSistema.SCRIPT_SEM_DICIONARIO.MensagemComParametro(
-                    "ALTER TABLE sem identificação da tabela"));
+            registrarErro(ctx, MensagemSistema.ERRO_ALTER_TABLE_SEM_TABELA.getMensagem());
         }
     }
 
     @Override
     public void enterCreatefunctionstmt(PostgreSQLParser.CreatefunctionstmtContext ctx) {
         if (ctx.func_name() == null || ctx.func_name().getText().isBlank()) {
-            throw new SqlException(
-                    MensagemSistema.SCRIPT_SEM_DICIONARIO.MensagemComParametro("Function sem nome")
-            );
+            registrarErro(ctx, MensagemSistema.ERRO_FUNCTION_SEM_NOME.getMensagem());
+            return;
         }
 
         String texto = ctx.getText().toUpperCase();
-
         if (texto.contains("SECURITYDEFINER")) {
-            throw new SqlException(
-                    MensagemSistema.SCRIPT_NAO_PERMITIDO.MensagemComParametro("SECURITY DEFINER não permitido")
-            );
+            bloquear(ctx, MensagemSistema.CMD_SECURITY_DEFINER);
         }
 
         String nomeFuncao = ctx.func_name().getText().toLowerCase();
-        validarNomeSnakeCase(nomeFuncao, "Function");
-        validarTamanhoNome(nomeFuncao, "Function");
+        validarNomeSnakeCase(ctx, nomeFuncao, "Function");
+        validarTamanhoNome(ctx, nomeFuncao, "Function");
     }
 
     @Override
     public void enterCreateplangstmt(PostgreSQLParser.CreateplangstmtContext ctx) {
-        throw new SqlException(MensagemSistema.SCRIPT_NAO_PERMITIDO.MensagemComParametro("CREATE LANGUAGE"));
+        bloquear(ctx, MensagemSistema.CMD_CREATE_LANGUAGE);
     }
 
     // =========================================================================
     // BLOCO F: NOMENCLATURA
     // =========================================================================
-    private void validarNomeSnakeCase(String nome, String tipoObjeto) {
+
+    private void validarNomeSnakeCase(ParserRuleContext ctx, String nome, String tipoObjeto) {
         if (nome == null || nome.isBlank()) return;
         String nomeSimples = nome.contains(".") ? nome.substring(nome.lastIndexOf('.') + 1) : nome;
         if (!nomeSimples.matches("^[a-z][a-z0-9_]*$")) {
-            throw new SqlException(MensagemSistema.SCRIPT_SEM_PADRAO_SQL.MensagemComParametro(
-                    tipoObjeto + " \"" + nomeSimples + "\" não segue o padrão snake_case obrigatório. "
-                            + "Use apenas letras minúsculas, números e underscore, começando com letra."));
+            registrarErro(ctx, MensagemSistema.ERRO_NOMENCLATURA_SNAKE_CASE.MensagemComParametro(tipoObjeto, nomeSimples));
         }
     }
 
-    private void validarTamanhoNome(String nome, String tipoObjeto) {
+    private void validarTamanhoNome(ParserRuleContext ctx, String nome, String tipoObjeto) {
         if (nome == null) return;
         String nomeSimples = nome.contains(".") ? nome.substring(nome.lastIndexOf('.') + 1) : nome;
         if (nomeSimples.length() > 63) {
-            throw new SqlException(MensagemSistema.SCRIPT_SEM_PADRAO_SQL.MensagemComParametro(
-                    tipoObjeto + " \"" + nomeSimples + "\" ultrapassa 63 caracteres (limite do PostgreSQL). "
-                            + "Nomes maiores são truncados silenciosamente pelo banco."));
+            registrarErro(ctx, MensagemSistema.ERRO_TAMANHO_NOME_EXCEDIDO.MensagemComParametro(tipoObjeto, nomeSimples));
         }
     }
 }
