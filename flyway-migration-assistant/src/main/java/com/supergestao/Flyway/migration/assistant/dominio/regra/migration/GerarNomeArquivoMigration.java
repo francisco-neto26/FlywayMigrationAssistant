@@ -16,31 +16,6 @@ public class GerarNomeArquivoMigration {
                                             String funcao,
                                             String nome) {
 
-        if (tipoMigration == null) {
-            throw new ValidacaoException(MensagemSistema.CAMPO_OBRIGATORIO.MensagemComParametro("Tipo de migration"));
-        }
-
-        if (acaoBanco == null) {
-            throw new ValidacaoException(MensagemSistema.CAMPO_OBRIGATORIO.MensagemComParametro("Ação no banco"));
-        }
-
-        if (objetoBanco == null) {
-            throw new ValidacaoException(MensagemSistema.CAMPO_OBRIGATORIO.MensagemComParametro("Objeto no banco"));
-        }
-
-        if (dataHoraFlyway == null || dataHoraFlyway.isBlank()) {
-            throw new ValidacaoException(MensagemSistema.CAMPO_OBRIGATORIO.MensagemComParametro("Data/Hora Flyway"));
-        }
-
-        if (funcao == null || funcao.isBlank()) {
-            throw new ValidacaoException(MensagemSistema.CAMPO_OBRIGATORIO.MensagemComParametro("Função"));
-        }
-
-        if (nome == null || nome.isBlank()) {
-            throw new ValidacaoException(MensagemSistema.CAMPO_OBRIGATORIO.MensagemComParametro("Nome"));
-        }
-
-
         if (tipoMigration.getRequerTimestamp()) {
             return String.format("%s%s__%s_%s_%s_%s.sql",
                     tipoMigration.getPrefixo(),
@@ -60,32 +35,8 @@ public class GerarNomeArquivoMigration {
         }
     }
 
-    private String formataCamelCase(String texto) {
-        StringBuilder resultado = new StringBuilder();
-        String textoNormalizado = Normalizer.normalize(texto, Normalizer.Form.NFD);
-        String[] palavras = textoNormalizado.split("[\\s_\\-]+");
-        int contador = 0;
-        for (String palavra : palavras) {
-
-            if (!palavra.isEmpty()) {
-                // Define a primeira letra dependendo do contador
-                String primeiraLetra = (contador == 0)
-                        ? palavra.substring(0, 1).toLowerCase()
-                        : palavra.substring(0, 1).toUpperCase();
-                // O resto da palavra é sempre igual! Limpa os caracteres e deixa minúsculo
-                String restoDaPalavra = palavra.substring(1).toLowerCase().replaceAll("[^a-zA-Z0-9]", "");
-                // Junta tudo
-                resultado.append(primeiraLetra).append(restoDaPalavra);
-                contador++;
-            }
-        }
-        return resultado.toString();
-    }
-
     public String gerarNomeArquivoMigrationUndo(String nomeArquivo) {
-        if (nomeArquivo == null || !nomeArquivo.contains("__")) {
-            throw new ValidacaoException(MensagemSistema.ERRO_CONVERTER_NOME_UNDO.MensagemComParametro(nomeArquivo));
-        }
+
         if (!nomeArquivo.toUpperCase().startsWith("V")) {
             throw new ValidacaoException(MensagemSistema.ERRO_ARQUIVO_NAO_VERSIONED.getMensagem());
         }
@@ -112,5 +63,27 @@ public class GerarNomeArquivoMigration {
                     finalNomeConcatenado);
         }
         throw new ValidacaoException(MensagemSistema.ERRO_CONVERTER_NOME_UNDO.MensagemComParametro(nomeArquivo));
+    }
+
+    private String formataCamelCase(String texto) {
+        StringBuilder resultado = new StringBuilder();
+        String textoNormalizado = Normalizer.normalize(texto, Normalizer.Form.NFD);
+        String[] palavras = textoNormalizado.split("[\\s_\\-]+");
+        int contador = 0;
+        for (String palavra : palavras) {
+
+            if (!palavra.isEmpty()) {
+                // Define a primeira letra dependendo do contador
+                String primeiraLetra = (contador == 0)
+                        ? palavra.substring(0, 1).toLowerCase()
+                        : palavra.substring(0, 1).toUpperCase();
+                // O resto da palavra é sempre igual! Limpa os caracteres e deixa minúsculo
+                String restoDaPalavra = palavra.substring(1).toLowerCase().replaceAll("[^a-zA-Z0-9]", "");
+                // Junta tudo
+                resultado.append(primeiraLetra).append(restoDaPalavra);
+                contador++;
+            }
+        }
+        return resultado.toString();
     }
 }

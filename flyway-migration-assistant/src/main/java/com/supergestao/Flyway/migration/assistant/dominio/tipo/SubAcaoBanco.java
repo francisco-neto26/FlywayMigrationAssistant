@@ -1,23 +1,23 @@
 package com.supergestao.Flyway.migration.assistant.dominio.tipo;
 
 public enum SubAcaoBanco {
-    RENAME_COLUMN("Renomear Coluna"),
-    ALTER_TYPE("Alterar Tipo de Dado"),
-    SET_NOT_NULL("Adicionar Regra NOT NULL"),
-    DROP_NOT_NULL("Remover Regra NOT NULL"),
-    SET_DEFAULT("Adicionar Valor Padrão (DEFAULT)"),
-    DROP_DEFAULT("Remover Valor Padrão (DEFAULT)"),
-    RENAME_TABLE("Renomear Tabela/View"),
-    SET_SCHEMA("Mover para outro Schema"),
-    OWNER_TO("Alterar Proprietário (Owner)"),
-    ENABLE_ROW_LEVEL_SECURITY("Habilitar RLS (Row Level Security)"),
-    RENAME_CONSTRAINT("Renomear Constraint"),
-    VALIDATE_CONSTRAINT("Validar Constraint (NOT VALID para VALID)"),
-    SET_DEFERRABLE("Alterar para DEFERRABLE (Atraso na validação)"),
-    RENAME_FUNCTION("Renomear Função"),
-    RENAME_TRIGGER("Renomear Trigger"),
-    DISABLE_TRIGGER("Desativar Trigger (DISABLE)"),
-    ENABLE_TRIGGER("Ativar Trigger (ENABLE)"),
+    RENAME_COLUMN("RENOMEAR COLUNA"),
+    ALTER_TYPE("ALTERAR TIPO DE DADO"),
+    SET_NOT_NULL("ADICIONAR REGRA NOT NULL"),
+    DROP_NOT_NULL("REMOVER REGRA NOT NULL"),
+    SET_DEFAULT("ADICIONAR VALOR PADRÃO (DEFAULT)"),
+    DROP_DEFAULT("REMOVER VALOR PADRÃO (DEFAULT)"),
+    RENAME_TABLE("RENOMEAR TABELA"),
+    SET_SCHEMA("MOVER PARA OUTRO SCHEMA"),
+    OWNER_TO("ALTERAR PROPRIETÁRIO (OWNER TO)"),
+    ENABLE_ROW_LEVEL_SECURITY("HABILITAR SEGURANÇA EM NÍVEL DE LINHA (ENABLE ROW LEVEL SECURITY)"),
+    RENAME_CONSTRAINT("RENOMEAR CONSTRAINT"),
+    VALIDATE_CONSTRAINT("VALIDAR CONSTRAINT (VALIDATE)"),
+    SET_DEFERRABLE("ALTERAR CONSTRAINT PARA DEFERRABLE"),
+    RENAME_FUNCTION("RENOMEAR FUNÇÃO"),
+    RENAME_TRIGGER("RENOMEAR TRIGGER"),
+    DISABLE_TRIGGER("DESATIVAR TRIGGER (DISABLE)"),
+    ENABLE_TRIGGER("ATIVAR TRIGGER (ENABLE)"),
     NENHUMA("Ação Padrão / Nenhuma");
 
     private final String descricao;
@@ -56,7 +56,7 @@ public enum SubAcaoBanco {
 
     @Override
     public String toString() {
-        return descricao;
+        return descricao.toLowerCase();
     }
 }
 

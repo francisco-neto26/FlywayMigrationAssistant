@@ -29,6 +29,7 @@ public enum MensagemSistema {
     ALTERACAO_NAO_SALVA("Alterações não salvas"),
     DESCARTAR_ALTERACAO("O arquivo atual possui alterações não salvas. Deseja descartá-las para abrir o novo arquivo?"),
     CAMPO_OBRIGATORIO("O Campo %s tem preenchimento obrigatório."),
+    VERIFIQUE_PREENCHIMENTO("Verifique o preenchimento dos campos obrigatórios."),
     FORMATO_DATA_INVALIDO("O Formato %s para data/hora é inválido."),
     FORMATO_DATA_NULL("Formato de data/hora não informado."),
     LOCALIDADE_DATA_INVALIDA("Localidade para data/hora não informada."),

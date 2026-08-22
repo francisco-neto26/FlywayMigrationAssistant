@@ -4,12 +4,12 @@ import com.supergestao.Flyway.migration.assistant.dominio.mensagem.MensagemSiste
 import com.supergestao.Flyway.migration.assistant.exception.ValidacaoException;
 
 public enum AcaoBanco {
-    CREATE("create"),
-    ALTER("alter"),
-    DROP("drop"),
-    ADD("add"),
-    REMOVE("remove"),
-    UPDATE("update");
+    CREATE("CREATE"),
+    ALTER("ALTER"),
+    DROP("DROP"),
+    ADD("ADD"),
+    REMOVE("REMOVE"),
+    UPDATE("UPDATE");
 
     private final String acao;
 

@@ -88,7 +88,8 @@ public class TelaNovoMigrationController implements ITelasModal {
         Platform.runLater(() -> {
             GerenciadorEstiloBotao.gerenciadorEstiloBotao(painelRaiz);
             iniciarCombo();
-            defineNomeArquivo();
+            //defineNomeArquivo();
+            monitoraAlteracaoCampos();
             controleCamposUndo(null);
             controleTeclaEsc();
         });
@@ -163,15 +164,19 @@ public class TelaNovoMigrationController implements ITelasModal {
 
     }
 
-    private void iniciarCombo() {
-
-        List<ComboBox<?>> combos = List.of(comboModulo,
+    private List<ComboBox<?>> obterCombos() {
+        return List.of(comboModulo,
                 comboFuncao,
                 comboTipo,
                 comboAcao,
                 comboObjeto,
                 comboSubAcao
         );
+    }
+
+    private void iniciarCombo() {
+
+        List<ComboBox<?>> combos = obterCombos();
 
         for (ComboBox<?> combo : combos) {
             switch (combo.getId()) {
@@ -214,25 +219,73 @@ public class TelaNovoMigrationController implements ITelasModal {
         });
     }
 
+    private void monitoraAlteracaoCampos() {
+
+        for (ComboBox<?> combo : obterCombos()) {
+            combo.valueProperty().addListener((observable, valorAntigo, valorNovo) -> {
+
+                controlaCampoNomeScript();
+
+                if (valorAntigo == valorNovo) {
+                    return;
+                }
+
+                if (combo == comboTipo && valorNovo == TipoMigration.UNDO) {
+                    txtNomeScript.setText("");
+                    return;
+                }
+
+                if (txtNomeScript.textProperty().getValue() != null && !txtNomeScript.textProperty().getValue().isBlank()) {
+                    defineNomeArquivo();
+                }
+            });
+        }
+
+        txtNomeScript.textProperty().addListener((observable, textoAntigo, textoNovo) -> {
+            defineNomeArquivo();
+        });
+    }
 
     private void defineNomeArquivo() {
-        txtNomeScript.textProperty().addListener((observable, nomeAntigo, nomeNovo) -> {
-
+        String nomeArquivoUndo = txtNomeScript.textProperty().getValue();
+        try {
             if (comboTipo.getValue() == TipoMigration.UNDO) {
-                String nomeUndo = this.contexto.gerarNomeArquivoMigrationUndo(nomeNovo);
-                txtPreviewArquivo.setText(nomeUndo);
+                if (txtBuscaUndo.getText() != null && !txtBuscaUndo.getText().isBlank()) {
+                    txtPreviewArquivo.setText(this.contexto.gerarNomeArquivoMigrationUndo(nomeArquivoUndo));
+                }
             } else {
-                String nomeCompleto = this.contexto.gerarNomeArquivoMigration(
+                if (txtNomeScript.isDisable()) {
+                    return;
+                }
+
+                for (ComboBox<?> combo : obterCombos()) {
+                    if (combo != comboFuncao && combo != comboSubAcao) {
+                        if (combo.getValue() == null) {
+                            this.contexto.exibirDialogo(TipoDialogo.ALERTA,
+                                    MensagemSistema.ATENCAO.getMensagem(),
+                                    MensagemSistema.VERIFIQUE_PREENCHIMENTO.getMensagem(),
+                                    MensagemSistema.CAMPO_OBRIGATORIO.MensagemComParametro(obterTextoLabelComboBox(combo)));
+                            return;
+                        }
+                    }
+                }
+
+                txtPreviewArquivo.setText(this.contexto.gerarNomeArquivoMigration(
                         comboTipo.getValue(),
                         comboAcao.getValue(),
                         comboObjeto.getValue(),
                         comboFuncao.getValue() != null ? comboFuncao.getValue().getNome() : "",
-                        nomeNovo
-                );
-                txtPreviewArquivo.setText(nomeCompleto);
+                        nomeArquivoUndo
+                ));
             }
 
-        });
+        } catch (Exception e) {
+            this.contexto.exibirDialogo(TipoDialogo.ERRO,
+                    MensagemSistema.ALERTA.getMensagem(),
+                    MensagemSistema.ATENCAO.getMensagem(),
+                    e.getMessage()
+            );
+        }
     }
 
     private void carregarFuncaoModulo(Modulo modulo) {
@@ -280,12 +333,35 @@ public class TelaNovoMigrationController implements ITelasModal {
 
     }
 
+    private void controlaCampoNomeScript() {
+        boolean comboComValor = true;
+        for (ComboBox<?> comboValor : obterCombos()) {
+            if (comboValor != comboFuncao && comboValor != comboSubAcao) {
+                if (!comboBoxTemValor(comboValor) && (comboComValor)) {
+                    comboComValor = false;
+                }
+            }
+        }
+
+        if (comboComValor) {
+            txtNomeScript.setDisable(false);
+        } else {
+            txtNomeScript.setDisable(true);
+            txtNomeScript.setText(null);
+        }
+    }
+
+    private boolean comboBoxTemValor(ComboBox<?> comboBox) {
+        return comboBox.getValue() != null;
+    }
+
     private void controleTeclaEsc() {
         painelRaiz.addEventFilter(KeyEvent.KEY_PRESSED, event -> {
             if (event.getCode() == KeyCode.ESCAPE) {
                 Node campoSelecionado = painelRaiz.getScene().getFocusOwner();
                 if (campoSelecionado instanceof ComboBox<?> comboBox) {
                     limparComboBox(comboBox);
+                    controlaCampoNomeScript();
                     if (comboBox == comboFuncao) {
                         carregarFuncaoModulo(comboModulo.getValue());
                     }
@@ -293,6 +369,7 @@ public class TelaNovoMigrationController implements ITelasModal {
             }
         });
     }
+
 
     private <T> void limparComboBox(ComboBox<T> comboBox) {
 
@@ -320,14 +397,14 @@ public class TelaNovoMigrationController implements ITelasModal {
         comboBox.setPromptText(MensagemSistema.SELECIONE.MensagemComParametro(obterTextoLabelComboBox(comboBox)).replace(":", ""));
     }
 
-    private Path defineDiretorioArquivo(){
+    private Path defineDiretorioArquivo() {
         return Paths.get(this.contexto.getDiretorioArquivo(),
                 (comboModulo.getSelectionModel().getSelectedItem() == null) ? "" : comboModulo.getValue().getNome(),
                 (comboFuncao.getSelectionModel().getSelectedItem() == null) ? "" : comboFuncao.getValue().getNome()
         );
     }
 
-    private Path defineDiretorioNomeArquivo(){
+    private Path defineDiretorioNomeArquivo() {
         return Paths.get(defineDiretorioArquivo().toString(), txtNomeScript.getText());
     }
 

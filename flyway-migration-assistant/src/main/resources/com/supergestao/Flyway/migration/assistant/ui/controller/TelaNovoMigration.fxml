@@ -83,8 +83,8 @@
                 <VBox prefHeight="61.0" prefWidth="520.0" spacing="5.0">
                     <children>
                         <Label fx:id="lblNomeScript" prefHeight="0.0" prefWidth="216.0"
-                               text="Nome Descritivo do Script:" textFill="#7f8c8d" VBox.vgrow="ALWAYS"/>
-                        <TextField fx:id="txtNomeScript" promptText="Ex: cria_tabela_usuarios"/>
+                               text="Nome do Script:" textFill="#7f8c8d" VBox.vgrow="ALWAYS"/>
+                        <TextField fx:id="txtNomeScript" disable="true" promptText="Ex: cria_tabela_usuarios"/>
                     </children>
                 </VBox>
 
