@@ -5,12 +5,14 @@ import com.supergestao.Flyway.migration.assistant.aplicacao.sincronizar.Sincroni
 import com.supergestao.Flyway.migration.assistant.dominio.configuracao.GerenciadorConfiguracao;
 import com.supergestao.Flyway.migration.assistant.dominio.configuracao.IGerenciadorConfiguracao;
 import com.supergestao.Flyway.migration.assistant.dominio.modelo.Arquivo;
+import com.supergestao.Flyway.migration.assistant.dominio.modelo.Funcao;
 import com.supergestao.Flyway.migration.assistant.dominio.modelo.Modulo;
 import com.supergestao.Flyway.migration.assistant.dominio.modelo.Resultado;
 import com.supergestao.Flyway.migration.assistant.dominio.regra.migration.GerarNomeArquivoMigration;
 import com.supergestao.Flyway.migration.assistant.dominio.regra.tempo.GeradorDataHora;
 import com.supergestao.Flyway.migration.assistant.dominio.tipo.AcaoBanco;
 import com.supergestao.Flyway.migration.assistant.dominio.tipo.ObjetoBanco;
+import com.supergestao.Flyway.migration.assistant.dominio.tipo.SubAcaoBanco;
 import com.supergestao.Flyway.migration.assistant.dominio.tipo.TipoMigration;
 import com.supergestao.Flyway.migration.assistant.persistencia.gerenciador.modulos.arquivos.IGerenciadorModulosArquivosDisco;
 import com.supergestao.Flyway.migration.assistant.persistencia.gerenciador.modulos.arquivos.GerenciadorModulosArquivosDisco;
@@ -165,17 +167,31 @@ public class ContextoAplicacao {
         return this.sincronizarModulosArquivos.buscarArquivosPorTermo(getDiretorioArquivo(), termoBusca);
     }
 
+    public GeradorDataHora getGeradorDataHora() {
+        return this.geradorDataHora;
+    }
+
     public String gerarNomeArquivoMigrationUndo(String nome){
         return this.gerarNomeArquivoMigration.gerarNomeArquivoMigrationUndo(nome);
     }
 
-    public String gerarNomeArquivoMigration(TipoMigration tipoMigration,
+    public String gerarNomeArquivoMigration(ContextoAplicacao contextoAplicacao,
+                                            TipoMigration tipoMigration,
+                                            Modulo modulo,
+                                            Funcao funcao,
                                             AcaoBanco acaoBanco,
                                             ObjetoBanco objetoBanco,
-                                            String funcao,
+                                            SubAcaoBanco subAcaoBanco,
                                             String nome){
 
-        return this.gerarNomeArquivoMigration.gerarNomeArquivoMigration(tipoMigration, acaoBanco, objetoBanco, geradorDataHora.gerarDataFlyway(), funcao, nome);
+        return this.gerarNomeArquivoMigration.gerarNomeArquivoMigration(contextoAplicacao,
+                tipoMigration,
+                modulo,
+                funcao,
+                acaoBanco,
+                objetoBanco,
+                subAcaoBanco,
+                nome);
     }
 
 }

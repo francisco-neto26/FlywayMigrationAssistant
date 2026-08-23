@@ -7,6 +7,8 @@ import com.supergestao.Flyway.migration.assistant.dominio.tipo.AcaoBanco;
 import com.supergestao.Flyway.migration.assistant.dominio.tipo.ObjetoBanco;
 import com.supergestao.Flyway.migration.assistant.dominio.tipo.SubAcaoBanco;
 import com.supergestao.Flyway.migration.assistant.dominio.tipo.TipoMigration;
+import com.supergestao.Flyway.migration.assistant.exception.TelaException;
+import com.supergestao.Flyway.migration.assistant.exception.ValidacaoException;
 import com.supergestao.Flyway.migration.assistant.ui.estado.ContextoAplicacao;
 import com.supergestao.Flyway.migration.assistant.ui.utilitario.estilo.GerenciadorEstiloBotao;
 import com.supergestao.Flyway.migration.assistant.ui.utilitario.janela.TipoDialogo;
@@ -86,12 +88,22 @@ public class TelaNovoMigrationController implements ITelasModal {
     @FXML
     public void initialize() {
         Platform.runLater(() -> {
-            GerenciadorEstiloBotao.gerenciadorEstiloBotao(painelRaiz);
-            iniciarCombo();
-            //defineNomeArquivo();
-            monitoraAlteracaoCampos();
-            controleCamposUndo(null);
-            controleTeclaEsc();
+
+            try {
+                GerenciadorEstiloBotao.gerenciadorEstiloBotao(painelRaiz);
+                iniciarCombo();
+                //defineNomeArquivo();
+                monitoraAlteracaoCampos();
+                controleCamposUndo(null);
+                controleTeclaEsc();
+            } catch (TelaException e) {
+                this.contexto.exibirDialogo(TipoDialogo.ERRO,
+                        MensagemSistema.ALERTA.getMensagem(),
+                        MensagemSistema.ATENCAO.getMensagem(),
+                        e.getMessage()
+                );
+            }
+
         });
     }
 
@@ -223,35 +235,59 @@ public class TelaNovoMigrationController implements ITelasModal {
 
         for (ComboBox<?> combo : obterCombos()) {
             combo.valueProperty().addListener((observable, valorAntigo, valorNovo) -> {
+                try {
+                    controlaCampoNomeScript();
 
-                controlaCampoNomeScript();
+                    if (valorAntigo == valorNovo) {
+                        return;
+                    }
 
-                if (valorAntigo == valorNovo) {
-                    return;
-                }
+                    if (combo == comboTipo && valorNovo == TipoMigration.UNDO) {
+                        txtNomeScript.setText("");
+                        return;
+                    }
 
-                if (combo == comboTipo && valorNovo == TipoMigration.UNDO) {
-                    txtNomeScript.setText("");
-                    return;
-                }
+                    if (txtNomeScript.textProperty().getValue() != null && !txtNomeScript.textProperty().getValue().isBlank()) {
+                        defineNomeArquivo();
+                    }
 
-                if (txtNomeScript.textProperty().getValue() != null && !txtNomeScript.textProperty().getValue().isBlank()) {
-                    defineNomeArquivo();
+                } catch (Exception e) {
+                    this.contexto.exibirDialogo(TipoDialogo.ERRO,
+                            MensagemSistema.ALERTA.getMensagem(),
+                            MensagemSistema.ATENCAO.getMensagem(),
+                            e.getMessage()
+                    );
                 }
             });
         }
 
         txtNomeScript.textProperty().addListener((observable, textoAntigo, textoNovo) -> {
-            defineNomeArquivo();
+            try {
+                if (txtNomeScript.textProperty().getValue() != null && !txtNomeScript.textProperty().getValue().isBlank()) {
+                    defineNomeArquivo();
+                } else {
+                    txtPreviewArquivo.setText(null);
+                }
+            } catch (Exception e) {
+                this.contexto.exibirDialogo(TipoDialogo.ERRO,
+                        MensagemSistema.ALERTA.getMensagem(),
+                        MensagemSistema.ATENCAO.getMensagem(),
+                        e.getMessage()
+                );
+            }
         });
     }
 
     private void defineNomeArquivo() {
-        String nomeArquivoUndo = txtNomeScript.textProperty().getValue();
+
+        String nomeArquivo = txtNomeScript.textProperty().getValue();
         try {
             if (comboTipo.getValue() == TipoMigration.UNDO) {
                 if (txtBuscaUndo.getText() != null && !txtBuscaUndo.getText().isBlank()) {
-                    txtPreviewArquivo.setText(this.contexto.gerarNomeArquivoMigrationUndo(nomeArquivoUndo));
+                    if (!nomeArquivo.toUpperCase().startsWith("V")) {
+                        throw new ValidacaoException(MensagemSistema.ERRO_ARQUIVO_NAO_VERSIONED.getMensagem());
+                    }
+                    txtPreviewArquivo.setText(this.contexto.gerarNomeArquivoMigrationUndo(nomeArquivo));
                 }
             } else {
                 if (txtNomeScript.isDisable()) {
@@ -261,30 +297,24 @@ public class TelaNovoMigrationController implements ITelasModal {
                 for (ComboBox<?> combo : obterCombos()) {
                     if (combo != comboFuncao && combo != comboSubAcao) {
                         if (combo.getValue() == null) {
-                            this.contexto.exibirDialogo(TipoDialogo.ALERTA,
-                                    MensagemSistema.ATENCAO.getMensagem(),
-                                    MensagemSistema.VERIFIQUE_PREENCHIMENTO.getMensagem(),
-                                    MensagemSistema.CAMPO_OBRIGATORIO.MensagemComParametro(obterTextoLabelComboBox(combo)));
-                            return;
+                            throw new TelaException(MensagemSistema.CAMPO_OBRIGATORIO.MensagemComParametro(obterTextoLabelComboBox(combo)));
                         }
                     }
                 }
 
-                txtPreviewArquivo.setText(this.contexto.gerarNomeArquivoMigration(
-                        comboTipo.getValue(),
-                        comboAcao.getValue(),
-                        comboObjeto.getValue(),
-                        comboFuncao.getValue() != null ? comboFuncao.getValue().getNome() : "",
-                        nomeArquivoUndo
-                ));
+                txtPreviewArquivo.setText(this.contexto.gerarNomeArquivoMigration(this.contexto,
+                        comboTipo.getSelectionModel().getSelectedItem(),
+                        comboModulo.getSelectionModel().getSelectedItem(),
+                        comboFuncao.getSelectionModel().getSelectedItem(),
+                        comboAcao.getSelectionModel().getSelectedItem(),
+                        comboObjeto.getSelectionModel().getSelectedItem(),
+                        comboSubAcao.getSelectionModel().getSelectedItem(),
+                        nomeArquivo)
+                );
             }
 
         } catch (Exception e) {
-            this.contexto.exibirDialogo(TipoDialogo.ERRO,
-                    MensagemSistema.ALERTA.getMensagem(),
-                    MensagemSistema.ATENCAO.getMensagem(),
-                    e.getMessage()
-            );
+            throw new RuntimeException(e.getMessage());
         }
     }
 
@@ -348,6 +378,7 @@ public class TelaNovoMigrationController implements ITelasModal {
         } else {
             txtNomeScript.setDisable(true);
             txtNomeScript.setText(null);
+            txtPreviewArquivo.setText(null);
         }
     }
 
