@@ -1,9 +1,13 @@
 package com.supergestao.Flyway.migration.assistant.dominio.regra.sql.template;
 
+import com.supergestao.Flyway.migration.assistant.dominio.modelo.ArquivoNovo;
+import com.supergestao.Flyway.migration.assistant.dominio.modelo.Funcao;
+import com.supergestao.Flyway.migration.assistant.dominio.modelo.Modulo;
 import com.supergestao.Flyway.migration.assistant.dominio.regra.sql.template.padrao.*;
 import com.supergestao.Flyway.migration.assistant.dominio.tipo.AcaoBanco;
 import com.supergestao.Flyway.migration.assistant.dominio.tipo.ObjetoBanco;
 import com.supergestao.Flyway.migration.assistant.dominio.tipo.SubAcaoBanco;
+import com.supergestao.Flyway.migration.assistant.dominio.tipo.TipoMigration;
 
 import java.util.EnumMap;
 import java.util.Map;
@@ -12,7 +16,7 @@ public class GeradorSqlTemplate {
 
     @FunctionalInterface
     private interface TemplateProvider {
-        GerarTemplate criar(AcaoBanco acao, ObjetoBanco objeto, SubAcaoBanco subAcao);
+        GerarTemplate criar(ArquivoNovo arquivoNovo);
     }
 
     private static final Map<ObjetoBanco, TemplateProvider> REGISTRO = new EnumMap<>(ObjetoBanco.class);
@@ -56,17 +60,15 @@ public class GeradorSqlTemplate {
         REGISTRO.put(ObjetoBanco.COLLATION, providerInfra);
     }
 
-    public static String gerarTemplate(String modulo, String funcao, String nomeScript,
-                                       AcaoBanco acao, ObjetoBanco objeto,
-                                       SubAcaoBanco subAcao, String tipoMigration) {
+    public String gerarTemplate(ArquivoNovo arquivoNovo) {
 
-        String cabecalho = TemplateCabecalhoSql.montarCabecalho(modulo, funcao, nomeScript,
-                acao.name(), objeto.name(), subAcao.name(), tipoMigration);
 
-        TemplateProvider provider = REGISTRO.get(objeto);
+        String cabecalho = TemplateCabecalhoSql.montarCabecalho(arquivoNovo);
+
+        TemplateProvider provider = REGISTRO.get(arquivoNovo.getObjetoBanco());
 
         GerarTemplate estrategia = (provider != null)
-                ? provider.criar(acao, objeto, subAcao)
+                ? provider.criar(arquivoNovo)
                 : () -> "\n-- Escreva seu script SQL aqui...\n";
 
         return cabecalho + estrategia.gerar();

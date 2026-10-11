@@ -46,13 +46,11 @@ public class GerenciadorModulosArquivosDisco implements IGerenciadorModulosArqui
 
     @Override
     public void salvarArquivo(String caminhoDoArquivo, String conteudoSQL) {
-
-        Path pasta = Paths.get(caminhoDoArquivo);
-
+        Path diretorio = Paths.get(caminhoDoArquivo);
         try {
-            Files.writeString(pasta, conteudoSQL);
-        } catch (IOException e) {
-            throw new PersistenciaException(MensagemSistema.ERRO_SALVAR_ARQUIVO.MensagemComParametro(pasta.getFileName().toString()), e);
+            Files.writeString(diretorio, conteudoSQL);
+        } catch (Exception e) {
+            throw new PersistenciaException(MensagemSistema.ERRO_SALVAR_ARQUIVO.MensagemComParametro(diretorio.getFileName().toString()), e);
         }
     }
 

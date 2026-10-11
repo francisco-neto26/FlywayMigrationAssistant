@@ -228,6 +228,12 @@ public class TelaPrincipalController implements ITelasModal {
                 this.contexto
         );
         verifcaEcarregarModuloFuncao();
+        String arquivoNovo = this.contexto.getUltimoArquivoSalvo();
+        if (arquivoNovo != null) {
+            abrirArquivoEmAba(arquivoNovo);
+            GerenciadorArvoreModulos.expandirESelecionarNaArvore( this.contexto, arquivoNovo, treeArquivos);
+            this.contexto.setUltimoArquivoSalvo(null);
+        }
     }
 
     @FXML

@@ -4,11 +4,9 @@ import atlantafx.base.theme.Theme;
 import com.supergestao.Flyway.migration.assistant.aplicacao.sincronizar.SincronizarModulosArquivos;
 import com.supergestao.Flyway.migration.assistant.dominio.configuracao.GerenciadorConfiguracao;
 import com.supergestao.Flyway.migration.assistant.dominio.configuracao.IGerenciadorConfiguracao;
-import com.supergestao.Flyway.migration.assistant.dominio.modelo.Arquivo;
-import com.supergestao.Flyway.migration.assistant.dominio.modelo.Funcao;
-import com.supergestao.Flyway.migration.assistant.dominio.modelo.Modulo;
-import com.supergestao.Flyway.migration.assistant.dominio.modelo.Resultado;
+import com.supergestao.Flyway.migration.assistant.dominio.modelo.*;
 import com.supergestao.Flyway.migration.assistant.dominio.regra.migration.GerarNomeArquivoMigration;
+import com.supergestao.Flyway.migration.assistant.dominio.regra.sql.template.GeradorSqlTemplate;
 import com.supergestao.Flyway.migration.assistant.dominio.regra.tempo.GeradorDataHora;
 import com.supergestao.Flyway.migration.assistant.dominio.tipo.AcaoBanco;
 import com.supergestao.Flyway.migration.assistant.dominio.tipo.ObjetoBanco;
@@ -33,6 +31,8 @@ public class ContextoAplicacao {
     private final SincronizarModulosArquivos sincronizarModulosArquivos;
     private final GerarNomeArquivoMigration gerarNomeArquivoMigration;
     private final GeradorDataHora geradorDataHora;
+    private final GeradorSqlTemplate geradorSqlTemplate;
+    private String ultimoArquivoSalvo;
 
     public ContextoAplicacao() {
         this.iGerenciadorModulosArquivosDisco = new GerenciadorModulosArquivosDisco();
@@ -41,6 +41,7 @@ public class ContextoAplicacao {
         this.sincronizarModulosArquivos = new SincronizarModulosArquivos(getIGerenciadorModulosArquivos());
         this.gerarNomeArquivoMigration = new GerarNomeArquivoMigration();
         this.geradorDataHora = new GeradorDataHora();
+        this.geradorSqlTemplate = new GeradorSqlTemplate();
 
     }
 
@@ -78,6 +79,10 @@ public class ContextoAplicacao {
 
     public boolean getDiretoriosConfigurados() {
         return this.iGerenciadorConfiguracao.diretoriosConfigurados();
+    }
+
+    public String getGeradorSqlTemplate(ArquivoNovo arquivoNovo) {
+        return this.geradorSqlTemplate.gerarTemplate(arquivoNovo);
     }
 
     public void salvarDiretorioModulo(String diretorioModulo) {
@@ -194,4 +199,11 @@ public class ContextoAplicacao {
                 nome);
     }
 
+    public String getUltimoArquivoSalvo() {
+        return ultimoArquivoSalvo;
+    }
+
+    public void setUltimoArquivoSalvo(String ultimoArquivoSalvo) {
+        this.ultimoArquivoSalvo = ultimoArquivoSalvo;
+    }
 }

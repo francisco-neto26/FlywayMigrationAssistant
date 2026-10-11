@@ -1,20 +1,32 @@
 package com.supergestao.Flyway.migration.assistant.dominio.regra.sql.template.padrao;
 
+import com.supergestao.Flyway.migration.assistant.dominio.modelo.ArquivoNovo;
+import com.supergestao.Flyway.migration.assistant.dominio.modelo.Funcao;
+import com.supergestao.Flyway.migration.assistant.dominio.modelo.Modulo;
 import com.supergestao.Flyway.migration.assistant.dominio.regra.sql.template.GerarTemplate;
 import com.supergestao.Flyway.migration.assistant.dominio.tipo.AcaoBanco;
 import com.supergestao.Flyway.migration.assistant.dominio.tipo.ObjetoBanco;
 import com.supergestao.Flyway.migration.assistant.dominio.tipo.SubAcaoBanco;
+import com.supergestao.Flyway.migration.assistant.dominio.tipo.TipoMigration;
 
 public class TemplateTabela implements GerarTemplate {
 
+    private final Modulo modulo;
+    private final Funcao funcao;
+    private final String nomeArquivo;
     private final AcaoBanco acao;
     private final ObjetoBanco objeto;
     private final SubAcaoBanco subAcao;
+    private final TipoMigration tipoMigration;
 
-    public TemplateTabela(AcaoBanco acao, ObjetoBanco objeto, SubAcaoBanco subAcao) {
-        this.acao = acao;
-        this.objeto = objeto;
-        this.subAcao = subAcao != null ? subAcao : SubAcaoBanco.NENHUMA;
+    public TemplateTabela(ArquivoNovo arquivoNovo) {
+        this.modulo = arquivoNovo.getModulo();
+        this.funcao = arquivoNovo.getFuncao();
+        this.nomeArquivo = arquivoNovo.getNome();
+        this.acao = arquivoNovo.getAcaoBanco();
+        this.objeto = arquivoNovo.getObjetoBanco();
+        this.subAcao = arquivoNovo.getSubAcaoBanco();
+        this.tipoMigration = arquivoNovo.getTipo();
     }
 
     @Override
@@ -73,23 +85,24 @@ public class TemplateTabela implements GerarTemplate {
     // -------------------------------------------------------------------------
     private String gerarCreateTable() {
         return """
-                CREATE TABLE nome_tabela (
-                    id            BIGSERIAL                  NOT NULL,
-                    descricao     VARCHAR(255)               NOT NULL,
-                    ativo         BOOLEAN                    NOT NULL DEFAULT TRUE,
-                    criado_em     TIMESTAMP WITH TIME ZONE   NOT NULL DEFAULT NOW(),
-                    atualizado_em TIMESTAMP WITH TIME ZONE   NOT NULL DEFAULT NOW(),
+                CREATE TABLE %1$s (
+                    id                  BIGSERIAL                  NOT NULL,
+                    ativo               BOOLEAN                    NOT NULL DEFAULT TRUE,
+                    usuario_criacao     VARCHAR(100)               NOT NULL,
+                    data_criacao        TIMESTAMP WITH TIME ZONE   NOT NULL DEFAULT NOW(),
+                    usuario_atualizacao VARCHAR(100)               NOT NULL,
+                    data_atualizacao    TIMESTAMP WITH TIME ZONE   NOT NULL,
 
-                    CONSTRAINT pk_nome_tabela PRIMARY KEY (id)
+                    CONSTRAINT %1$s_pk PRIMARY KEY (id)
                 );
 
-                COMMENT ON TABLE  nome_tabela                IS 'Descrição da tabela';
-                COMMENT ON COLUMN nome_tabela.id             IS 'Identificador único da tabela (PK)';
-                COMMENT ON COLUMN nome_tabela.descricao      IS 'Descrição do registro';
-                COMMENT ON COLUMN nome_tabela.ativo          IS 'Indica se o registro está ativo';
-                COMMENT ON COLUMN nome_tabela.criado_em      IS 'Data e hora de criação do registro';
-                COMMENT ON COLUMN nome_tabela.atualizado_em  IS 'Data e hora da última atualização do registro';
-                """;
+                COMMENT ON TABLE  %1$s                IS ' ';
+                COMMENT ON COLUMN %1$s.id             IS ' ';
+                COMMENT ON COLUMN %1$s.usuario_criacao IS ' ';
+                COMMENT ON COLUMN %1$s.data_criacao    IS ' ';
+                COMMENT ON COLUMN %1$s.usuario_atualizacao IS ' ';
+                COMMENT ON COLUMN %1$s.data_atualizacao IS ' ';
+                """.formatted(nomeArquivo);
     }
 
     // -------------------------------------------------------------------------
@@ -97,15 +110,15 @@ public class TemplateTabela implements GerarTemplate {
     // -------------------------------------------------------------------------
     private String gerarAlterAddColumn() {
         return """
-                ALTER TABLE nome_tabela
-                    ADD COLUMN nova_coluna VARCHAR(100) NOT NULL DEFAULT '';
+                ALTER TABLE %1$s
+                    ADD COLUMN  VARCHAR(100) NOT NULL DEFAULT '';
 
-                COMMENT ON COLUMN nome_tabela.nova_coluna IS 'Descrição da nova coluna';
-                """;
+                COMMENT ON COLUMN %1$s. IS 'Descrição da nova coluna';
+                """.formatted(nomeArquivo);
     }
 
     private String gerarAlterDropColumn() {
-        return "ALTER TABLE nome_tabela DROP COLUMN nome_coluna;\n";
+        return "ALTER TABLE %1$s DROP COLUMN ;\n";
     }
 
     // -------------------------------------------------------------------------

@@ -1,12 +1,14 @@
 package com.supergestao.Flyway.migration.assistant.ui.controller;
 
 import com.supergestao.Flyway.migration.assistant.dominio.mensagem.MensagemSistema;
+import com.supergestao.Flyway.migration.assistant.dominio.modelo.ArquivoNovo;
 import com.supergestao.Flyway.migration.assistant.dominio.modelo.Funcao;
 import com.supergestao.Flyway.migration.assistant.dominio.modelo.Modulo;
 import com.supergestao.Flyway.migration.assistant.dominio.tipo.AcaoBanco;
 import com.supergestao.Flyway.migration.assistant.dominio.tipo.ObjetoBanco;
 import com.supergestao.Flyway.migration.assistant.dominio.tipo.SubAcaoBanco;
 import com.supergestao.Flyway.migration.assistant.dominio.tipo.TipoMigration;
+import com.supergestao.Flyway.migration.assistant.exception.PersistenciaException;
 import com.supergestao.Flyway.migration.assistant.exception.TelaException;
 import com.supergestao.Flyway.migration.assistant.exception.ValidacaoException;
 import com.supergestao.Flyway.migration.assistant.ui.estado.ContextoAplicacao;
@@ -27,8 +29,11 @@ import javafx.stage.Stage;
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.text.ParseException;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 public class TelaNovoMigrationController implements ITelasModal {
 
@@ -116,7 +121,7 @@ public class TelaNovoMigrationController implements ITelasModal {
     @FXML
     private void salvarMigration() {
         String caminhoArquivoNovo = defineDiretorioNomeArquivo().toString();
-        String conteudoArquivoNovo = null;
+        String conteudoArquivoNovo = "";
 
         if (comboTipo.getValue() == TipoMigration.UNDO) {
             conteudoArquivoNovo = this.contexto.buscarConteudoArquivo(txtBuscaUndo.getText());
@@ -137,18 +142,51 @@ public class TelaNovoMigrationController implements ITelasModal {
                 );
                 return;
             }
-        }
 
-        if (txtNomeScript.getText() == null || txtNomeScript.getText().isBlank()) {
-            this.contexto.exibirDialogo(TipoDialogo.ERRO,
-                    MensagemSistema.ALERTA.getMensagem(),
-                    MensagemSistema.ATENCAO.getMensagem(),
-                    MensagemSistema.CAMPO_OBRIGATORIO.MensagemComParametro(obterTextoLabelText(txtNomeScript))
+            if (txtNomeScript.getText() == null || txtNomeScript.getText().isBlank()) {
+                this.contexto.exibirDialogo(TipoDialogo.ERRO,
+                        MensagemSistema.ALERTA.getMensagem(),
+                        MensagemSistema.ATENCAO.getMensagem(),
+                        MensagemSistema.CAMPO_OBRIGATORIO.MensagemComParametro(obterTextoLabelText(txtNomeScript))
+                );
+                return;
+            }
+
+            ArquivoNovo arquivoNovo = new ArquivoNovo(
+                    comboModulo.getValue(),
+                    comboFuncao.getValue(),
+                    txtNomeScript.getText(),
+                    comboAcao.getValue(),
+                    comboObjeto.getValue(),
+                    comboSubAcao.getValue(),
+                    comboTipo.getValue(),
+                    LocalDateTime.now(),
+                    null
             );
-            return;
+
+            conteudoArquivoNovo = this.contexto.getGeradorSqlTemplate(arquivoNovo);
         }
 
-        this.contexto.salvarArquivo(caminhoArquivoNovo, conteudoArquivoNovo);
+        try {
+            boolean querSalvar = this.contexto.exibirDialogo(TipoDialogo.CONFIRMACAO,
+                    MensagemSistema.SALVAR_ARQUIVO.getMensagem(),
+                    MensagemSistema.SALVAR_ALTERACAO.getMensagem(),
+                    MensagemSistema.CRIAR_ARQUIVO.MensagemComParametro(txtNomeScript.getText(), defineDiretorioArquivo().toString()));
+            if (querSalvar) {
+                this.contexto.salvarArquivo(caminhoArquivoNovo, conteudoArquivoNovo);
+                this.contexto.setUltimoArquivoSalvo(caminhoArquivoNovo);
+                this.contexto.exibirDialogo(TipoDialogo.MENSAGEM,
+                        MensagemSistema.CONFIRMACAO.getMensagem(),
+                        null,
+                        MensagemSistema.ARQUIVO_SALVO.getMensagem());
+            }
+        } catch (Exception e) {
+            System.out.println(txtPreviewArquivo.getText());
+            this.contexto.exibirDialogo(TipoDialogo.ERRO,
+                    MensagemSistema.ERRO.getMensagem(),
+                    MensagemSistema.ERRO_SALVAR_ARQUIVO.MensagemComParametro(""),
+                    e.getMessage());
+        }
         fechar();
     }
 
@@ -436,7 +474,7 @@ public class TelaNovoMigrationController implements ITelasModal {
     }
 
     private Path defineDiretorioNomeArquivo() {
-        return Paths.get(defineDiretorioArquivo().toString(), txtNomeScript.getText());
+        return Paths.get(defineDiretorioArquivo().toString(), txtPreviewArquivo.getText());
     }
 
     private String obterTextoLabelComboBox(ComboBox<?> comboBox) {

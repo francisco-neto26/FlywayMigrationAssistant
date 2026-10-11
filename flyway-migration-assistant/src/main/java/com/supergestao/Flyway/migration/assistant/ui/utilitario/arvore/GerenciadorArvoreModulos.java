@@ -7,11 +7,14 @@ import com.supergestao.Flyway.migration.assistant.ui.utilitario.janela.TipoDialo
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class GerenciadorArvoreModulos {
+
 
     public static void buscarModulosFuncoes(ContextoAplicacao contexto, TreeView<String> treeArquivos) {
         Map<String, Modulo> moduloFuncao = contexto.moduloParaSincronizar(contexto.getDiretorioModulo(), contexto.getDiretorioArquivo());
@@ -195,4 +198,48 @@ public class GerenciadorArvoreModulos {
             );
         }
     }
+
+    public static void expandirESelecionarNaArvore(ContextoAplicacao contexto, String caminhoArquivo, TreeView<String> treeArquivos) {
+        if (caminhoArquivo == null || treeArquivos.getRoot() == null) {
+            return;
+        }
+        Path pathArquivo = Paths.get(caminhoArquivo);
+        String nomeArquivo = pathArquivo.getFileName().toString();
+        // Descobre o Módulo e a Função pelo caminho relativo da pasta base
+        Path pathBase = Paths.get(contexto.getDiretorioArquivo());
+        Path pathRelativo = pathBase.relativize(pathArquivo);
+        String nomeModulo = pathRelativo.getName(0).toString();
+        String nomeFuncao = (pathRelativo.getNameCount() >= 3) ? pathRelativo.getName(1).toString() : null;
+        // 1. Encontra e EXPANDI o Módulo na árvore
+        TreeItem<String> itemModulo = null;
+        for (TreeItem<String> moduloItem : treeArquivos.getRoot().getChildren()) {
+            if (moduloItem.getValue().equalsIgnoreCase(nomeModulo)) {
+                itemModulo = moduloItem;
+                itemModulo.setExpanded(true);
+                break;
+            }
+        }
+        if (itemModulo == null) return;
+        TreeItem<String> pastaFinal = itemModulo;
+        // 2. Se houver Função, encontra e EXPANDI a Função na árvore
+        if (nomeFuncao != null) {
+            for (TreeItem<String> funcaoItem : itemModulo.getChildren()) {
+                if (funcaoItem.getValue().equalsIgnoreCase(nomeFuncao)) {
+                    pastaFinal = funcaoItem;
+                    pastaFinal.setExpanded(true);
+                    break;
+                }
+            }
+        }
+        // 3. Encontra o arquivo dentro da pasta expandida e SELECIONA na árvore
+        for (TreeItem<String> arquivoItem : pastaFinal.getChildren()) {
+            if (arquivoItem.getValue().equalsIgnoreCase(nomeArquivo)) {
+                treeArquivos.getSelectionModel().select(arquivoItem);
+                treeArquivos.scrollTo(treeArquivos.getRow(arquivoItem));
+                break;
+            }
+        }
+    }
+
+
 }

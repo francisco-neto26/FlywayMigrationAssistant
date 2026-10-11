@@ -1,31 +1,43 @@
 package com.supergestao.Flyway.migration.assistant.dominio.regra.sql.template.padrao;
 
+import com.supergestao.Flyway.migration.assistant.dominio.modelo.ArquivoNovo;
+import com.supergestao.Flyway.migration.assistant.dominio.modelo.Funcao;
+import com.supergestao.Flyway.migration.assistant.dominio.modelo.Modulo;
 import com.supergestao.Flyway.migration.assistant.dominio.regra.sql.template.GerarTemplate;
 import com.supergestao.Flyway.migration.assistant.dominio.tipo.AcaoBanco;
 import com.supergestao.Flyway.migration.assistant.dominio.tipo.ObjetoBanco;
 import com.supergestao.Flyway.migration.assistant.dominio.tipo.SubAcaoBanco;
+import com.supergestao.Flyway.migration.assistant.dominio.tipo.TipoMigration;
 
 public class TemplateFunction implements GerarTemplate {
 
+    private final Modulo modulo;
+    private final Funcao funcao;
+    private final String nomeArquivo;
     private final AcaoBanco acao;
     private final ObjetoBanco objeto;
     private final SubAcaoBanco subAcao;
+    private final TipoMigration tipoMigration;
 
-    public TemplateFunction(AcaoBanco acao, ObjetoBanco objeto, SubAcaoBanco subAcao) {
-        this.acao = acao;
-        this.objeto = objeto;
-        this.subAcao = subAcao != null ? subAcao : SubAcaoBanco.NENHUMA;
+    public TemplateFunction(ArquivoNovo arquivoNovo) {
+        this.modulo = arquivoNovo.getModulo();
+        this.funcao = arquivoNovo.getFuncao();
+        this.nomeArquivo = arquivoNovo.getNome();
+        this.acao = arquivoNovo.getAcaoBanco();
+        this.objeto = arquivoNovo.getObjetoBanco();
+        this.subAcao = arquivoNovo.getSubAcaoBanco();
+        this.tipoMigration = arquivoNovo.getTipo();
     }
 
     @Override
     public String gerar() {
         return switch (acao) {
             case CREATE -> gerarCreateFunction();
-            case DROP   -> gerarDropFunction();
-            case ALTER  -> switch (subAcao) {
+            case DROP -> gerarDropFunction();
+            case ALTER -> switch (subAcao) {
                 case RENAME_FUNCTION -> gerarRenameFunction();
-                case OWNER_TO        -> gerarOwnerFunction();
-                case SET_SCHEMA      -> gerarSetSchemaFunction();
+                case OWNER_TO -> gerarOwnerFunction();
+                case SET_SCHEMA -> gerarSetSchemaFunction();
                 default -> "-- Selecione uma Sub-Ação para a Função";
             };
             default -> "\n-- Combinação não suportada para Funções.\n";
@@ -40,11 +52,11 @@ public class TemplateFunction implements GerarTemplate {
                     v_resultado NUMERIC;
                 BEGIN
                     -- Lógica de negócio aqui
-                    
+                
                     RETURN v_resultado;
                 END;
                 $$ LANGUAGE plpgsql;
-
+                
                 COMMENT ON FUNCTION fn_calcula_algo(INT) IS 'Descrição da regra de negócio';
                 """;
     }
